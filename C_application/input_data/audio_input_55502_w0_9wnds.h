@@ -3,21 +3,22 @@
 
 
 /* Sampling frequency */
+#include "types.h"
 #define AUDIO_FS  8000
 
 /* Number of samples per each audiosignal */
 #define AUDIO_LEN   57600
 
 
-/* 
+/*
 	The samples are taken from two microphones, one facing the sking
-	the other facing the air 
+	the other facing the air
     In this case only the air is used, this is a simplified input
     data set
 */
 typedef struct audio_input_55502
 {
-    float air[AUDIO_LEN];
+    num_t air[AUDIO_LEN];
 } audio_input_t;
 
 static const audio_input_t audio_in = {

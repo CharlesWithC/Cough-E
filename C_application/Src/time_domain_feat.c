@@ -1,3 +1,5 @@
+#include "types.h"
+
 #include <stdio.h>
 #include <math.h>
 
@@ -14,14 +16,14 @@
 
 // Here I put all the functions to compute time domain features
 
-int16_t _find_peaks(float *x, int16_t len);
+int16_t _find_peaks(num_t *x, int16_t len);
 
 
 
 
-float get_max(float *sig, int16_t len){
+num_t get_max(num_t *sig, int16_t len){
 
-    float max = sig[0];
+    num_t max = sig[0];
 
     for(int16_t i=1; i<len; i++){
         if(sig[i] > max){
@@ -34,23 +36,23 @@ float get_max(float *sig, int16_t len){
 
 
 
-void sub_mean(const float *sig, float *res, int16_t len){
+void sub_mean(const num_t *sig, num_t *res, int16_t len){
 
-    float mean = vect_mean(sig, len);
+    num_t mean = vect_mean(sig, len);
 
     sub_constant(sig, len, mean, res);
 }
 
 
-float get_rms(float *sig, int16_t len){
-    float sum = 0;
+num_t get_rms(num_t *sig, int16_t len){
+    num_t sum = 0;
     for(int16_t i=0; i<len; i++){
-        float sq = sig[i] * sig[i];
+        num_t sq = sig[i] * sig[i];
         RA_IMU_LOG_SCALAR("get_rms", "sig_sq", sq);
         sum += sq;
     }
     RA_IMU_LOG_SCALAR("get_rms", "sum_sq", sum);
-    float result = sqrtf(sum / len);
+    num_t result = sqrtnum(sum / len);
     RA_IMU_LOG_SCALAR("get_rms", "result", result);
     return result;
 }
@@ -58,10 +60,10 @@ float get_rms(float *sig, int16_t len){
 
 
 
-float compute_zrc(float *sig, int16_t len){
+num_t compute_zrc(num_t *sig, int16_t len){
 
     int sum = 0;
-    float interm_product = 0;
+    num_t interm_product = 0;
 
     for(int16_t i=0; i<len-1; i++){
         interm_product = sig[i] * sig[i + 1];
@@ -70,7 +72,7 @@ float compute_zrc(float *sig, int16_t len){
             sum++;
         }
     }
-    float result = (float) sum / (len - 1);
+    num_t result = (num_t) sum / (len - 1);
     RA_IMU_LOG_SCALAR("compute_zrc", "result", result);
     return result;
 }
@@ -81,7 +83,7 @@ float compute_zrc(float *sig, int16_t len){
     This function mimics the _local_maxima_1d() function in the python
     "scipy" module.
 */
-int16_t _find_peaks(float *x, int16_t len){
+int16_t _find_peaks(num_t *x, int16_t len){
 
     int16_t i = 1; // points to the first considered sample (the second one)
     int16_t i_max = len-1;
@@ -111,12 +113,12 @@ int16_t _find_peaks(float *x, int16_t len){
 
 
 
-void eepd(const float *sig, int16_t len, int16_t fs, const int8_t *select, int16_t *res){
+void eepd(const num_t *sig, int16_t len, int16_t fs, const int8_t *select, int16_t *res){
 
-    float *interm = (float*)malloc(len * sizeof(float));    // to store the intermediate result between the first and the second filter 
-    float *filtered = (float*)malloc(len * sizeof(float));       // temporary to store the result of each filter
+    num_t *interm = (num_t*)malloc(len * sizeof(num_t));    // to store the intermediate result between the first and the second filter
+    num_t *filtered = (num_t*)malloc(len * sizeof(num_t));       // temporary to store the result of each filter
 
-    const float *b, *a, *zi;
+    const num_t *b, *a, *zi;
 
     for(int16_t i=0; i<N_EEPD; i++){
         if(select[i] == 1){
@@ -138,7 +140,7 @@ void eepd(const float *sig, int16_t len, int16_t fs, const int8_t *select, int16
             RA_LOG_ARRAY("AUDIO_EEPD", "eepd", "normalized", filtered, len);
 
             res[i] = _find_peaks(filtered, len);
-            RA_LOG_SCALAR("AUDIO_EEPD", "eepd", "n_peaks", (float)res[i]);
+            RA_LOG_SCALAR("AUDIO_EEPD", "eepd", "n_peaks", (num_t)res[i]);
         }
     }
 

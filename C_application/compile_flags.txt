@@ -1,0 +1,11 @@
+-DUSE_UNUM_POSIT
+-DEVALUATION_MODE
+-IInc
+-IFxP
+-I./
+-Ikiss_fftr
+-Iuniversal
+-Irange_analysis
+
+--driver-mode=g++
+-std=c++20

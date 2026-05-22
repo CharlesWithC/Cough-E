@@ -2,10 +2,11 @@
 #define _IMU_INPUT_55502_H_
 
 /* Sampling frequency of the IMU signal */
+#include "types.h"
 #define IMU_FS 100
 
-/* 
-	Number of samples for the IMU signals 
+/*
+	Number of samples for the IMU signals
 	Note that each sample contains the meaasurement of each of
 	the three axis of the accelerometer and gyroscope.
 */
@@ -26,7 +27,7 @@
 	}
 */
 
-static const float imu_in[IMU_LEN][6] = {
+static const num_t imu_in[IMU_LEN][6] = {
 
 	{
 		-0.57,

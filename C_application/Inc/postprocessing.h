@@ -1,6 +1,8 @@
 #ifndef _POSTPROCESSING_H_
 #define _POSTPROCESSING_H_
 
+#include "types.h"
+
 #include <inttypes.h>
 #include <stdlib.h>
 #include <math.h>
@@ -28,8 +30,8 @@
 #define COUGH_LEN_IN_SERIES_DECREASE_FACTOR 0.8
 
 
-uint16_t _clean_cough_segments(uint16_t *starts_idxs, uint16_t *ends_idxs, uint16_t *peaks_locs, float *peaks, uint16_t n_peaks, uint16_t fs);
-void _get_cough_peaks(const float* seg, int16_t len, int16_t fs, uint16_t *starts, uint16_t *ends, uint16_t *peaks_locs, float *peaks_amps, uint16_t *new_added);
+uint16_t _clean_cough_segments(uint16_t *starts_idxs, uint16_t *ends_idxs, uint16_t *peaks_locs, num_t *peaks, uint16_t n_peaks, uint16_t fs);
+void _get_cough_peaks(const num_t* seg, int16_t len, int16_t fs, uint16_t *starts, uint16_t *ends, uint16_t *peaks_locs, num_t *peaks_amps, uint16_t *new_added);
 
 
 #endif

@@ -4,6 +4,7 @@
 #include <inttypes.h>
 
 #include <main.h>
+#include "types.h"
 
 #include <fsm_control.h>
 #include <feature_extraction.h>
@@ -37,29 +38,29 @@ int main(){
     ////    AUDIO FEATURES    ////
     // Array for containing the audio features values. The order is the same as of the
     // features families enum
-    float  *audio_feature_array = (float*)malloc(Number_AUDIO_Features * sizeof(float));
+    num_t  *audio_feature_array = (num_t*)malloc(Number_AUDIO_Features * sizeof(num_t));
     memset(audio_feature_array, 0.0, Number_AUDIO_Features);
 
 
     ////    IMU FEATURES    ////
-    float *imu_feature_array = (float*)malloc(Number_IMU_Features * sizeof(float)); // To store all the possible IMU features
+    num_t *imu_feature_array = (num_t*)malloc(Number_IMU_Features * sizeof(num_t)); // To store all the possible IMU features
     memset(imu_feature_array, 0.0, Number_IMU_Features);
 
     // Array for the features set of the audio model
-    float* features_audio_model = (float*)malloc(TOT_FEATURES_AUDIO_MODEL_AUDIO * sizeof(float));
+    num_t* features_audio_model = (num_t*)malloc(TOT_FEATURES_AUDIO_MODEL_AUDIO * sizeof(num_t));
 
-    float audio_proba = 0.0;
+    num_t audio_proba = 0.0;
 
     // Array for the features set of the imu model
-    float* features_imu_model = (float*)malloc(TOT_FEATURES_IMU_MODEL_IMU * sizeof(float));
+    num_t* features_imu_model = (num_t*)malloc(TOT_FEATURES_IMU_MODEL_IMU * sizeof(num_t));
 
-    float imu_proba = 0.0;
+    num_t imu_proba = 0.0;
 
     // Postprocessing arrays and variables
     uint16_t *starts = (uint16_t*)malloc(MAX_PEAKS_EXPECTED * sizeof(uint16_t));
     uint16_t *ends = (uint16_t*)malloc(MAX_PEAKS_EXPECTED * sizeof(uint16_t));
     uint16_t *locs = (uint16_t*)malloc(MAX_PEAKS_EXPECTED * sizeof(uint16_t));
-    float *peaks = (float*)malloc(MAX_PEAKS_EXPECTED * sizeof(float));
+    num_t *peaks = (num_t*)malloc(MAX_PEAKS_EXPECTED * sizeof(num_t));
 
     // Number of peaks found from last output
     uint16_t n_peaks = 0;
@@ -68,7 +69,7 @@ int main(){
     uint16_t new_added = 0;
 
     // Confidence of the model per each peak found
-    float *audio_confidence = (float*)malloc(MAX_PEAKS_EXPECTED * sizeof(float*));
+    num_t *audio_confidence = (num_t*)malloc(MAX_PEAKS_EXPECTED * sizeof(num_t*));
 
     // Index of the start of the current window (depending on the model to use, it indexes the AUDIO or the IMU signal)
     uint32_t idx_start_window = 0;
@@ -112,8 +113,12 @@ int main(){
 
             // Predict with the IMU model
             imu_proba = imu_predict(features_imu_model);
+            // #ifdef USE_UNUM_POSIT
+            // std::cout<<"IMU P: "<<std::fixed<<std::setprecision(6)<<imu_proba<<"\n";
+            // #else
             // printf("IMU P: %f\n", imu_proba);
-            
+            // #endif
+
             // Update the output of the FSM
             if(imu_proba>=IMU_TH){
                 fsm_state.model_cls_out = COUGH_OUT;
@@ -121,7 +126,7 @@ int main(){
                 fsm_state.model_cls_out = NON_COUGH_OUT;
             }
         }
-        else { 
+        else {
 
             if(idx_start_window >= AUDIO_LEN){
                 break;
@@ -144,7 +149,11 @@ int main(){
             }
 
             audio_proba = audio_predict(features_audio_model);
+            // #ifdef USE_UNUM_POSIT
+            // std::cout<<"AUDIO P: "<<std::fixed<<std::setprecision(6)<<audio_proba<<"\n";
+            // #else
             // printf("AUDIO P: %f\n", audio_proba);
+            // #endif
 
             // Update the output of the FSM
             if(audio_proba >= AUDIO_TH){
@@ -153,7 +162,7 @@ int main(){
                 fsm_state.model_cls_out = NON_COUGH_OUT;
             }
 
-            // Identify the peaks   
+            // Identify the peaks
             _get_cough_peaks(&audio_in.air[idx_start_window], WINDOW_SAMP_AUDIO, AUDIO_FS, &starts[n_peaks], &ends[n_peaks], &locs[n_peaks], &peaks[n_peaks], &new_added);
 
             for(uint16_t j=0; j<new_added; j++){
@@ -172,7 +181,7 @@ int main(){
             uint16_t n_peaks_final = 0;
 
             if(n_peaks > 0){
-                // Keeps track of the indexes of the peaks for which the model confidence is above the threshold 
+                // Keeps track of the indexes of the peaks for which the model confidence is above the threshold
                 uint16_t *idxs_above_th = (uint16_t*)malloc(n_peaks * sizeof(uint16_t));
 
 
@@ -186,7 +195,7 @@ int main(){
                 uint16_t *final_starts = (uint16_t*)malloc(n_idxs_above_th * sizeof(uint16_t));
                 uint16_t *final_ends = (uint16_t*)malloc(n_idxs_above_th * sizeof(uint16_t));
                 uint16_t *above_locs = (uint16_t*)malloc(n_idxs_above_th * sizeof(uint16_t));
-                float *above_peaks = (float*)malloc(n_idxs_above_th * sizeof(float));
+                num_t *above_peaks = (num_t*)malloc(n_idxs_above_th * sizeof(num_t));
 
 
                 for(uint16_t i=0; i<n_idxs_above_th; i++){
@@ -211,11 +220,11 @@ int main(){
                 free(above_locs);
                 free(above_peaks);
             }
-            
+
             #ifdef EVALUATION_MODE
             printf("N_PEAKS FINAL: %d\n", n_peaks_final);
             #endif
-            
+
             // Reset postprocessing variables to their default value
             n_peaks = 0;
 

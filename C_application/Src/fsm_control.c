@@ -5,7 +5,7 @@ fsm_t fsm_state;
 
 
 void init_state(){
-    
+
 #ifndef RUN_ONLY_AUD
     fsm_state.model = IMU_MODEL;    // This is for both ONLY_IMU or MIXED
 #else
@@ -29,8 +29,8 @@ void update(){
 
     // COUGH found
     if(fsm_state.model_cls_out ==  COUGH_OUT){
-        
-        // IMU was used 
+
+        // IMU was used
         if(fsm_state.model == IMU_MODEL){
             fsm_state.time_from_last_out = fsm_state.time_start_wind + WIND_LEN_IMU - fsm_state.timestamp_last_out;
 
@@ -59,7 +59,7 @@ void update(){
                 fsm_state.time_start_wind += AUDIO_STEP_SEC;
             }
             #else
-            
+
             #ifdef RUN_ONLY_AUD
             fsm_state.time_start_wind += AUDIO_STEP_SEC;
             #endif
@@ -69,7 +69,7 @@ void update(){
     }
     else{   // NON COUGH
 
-        // IMU was used 
+        // IMU was used
         if(fsm_state.model == IMU_MODEL){
             fsm_state.time_from_last_out = fsm_state.time_start_wind + WIND_LEN_IMU - fsm_state.timestamp_last_out;
             fsm_state.model = IMU_MODEL;
@@ -100,7 +100,7 @@ uint8_t check_postprocessing(){
     // printf("last out time: %f\n", fsm_state.timestamp_last_out);
 
     if(fsm_state.time_from_last_out >= TIME_DEADLINE_OUTPUT){
-        
+
         if(fsm_state.model == IMU_MODEL){
             fsm_state.timestamp_last_out = fsm_state.time_start_last_wind + WIND_LEN_IMU;
         } else {
@@ -125,9 +125,9 @@ uint8_t check_postprocessing(){
 uint32_t get_idx_window(){
 
     if(fsm_state.model == IMU_MODEL){
-        return (uint32_t)(fsm_state.time_start_wind * IMU_FS);
+        return (uint32_t)(double)(fsm_state.time_start_wind * IMU_FS);
     }
     else{
-        return (uint32_t)(fsm_state.time_start_wind * AUDIO_FS);
+        return (uint32_t)(double)(fsm_state.time_start_wind * AUDIO_FS);
     }
 }

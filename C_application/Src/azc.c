@@ -5,6 +5,7 @@
 #include <math.h>
 #include <range_analysis.h>
 
+#include "types.h"
 
 
 /**
@@ -36,7 +37,7 @@ int _qsort_cmp(const void *e1, const void *e2){
  * Given the first and last points' coordinates, it computes all the intermediate
  * points of the linear interpolation fitting a linear segment. The number of points
  * will be equal to len
- * 
+ *
  * @param len: length in points of the final segment
  * @param xf: x coordinate of the first point
  * @param yf: y coordinate of the first point
@@ -45,14 +46,14 @@ int _qsort_cmp(const void *e1, const void *e2){
  * @param *res: pointer to the array used to store the result. Notice that the result
  * will be made only of y coordinates
 */
-void _interp(int16_t len, int16_t xf, float yf, int16_t xl, float yl, float *res){
+void _interp(int16_t len, int16_t xf, num_t yf, int16_t xl, num_t yl, num_t *res){
 
     res[0] = yf;
     res[len-1] = yl;
 
     // Compute the segment parameters
-    float m = (yl - yf) / (xl - xf);    // slope
-    float q = yf - (m * xf);            // y-axis intercept
+    num_t m = (yl - yf) / (xl - xf);    // slope
+    num_t q = yf - (m * xf);            // y-axis intercept
 
     for(int i=1; i<len-1; i++){
         res[i] = (m * (xf + i)) + q;
@@ -61,18 +62,18 @@ void _interp(int16_t len, int16_t xf, float yf, int16_t xl, float yl, float *res
 
 /**
  * Computes the discrete-time differentiation of the given signal given integer timestamps
- * 
+ *
  * @param *sig: pointer to array storing the signal
  * @param timestamps: time instants of each signal sample, needs to be passed since
  * the timestamps might be non equally spaced
  * @param len: length of the input signal array
- * 
- * @return a float pointer containing the resulting differentiation
+ *
+ * @return a num_t pointer containing the resulting differentiation
 */
-float *_discrete_diff(float *sig, int16_t *timestamps, int16_t len){
-        
+num_t *_discrete_diff(num_t *sig, int16_t *timestamps, int16_t len){
+
     int16_t res_len = len-1;
-    float *res = (float*)malloc((res_len) * sizeof(float));
+    num_t *res = (num_t*)malloc((res_len) * sizeof(num_t));
 
     for(int16_t i=0; i<(res_len); i++){
         res[i] = (sig[i+1] - sig[i]) / (timestamps[i+1] - timestamps[i]);
@@ -83,17 +84,17 @@ float *_discrete_diff(float *sig, int16_t *timestamps, int16_t len){
 /**
  * Computes the max vertical distance from the specified signal and the
  * linear segment delimited by the signal points indexes by first and last.
- * 
+ *
  * @param *sig: pointer to the signal
  * @param  first: index of the first signal sample of the linear segment
  * @param  last: index of the last signal sample of the linear segment
  * @param  *idx: pointer in which to store the index of the sample having max vertical distance
- *  
+ *
  * @return The max vertical distance found. Also the index of the signal sample having this max
  * distance from the linear segment will be stored in the idx parameter
 */
-float _max_vdist(float *sig, int16_t first, int16_t last, int16_t *idx){
-    
+num_t _max_vdist(num_t *sig, int16_t first, int16_t last, int16_t *idx){
+
     // Check if the first and last indexes are the same
     if(first == last){
         *idx = first;
@@ -104,11 +105,11 @@ float _max_vdist(float *sig, int16_t first, int16_t last, int16_t *idx){
     int16_t len = last - first + 1;
 
     // Interpolated segment
-    float *intrp = (float*)malloc(len * sizeof(float));
+    num_t *intrp = (num_t*)malloc(len * sizeof(num_t));
     _interp(len, first, sig[first], last, sig[last], intrp);
-    
-    // To store the distances 
-    float *dist = (float*)malloc(len * sizeof(float));
+
+    // To store the distances
+    num_t *dist = (num_t*)malloc(len * sizeof(num_t));
     for(int16_t i=0; i<len; i++){
         dist[i] = fabs(sig[first+i] - intrp[i]);
     }
@@ -117,7 +118,7 @@ float _max_vdist(float *sig, int16_t first, int16_t last, int16_t *idx){
     *idx = vect_max_index(dist, len);
 
     // Have to take the result before adjusting the index
-    float result  = dist[*idx];
+    num_t result  = dist[*idx];
     RA_IMU_LOG_SCALAR("azc", "max_dist", result);
 
     // Adjust the index to have the global one with respect to sig
@@ -131,18 +132,18 @@ float _max_vdist(float *sig, int16_t first, int16_t last, int16_t *idx){
 
 
 /**
- * Computes the polygonal approximation of the given signal and returns the 
+ * Computes the polygonal approximation of the given signal and returns the
  * indexes of the result.
- * 
+ *
  * @param sig: pointer to the signal
  * @param len: length of the original signal
  * @param eps: epsilon value used as a tolerance for the Douglas-Peucker algorithm
  * @param res_len: pointer in which to store the lenght of the resulting approximated signal
- * 
+ *
  * @return pointer to the array storing the indexes of the point in the original signal
- * that form the result. 
+ * that form the result.
 */
-int16_t *polygonal_approx(float *sig, int16_t len, float eps, int16_t *res_len){
+int16_t *polygonal_approx(num_t *sig, int16_t len, num_t eps, int16_t *res_len){
 
     // Array of the resulting indexes. For safety reasons it is allocated
     // at his maximum possible size (i.e. len)
@@ -166,7 +167,7 @@ int16_t *polygonal_approx(float *sig, int16_t len, float eps, int16_t *res_len){
     // Always keeps track of the tail of the array, next element to process
     int16_t next_to_process = 0;
 
-    float max_dist = 0.0;
+    num_t max_dist = 0.0;
     int16_t max_idx = 0;
 
     // Indexes of first and last element to consider at each iteration
@@ -191,7 +192,7 @@ int16_t *polygonal_approx(float *sig, int16_t len, float eps, int16_t *res_len){
 
             next_to_process += 2;
         } else {
-            
+
             // To avoid adding duplicated indexes in the result
             add_first = 1;
             add_last = 1;
@@ -223,7 +224,7 @@ int16_t *polygonal_approx(float *sig, int16_t len, float eps, int16_t *res_len){
 
 
 
-int16_t azc_computation(float *sig, int16_t len, float epsilon){
+int16_t azc_computation(num_t *sig, int16_t len, num_t epsilon){
 
     int16_t approx_len = 0;
 
@@ -234,7 +235,7 @@ int16_t azc_computation(float *sig, int16_t len, float epsilon){
     qsort(approx_idxs, approx_len, sizeof(int16_t), _qsort_cmp);
 
     // Extract the approximated signal
-    float *approx_sig = (float*)malloc(approx_len * sizeof(float));
+    num_t *approx_sig = (num_t*)malloc(approx_len * sizeof(num_t));
     int16_t *timestamps = (int16_t*)malloc(approx_len * sizeof(int16_t));
     for(int16_t i=0; i<approx_len; i++){
         approx_sig[i] = sig[approx_idxs[i]];
@@ -245,7 +246,7 @@ int16_t azc_computation(float *sig, int16_t len, float epsilon){
         RA_IMU_LOG_ARRAY("azc", "approx_sig", approx_sig, approx_len);
     }
 
-    float *diff = _discrete_diff(approx_sig, timestamps, approx_len);
+    num_t *diff = _discrete_diff(approx_sig, timestamps, approx_len);
 
     if(approx_len > 1){
         RA_IMU_LOG_ARRAY("azc", "diff", diff, approx_len - 1);

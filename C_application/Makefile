@@ -6,7 +6,7 @@ BUILD_DIR 	= 	build
 SRC_DIRS 	= 	Src kiss_fftr
 SRC 		= 	$(foreach c, $(SRC_DIRS), $(wildcard $c/*.c))
 
-INC_DIRS 	= 	Inc ./ kiss_fftr range_analysis
+INC_DIRS 	= 	Inc ./ kiss_fftr universal range_analysis
 INC 		= 	$(foreach d, $(INC_DIRS), -I$d)
 
 MATH 		= 	-lm
@@ -27,9 +27,9 @@ COMP_STRING += 	"|++++++++++++++++++++++++++++++++|\n"
 # @echo "Running with command:"
 
 
-EXEC_STRING =	" |++++++++++++++++++++++++++++++++|\n" 
-EXEC_STRING +=	"|     Start of execution...      |\n" 
-EXEC_STRING +=	"|++++++++++++++++++++++++++++++++|\n" 
+EXEC_STRING =	" |++++++++++++++++++++++++++++++++|\n"
+EXEC_STRING +=	"|     Start of execution...      |\n"
+EXEC_STRING +=	"|++++++++++++++++++++++++++++++++|\n"
 
 
 all:

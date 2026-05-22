@@ -1,6 +1,8 @@
 #ifndef _MFCC_MODULE_H_
 #define _MFCC_MODULE_H_
 
+#include "types.h"
+
 /*
     This module contains the main helper functions to compute the MFCCs
 */
@@ -15,7 +17,7 @@
 #define PAD_LEN 1024
 
 // defines used in the dB conversion
-#define F_MIN 1.17549e-038 
+#define F_MIN 1.17549e-038
 #define TOP_DB 80.0
 
 // define used for the DCT computation
@@ -34,7 +36,7 @@
 /// @param len          lenght of the array
 /// @param n_frames     number of frames
 /// @param *res         pointer to the result
-void stft(const float *x, int16_t len, int16_t n_frames, float *res);
+void stft(const num_t *x, int16_t len, int16_t n_frames, num_t *res);
 
 
 
@@ -44,7 +46,7 @@ void stft(const float *x, int16_t len, int16_t n_frames, float *res);
 /// @param len          lenght of the array
 /// @param n_frames     number of frames
 /// @param *res         pointer to the result
-void mel_spectrogram_full(const float *x, int16_t len, int16_t n_frames, float *res);
+void mel_spectrogram_full(const num_t *x, int16_t len, int16_t n_frames, num_t *res);
 
 
 
@@ -56,7 +58,7 @@ void mel_spectrogram_full(const float *x, int16_t len, int16_t n_frames, float *
 /// @param n_frames         number of frames
 /// @param *idx_required    pointer to the indexes that specify the required frames
 /// @param *res             pointer to the result
-void mel_spectrogram(const float *x, int16_t len, int16_t n_frames, uint8_t *idx_required, float *res);
+void mel_spectrogram(const num_t *x, int16_t len, int16_t n_frames, uint8_t *idx_required, num_t *res);
 
 
 
@@ -65,17 +67,17 @@ void mel_spectrogram(const float *x, int16_t len, int16_t n_frames, uint8_t *idx
 /// @param *x               pointer to the input signal
 /// @param len              lenght of the array
 /// @param *res             pointer to the result
-void power_to_dB(float *x, int16_t len, float *res);
+void power_to_dB(num_t *x, int16_t len, num_t *res);
 
 
 
 
 /**
-* @brief Computes the DCT (Discrete Cosine Transform) on the input matrix and 
+* @brief Computes the DCT (Discrete Cosine Transform) on the input matrix and
     stores the result in the output matrix.
-    
+
     Both input and output matrices are stored as 1D arrays.
-    
+
     The matrix is stored on a row by row basis:
     x = [... ROW 0 ... | ... ROW 1 ... | ....]
 * @param *x     pointer to the input
@@ -83,13 +85,13 @@ void power_to_dB(float *x, int16_t len, float *res);
 * @param cols   number of columns
 * @param *y     pointer to the result
 */
-void dct_matrix(float *x, int16_t rows, int16_t cols, float *y);
+void dct_matrix(num_t *x, int16_t rows, int16_t cols, num_t *y);
 
 
 
 /**
  * Computes the entropy of the given spectrogram.
- * 
+ *
  * @param *spectrogram  :   pointer to the spectrogram. It has to be
  *                          a matrix store row by row in a linear array
  * @param n_rows        :   number of rows of the spectrogram matrix
@@ -97,6 +99,6 @@ void dct_matrix(float *x, int16_t rows, int16_t cols, float *y);
  * @param *res          :   array where to store the resulting entropy. It should
  *                          be an array of `n_rows` elements
 */
-void entropy(float *spectrogram, int16_t n_rows, int16_t n_columns, float *res);
+void entropy(num_t *spectrogram, int16_t n_rows, int16_t n_columns, num_t *res);
 
 #endif

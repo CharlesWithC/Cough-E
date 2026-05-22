@@ -3,8 +3,10 @@
 This folder contains the code for the embedded application of Cough-E, together with the necessary scripts to compile and run it.
 
 The `Inc` and `Src` folders contain the header and source files, respectively.
+
 The `kiss_fftr` folder instead contains both header and source files for the computation of the FFT (taken from [here](https://github.com/mborgerding/kissfft)).
 
+The `universal` folder should contain content of the `include/sw/` directory of [this repo](https://github.com/stillwater-sc/universal), which is gitignored due to size concern.
 
 #### Settings
 The `main.h` file contains the main parameters of the multimodal execution.
@@ -20,12 +22,9 @@ Compilation and execution are triggerred by means of a Makefile through the foll
 - `make`: to build the application. This will generate a `cough-e` executable file.
 - `make run`: to build and launch the execution
 
+By default, builtin `float` is used. To use posit32 from universal number, compile with `make CC=g++ CFLAGS=-DUSE_UNUM_POSIT`. Note that `gcc>=16` is required for `c++20` standard.
 
 #### Input data
 The input data are supposed to be stored in three separate header files, for audio, kinematic, and bio signals.
 These three files should be included in the `main.h` file.
 An example containing 9 windows of data can be found under `./input_data/`
-
-
-
-

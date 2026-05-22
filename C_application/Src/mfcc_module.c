@@ -1,3 +1,5 @@
+#include "types.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>
@@ -20,37 +22,37 @@
 #include <range_analysis.h>
 
 // This function is internally used to avoid the helper module
-// the need of importing the kiss_fft library 
-void _cmplx_mag(kiss_fft_cpx *x, int16_t len, float *res);
+// the need of importing the kiss_fft library
+void _cmplx_mag(kiss_fft_cpx *x, int16_t len, num_t *res);
 
 // internal use function to compute the dct on a linear array
-void _dct_linear(float *x, int16_t len, float *y);
+void _dct_linear(num_t *x, int16_t len, num_t *y);
 
 /*
     Computes the complex magnitude of the input RFFT result and put
     it inside res array
 */
-void _cmplx_mag(kiss_fft_cpx *x, int16_t len, float *res){
+void _cmplx_mag(kiss_fft_cpx *x, int16_t len, num_t *res){
 
     for(int16_t i=0; i<len; i++){
-        res[i] = sqrtf((x[i].r * x[i].r) + (x[i].i * x[i].i));
+        res[i] = sqrtnum((x[i].r * x[i].r) + (x[i].i * x[i].i));
     }
 }
 
 
 
-void stft(const float *x, int16_t len, int16_t n_frames, float *res){
+void stft(const num_t *x, int16_t len, int16_t n_frames, num_t *res){
 
     RA_LOG_ARRAY("AUDIO_MEL", "stft", "sig_input", x, len);
 
     // apply padding
     int16_t padded_len = (2 * PAD_LEN) + len;
-    float *padded = (float*)malloc(padded_len * sizeof(float));
+    num_t *padded = (num_t*)malloc(padded_len * sizeof(num_t));
     // zero_padding(x, len, PAD_LEN, padded);
     reflect_padding(x, len, PAD_LEN, padded);
 
-    float *column = (float*)malloc(N_FFT * sizeof(float));
-    float *fft_res = (float*)malloc(FFT_RES_LEN * sizeof(float));
+    num_t *column = (num_t*)malloc(N_FFT * sizeof(num_t));
+    num_t *fft_res = (num_t*)malloc(FFT_RES_LEN * sizeof(num_t));
 
     // initialize RFFT structures
     kiss_fftr_cfg cfg = kiss_fftr_alloc(N_FFT, 0, 0, 0);
@@ -76,8 +78,8 @@ void stft(const float *x, int16_t len, int16_t n_frames, float *res){
 #ifdef RANGE_ANALYSIS
         // Log re and im separately for range analysis
         {
-            float *re_tmp = (float*)malloc(FFT_RES_LEN * sizeof(float));
-            float *im_tmp = (float*)malloc(FFT_RES_LEN * sizeof(float));
+            num_t *re_tmp = (num_t*)malloc(FFT_RES_LEN * sizeof(num_t));
+            num_t *im_tmp = (num_t*)malloc(FFT_RES_LEN * sizeof(num_t));
             for(int16_t j=0; j<FFT_RES_LEN; j++){
                 re_tmp[j] = cx_out[j].r;
                 im_tmp[j] = cx_out[j].i;
@@ -115,10 +117,10 @@ void stft(const float *x, int16_t len, int16_t n_frames, float *res){
 
 
 
-void mel_spectrogram_full(const float *x, int16_t len, int16_t n_frames, float *res){
+void mel_spectrogram_full(const num_t *x, int16_t len, int16_t n_frames, num_t *res){
 
     // STFT
-    float *frames_power = (float*)malloc((FFT_RES_LEN * n_frames) * sizeof(float));
+    num_t *frames_power = (num_t*)malloc((FFT_RES_LEN * n_frames) * sizeof(num_t));
     stft(x, len, n_frames, frames_power);
 
     // MULT BY MEL BASIS (matrix multiplication)
@@ -138,10 +140,10 @@ void mel_spectrogram_full(const float *x, int16_t len, int16_t n_frames, float *
 }
 
 
-void mel_spectrogram(const float *x, int16_t len, int16_t n_frames, uint8_t *idx_required, float *res){
+void mel_spectrogram(const num_t *x, int16_t len, int16_t n_frames, uint8_t *idx_required, num_t *res){
 
     // STFT
-    float *frames_power = (float*)malloc((FFT_RES_LEN * n_frames) * sizeof(float));
+    num_t *frames_power = (num_t*)malloc((FFT_RES_LEN * n_frames) * sizeof(num_t));
     stft(x, len, n_frames, frames_power);
 
 
@@ -174,19 +176,19 @@ void mel_spectrogram(const float *x, int16_t len, int16_t n_frames, uint8_t *idx
 
 
 
-void power_to_dB(float *x, int16_t len, float *res){
+void power_to_dB(num_t *x, int16_t len, num_t *res){
     RA_LOG_ARRAY("AUDIO_MEL", "power_to_dB", "input", x, len);
 
-    float sample = 0.0;
+    num_t sample = 0.0;
     for(int16_t i=0; i<len; i++){
         if(x[i] == 0){
             sample = F_MIN;
         } else {
             sample = x[i];
         }
-        res[i] = 10.0 * log10f(sample);
+        res[i] = 10.0 * log10num(sample);
     }
-    float max = vect_max_value(res, len);
+    num_t max = vect_max_value(res, len);
     RA_LOG_SCALAR("AUDIO_MEL", "power_to_dB", "max_dB", max);
 
     for(int16_t i=0; i<len; i++){
@@ -202,14 +204,14 @@ void power_to_dB(float *x, int16_t len, float *res){
 /// @param *x   pointer to the input signal
 /// @param len  lenght
 /// @param *y   pointer to the result
-void _dct_linear(float *x, int16_t len, float *y){
+void _dct_linear(num_t *x, int16_t len, num_t *y){
 
     RA_LOG_ARRAY("AUDIO_MEL", "dct_linear", "input", x, len);
 
-    float sum = 0.0;
-    float scaling = sqrtf(1.0 / (2 * len));
+    num_t sum = 0.0;
+    num_t scaling = sqrtf(1.0 / (2 * len));
 
-    float cos_v = 0.0;
+    num_t cos_v = 0.0;
 
     for(int16_t k=0; k<len; k++){
         sum = 0.0;
@@ -230,10 +232,10 @@ void _dct_linear(float *x, int16_t len, float *y){
 
 
 
-void dct_matrix(float *x, int16_t rows, int16_t cols, float *y){
+void dct_matrix(num_t *x, int16_t rows, int16_t cols, num_t *y){
 
-    float *column = (float*)malloc(rows * sizeof(float));
-    float *c_res = (float*)malloc(rows * sizeof(float));
+    num_t *column = (num_t*)malloc(rows * sizeof(num_t));
+    num_t *c_res = (num_t*)malloc(rows * sizeof(num_t));
 
     for(int16_t c=0; c<cols; c++){
         // fill the column array with the current column
@@ -255,12 +257,12 @@ void dct_matrix(float *x, int16_t rows, int16_t cols, float *y){
 
 
 
-void entropy(float *spectrogram, int16_t n_rows, int16_t n_columns, float *res){
+void entropy(num_t *spectrogram, int16_t n_rows, int16_t n_columns, num_t *res){
 
     RA_LOG_ARRAY("AUDIO_MEL", "entropy", "input", spectrogram, n_rows * n_columns);
 
     // Store the sum of each row of the spectrogram
-    float row_sum = 0.0;
+    num_t row_sum = 0.0;
 
     for(int8_t i=0; i<n_rows; i++){
         // Sum each column of the spectrogram

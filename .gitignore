@@ -31,5 +31,9 @@ C_application/OVERLEAF.md
 # FxP-Port test artifacts
 C_application/test/
 
+# Universal Numbers Repo
+C_application/universal/
+
 # Local dataset
 datasets/
+Datasets/

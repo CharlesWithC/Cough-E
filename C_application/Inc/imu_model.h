@@ -1,6 +1,8 @@
 #ifndef _IMU_MODEL_H_
 #define _IMU_MODEL_H_
 
+#include "types.h"
+
 #include <inttypes.h>
 
 #include <imu_features.h>
@@ -11,18 +13,18 @@
 
 #define TOT_FEATURES_IMU_MODEL_IMU    (N_IMU_FEATURES + N_BIO_FEATURES_IMU)
 
-/* 
-    Features selector vectors. 
+/*
+    Features selector vectors.
     Each array is a one-hot econding of the features to be extracted.
     1 --> extract the corresponding feature
     0 --> non extract the corresponding feature
 */
 static const int8_t imu_features_selector[Number_IMU_Features] = {
-    1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 
+    1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1,
 };
 
 static const int8_t imu_bio_feats_selector[Number_bio_features] = {
-    1,  // Gender 
+    1,  // Gender
     1   // BMI
 };
 
@@ -48,11 +50,11 @@ static const int8_t imu_bio_feats_selector[Number_bio_features] = {
 /**
  * Returns the model confidence for the current window to be COUGH
 */
-float imu_predict(float *feat);
+num_t imu_predict(num_t *feat);
 
 
 /**
- * Structure to store type and ID of a generic node element 
+ * Structure to store type and ID of a generic node element
  * (it can be either NODE or LEAF)
 */
 typedef struct imu_node
@@ -65,7 +67,7 @@ typedef struct imu_node
 /**
  * Structure to store the info regarding the left and right child of each node
 */
-typedef struct imu_node_children 
+typedef struct imu_node_children
 {
     imu_NODE_T child_left;
     imu_NODE_T child_right;

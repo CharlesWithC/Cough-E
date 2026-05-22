@@ -1,3 +1,5 @@
+#include "types.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -8,15 +10,15 @@
 
 
 
-void linear_filer(float *sig, int len, const float *b, const float *a, float *zi, float *res){
+void linear_filer(num_t *sig, int len, const num_t *b, const num_t *a, num_t *zi, num_t *res){
 
     RA_LOG_ARRAY("AUDIO_EEPD", "linear_filter", "input", sig, len);
 
-    float sig_1 = 0.0;
-    float y_1 = 0.0;
+    num_t sig_1 = 0.0;
+    num_t y_1 = 0.0;
 
-    float s_1 = zi[0];
-    float s_2 = zi[1];
+    num_t s_1 = zi[0];
+    num_t s_2 = zi[1];
 
     // First one needs to be done outside the loop in order not to
     // update the states (s_1 and s_2)
@@ -44,36 +46,36 @@ void linear_filer(float *sig, int len, const float *b, const float *a, float *zi
 }
 
 
-void filtfilt(const float *sig, int len, const float *b, const float* a, const float *zi, float *res){
+void filtfilt(const num_t *sig, int len, const num_t *b, const num_t* a, const num_t *zi, num_t *res){
 
     RA_LOG_ARRAY("AUDIO_EEPD", "filtfilt", "input", sig, len);
 
     // PADDING //
     int padded_len = (2 * PADLEN) + len;
-    float *pad = (float*)malloc(padded_len * sizeof(float));
+    num_t *pad = (num_t*)malloc(padded_len * sizeof(num_t));
     padding(sig, len, PADLEN, pad);
-    
+
     // GET INITIAL STATE //
-    float x0 = pad[0];
+    num_t x0 = pad[0];
 
     // FILTER FORWARD //
-    float *intermediate = (float*)malloc(padded_len * sizeof(float)); // intermediate output, cannot be res because it's not padded
+    num_t *intermediate = (num_t*)malloc(padded_len * sizeof(num_t)); // intermediate output, cannot be res because it's not padded
 
-    float *initial = (float*)malloc(2 * sizeof(float));
+    num_t *initial = (num_t*)malloc(2 * sizeof(num_t));
     initial[0] = zi[0] * x0;
     initial[1] = zi[1] * x0;
     linear_filer(pad, padded_len, b, a, initial, intermediate);
 
     // FILTER BACKWARD //
-    float *reverse = (float*)malloc(padded_len * sizeof(float));    // for the reverse filtering
+    num_t *reverse = (num_t*)malloc(padded_len * sizeof(num_t));    // for the reverse filtering
     for(int i=0; i<padded_len; i++){
         reverse[i] = intermediate[padded_len-1-i];
     }
-    
+
     initial[0] = zi[0] * reverse[0];
     initial[1] = zi[1] * reverse[0];
-    
-    float *res_padded = (float*)malloc(padded_len * sizeof(float));
+
+    num_t *res_padded = (num_t*)malloc(padded_len * sizeof(num_t));
     linear_filer(reverse, padded_len, b, a, initial, res_padded);
 
     // CUT THE PADDING TO GET THE FINAL RESULT //

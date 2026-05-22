@@ -68,6 +68,8 @@ CSV_FIELDNAMES = [
     "duration",
 ]
 
+NUM_FMT = "float" # or, "unum-posit"
+
 
 # ──────────────────────────────────────────────
 #  main.h management
@@ -109,8 +111,16 @@ def update_main_h(audio_relpath, imu_relpath, bio_relpath):
 
 def compile_c_app():
     """Compile the C application with EVALUATION_MODE enabled. Returns True on success."""
-    result = subprocess.run(["make", "-C", C_APP_DIR, "CFLAGS=-DEVALUATION_MODE"],
-                            capture_output=True, text=True)
+    result = None
+    if NUM_FMT == "float":
+        result = subprocess.run(["make", "-C", C_APP_DIR, "CFLAGS=-DEVALUATION_MODE"],
+                                capture_output=True, text=True)
+    elif NUM_FMT == "unum-posit":
+        result = subprocess.run(["make", "-C", C_APP_DIR, "CC=g++", "CFLAGS=-DEVALUATION_MODE -DUSE_UNUM_POSIT"],
+                                capture_output=True, text=True)
+    else:
+        print("  Invalid --num-fmt argument")
+        return False
     if result.returncode != 0:
         print(f"  Compilation failed: {result.stderr}")
         return False
@@ -523,8 +533,11 @@ def cmd_full(args):
 
 
 def main():
+    global NUM_FMT
+
     parser = argparse.ArgumentParser(
         description="Evaluate Cough-E C application against full_dataset_test")
+    parser.add_argument("--num-fmt", type=str, default=NUM_FMT)
     subparsers = parser.add_subparsers(dest="command")
 
     def add_common_args(p):
@@ -554,6 +567,7 @@ def main():
     p_full.set_defaults(func=cmd_full)
 
     args = parser.parse_args()
+    NUM_FMT = args.num_fmt
 
     # Default to 'full' when no subcommand given
     if args.command is None:
