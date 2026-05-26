@@ -1,10 +1,9 @@
-#include "types.h"
-
 #include <stdio.h>
 #include <inttypes.h>
 #include <math.h>
 #include <helpers.h>
 
+#include <types.h>
 #include <imu_model.h>
 #include <range_analysis.h>
 

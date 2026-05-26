@@ -7,6 +7,7 @@
     #endif
     #include <universal/number/posit/posit.hpp>
     using namespace sw::universal;
+    // use posit32 here, but posit24 seem to produce a similar result as float32
     typedef posit<32, 2> num_t;
 #else
     #ifdef USE_ASM_POSIT

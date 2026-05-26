@@ -27,6 +27,11 @@ All commands are run from the repository root (`Cough-E/`).
 python C_application/evaluation/evaluate.py
 ```
 
+#### Full pipeline with posit (transform + evaluate, all subjects)
+```
+python C_application/evaluation/evaluate.py --num-fmt unum-posit
+```
+
 #### Specific subjects only
 ```
 python C_application/evaluation/evaluate.py full --subjects 14287 14342

@@ -1,8 +1,8 @@
 #ifndef _AZC_H_
 #define _AZC_H_
 
-#include "types.h"
 #include <inttypes.h>
+#include <types.h>
 
 
 /**

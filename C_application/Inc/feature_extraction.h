@@ -1,7 +1,7 @@
 #ifndef _FEATURE_EXTRACTION_H
 #define _FEATURE_EXTRACTION_H
 
-#include "types.h"
+#include <types.h>
 
 #include <stdlib.h>
 #include <imu_features.h>

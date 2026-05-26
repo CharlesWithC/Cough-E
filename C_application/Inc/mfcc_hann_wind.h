@@ -1,7 +1,7 @@
 #ifndef _MFCC_HANN_WIND_H_
 #define _MFCC_HANN_WIND_H_
 
-#include "types.h"
+#include <types.h>
 
 #define HANN_SIZE   2048
 

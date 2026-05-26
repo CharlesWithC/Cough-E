@@ -1,8 +1,7 @@
-#include "types.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <types.h>
 #include <postprocessing.h>
 #include <range_analysis.h>
 

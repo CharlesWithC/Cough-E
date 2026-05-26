@@ -1,9 +1,8 @@
 #ifndef _IMU_MODEL_H_
 #define _IMU_MODEL_H_
 
-#include "types.h"
-
 #include <inttypes.h>
+#include <types.h>
 
 #include <imu_features.h>
 #include <bio_features.h>

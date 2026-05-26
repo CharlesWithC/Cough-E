@@ -1,9 +1,8 @@
-#include "types.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 
+#include <types.h>
 #include <helpers.h>
 #include <range_analysis.h>
 

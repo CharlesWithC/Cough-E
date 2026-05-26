@@ -4,8 +4,8 @@
 #include <inttypes.h>
 
 #include <main.h>
-#include "types.h"
 
+#include <types.h>
 #include <fsm_control.h>
 #include <feature_extraction.h>
 #include <audio_features.h>

@@ -1,9 +1,8 @@
 #ifndef _AUDIO_MODEL_
 #define _AUDIO_MODEL_
 
-#include "types.h"
-
 #include <inttypes.h>
+#include <types.h>
 
 #include <audio_features.h>
 #include <bio_features.h>

@@ -1,8 +1,7 @@
-#include "types.h"
-
 #include <stdio.h>
 #include <inttypes.h>
 
+#include <types.h>
 #include <time_domain_feat.h>
 #include <feature_extraction.h>
 #include <frequency_features.h>

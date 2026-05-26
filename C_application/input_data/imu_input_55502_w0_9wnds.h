@@ -1,8 +1,9 @@
 #ifndef _IMU_INPUT_55502_H_
 #define _IMU_INPUT_55502_H_
 
+#include <types.h>
+
 /* Sampling frequency of the IMU signal */
-#include "types.h"
 #define IMU_FS 100
 
 /*

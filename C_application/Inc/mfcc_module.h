@@ -1,7 +1,7 @@
 #ifndef _MFCC_MODULE_H_
 #define _MFCC_MODULE_H_
 
-#include "types.h"
+#include <types.h>
 
 /*
     This module contains the main helper functions to compute the MFCCs

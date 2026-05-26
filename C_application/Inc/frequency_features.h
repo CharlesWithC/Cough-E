@@ -1,9 +1,9 @@
 #ifndef _FREQ_FEAT_H_
 #define _FREQ_FEAT_H_
 
-#include "types.h"
-
 #include <inttypes.h>
+#include <types.h>
+
 #include <welch_psd.h>
 
 /*

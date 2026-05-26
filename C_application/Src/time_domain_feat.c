@@ -1,8 +1,7 @@
-#include "types.h"
-
 #include <stdio.h>
 #include <math.h>
 
+#include <types.h>
 #include <feature_extraction.h>
 #include <time_domain_feat.h>
 #include <helpers.h>

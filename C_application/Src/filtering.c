@@ -1,8 +1,7 @@
-#include "types.h"
-
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <types.h>
 #include <filtering.h>
 #include <helpers.h>
 #include <filters_parameters.h>

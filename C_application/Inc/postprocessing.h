@@ -1,9 +1,9 @@
 #ifndef _POSTPROCESSING_H_
 #define _POSTPROCESSING_H_
 
-#include "types.h"
-
 #include <inttypes.h>
+#include <types.h>
+
 #include <stdlib.h>
 #include <math.h>
 #include <helpers.h>

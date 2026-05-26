@@ -1,7 +1,7 @@
 #ifndef _FILTERING_H_
 #define _FILTERING_H_
 
-#include "types.h"
+#include <types.h>
 
 /**
  * Applies a linear filter to the signal. The filter is defined by a, b, and zi coefficients

@@ -62,7 +62,7 @@ def generate_audio_header(audio, audio_len, suffix, output_dir):
     with open(os.path.join(output_dir, filename), 'w') as f:
         f.write(f"#ifndef {guard}\n")
         f.write(f"#define {guard}\n\n\n")
-        f.write("#include \"types.h\"\n\n")
+        f.write("#include <types.h>\n\n")
         f.write("/* Sampling frequency */\n")
         f.write(f"#define AUDIO_FS  {AUDIO_FS_TARGET}\n\n")
         f.write("/* Number of samples per each audiosignal */\n")
@@ -99,7 +99,7 @@ def generate_imu_header(imu_data, imu_len, suffix, output_dir):
     with open(os.path.join(output_dir, filename), 'w') as f:
         f.write(f"#ifndef {guard}\n")
         f.write(f"#define {guard}\n\n")
-        f.write("#include \"types.h\"\n\n")
+        f.write("#include <types.h>\n\n")
         f.write("/* Sampling frequency of the IMU signal */\n")
         f.write(f"#define IMU_FS {IMU_FS}\n\n")
         f.write("/* \n")
@@ -155,7 +155,7 @@ def generate_bio_header(bio_path, subj_id, output_dir):
     with open(filepath, 'w') as f:
         f.write(f"#ifndef {guard}\n")
         f.write(f"#define {guard}\n\n")
-        f.write("#include \"types.h\"\n\n")
+        f.write("#include <types.h>\n\n")
         f.write(f"static const num_t gender = {int(gender)};\n")
         f.write(f"static const num_t bmi = {bmi};\n\n")
         f.write("#endif\n")

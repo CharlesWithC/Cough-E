@@ -1,8 +1,8 @@
 #ifndef _HELPERS_H_
 #define _HELPERS_H_
 
-#include "types.h"
 #include <inttypes.h>
+#include <types.h>
 
 num_t expnum(num_t x);
 num_t sqrtnum(num_t x);

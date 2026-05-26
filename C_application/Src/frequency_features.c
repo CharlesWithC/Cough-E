@@ -1,10 +1,9 @@
-#include "types.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <strings.h>
 
+#include <types.h>
 #include <feature_extraction.h>
 #include <frequency_features.h>
 #include <welch_psd.h>

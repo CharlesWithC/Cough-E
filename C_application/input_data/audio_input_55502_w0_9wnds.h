@@ -1,9 +1,9 @@
 #ifndef _AUDIO_INPUT_55502_W2_H_
 #define _AUDIO_INPUT_55502_W2_H_
 
+#include <types.h>
 
 /* Sampling frequency */
-#include "types.h"
 #define AUDIO_FS  8000
 
 /* Number of samples per each audiosignal */
