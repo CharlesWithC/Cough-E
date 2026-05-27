@@ -1,7 +1,9 @@
 #ifndef _DCT_LIN_H_
 #define _DCT_LIN_H_
 
- static const float dct_cos[16384] = {
+#include <types.h>
+
+num_t __attribute__((section(".xheep_data_flash_only"))) __attribute__ ((aligned (16))) dct_cos[16384] = {
 1.000000,
 1.000000,
 1.000000,

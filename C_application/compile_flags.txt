@@ -3,6 +3,7 @@
 -IInc
 -IFxP
 -I./
+-I../../x-heep/sw/device/bsp/w25q/
 -Ikiss_fftr
 -Iuniversal
 -Irange_analysis

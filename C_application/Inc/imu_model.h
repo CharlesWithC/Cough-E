@@ -58,8 +58,8 @@ num_t imu_predict(num_t *feat);
 */
 typedef struct imu_node
 {
-    int16_t type;
-    int16_t id;
+    int8_t type;
+    int8_t id;
 } imu_NODE_T;
 
 

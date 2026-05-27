@@ -13,6 +13,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 */
 
 // #include "twiddles.h"
+#include <stdlib.h>
+#include <w25q128jw.h>
+
 #include "twiddles_win08_fs8000.h"
 
 #include "_kiss_fft_guts.h"
@@ -23,7 +26,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 /**
  * Custom function to initialize the twiddles specific for the CoughDetetc application
 */
-void init_twiddles(kiss_fft_cfg *st, const twiddles_t *twiddles, int16_t len);
+void init_twiddles_flash(kiss_fft_cfg *st, twiddles_t *twiddles, int16_t len);
 
 static void kf_bfly2(
         kiss_fft_cpx * Fout,
@@ -257,7 +260,7 @@ void kf_work(
     const kiss_fft_cpx * Fout_end = Fout + p*m;
 
 #ifdef _OPENMP
-    // use openmp extensions at the 
+    // use openmp extensions at the
     // top-level (not recursive)
     if (fstride==1 && p<=5)
     {
@@ -265,15 +268,15 @@ void kf_work(
 
         // execute the p different work units in different threads
 #       pragma omp parallel for
-        for (k=0;k<p;++k) 
+        for (k=0;k<p;++k)
             kf_work( Fout +k*m, f+ fstride*in_stride*k,fstride*p,in_stride,factors,st);
         // all threads have joined by this point
 
         switch (p) {
             case 2: kf_bfly2(Fout,fstride,st,m); break;
-            case 3: kf_bfly3(Fout,fstride,st,m); break; 
+            case 3: kf_bfly3(Fout,fstride,st,m); break;
             case 4: kf_bfly4(Fout,fstride,st,m); break;
-            case 5: kf_bfly5(Fout,fstride,st,m); break; 
+            case 5: kf_bfly5(Fout,fstride,st,m); break;
             default: kf_bfly_generic(Fout,fstride,st,m,p); break;
         }
         return;
@@ -289,7 +292,7 @@ void kf_work(
         do{
             // recursive call:
             // DFT of size m*p performed by doing
-            // p instances of smaller DFTs of size m, 
+            // p instances of smaller DFTs of size m,
             // each one takes a decimated version of the input
             kf_work( Fout , f, fstride*p, in_stride, factors,st);
             f += fstride*in_stride;
@@ -298,21 +301,21 @@ void kf_work(
 
     Fout=Fout_beg;
 
-    // recombine the p smaller DFTs 
+    // recombine the p smaller DFTs
     switch (p) {
         case 2: kf_bfly2(Fout,fstride,st,m); break;
-        case 3: kf_bfly3(Fout,fstride,st,m); break; 
+        case 3: kf_bfly3(Fout,fstride,st,m); break;
         case 4: kf_bfly4(Fout,fstride,st,m); break;
-        case 5: kf_bfly5(Fout,fstride,st,m); break; 
+        case 5: kf_bfly5(Fout,fstride,st,m); break;
         default: kf_bfly_generic(Fout,fstride,st,m,p); break;
     }
 }
 
 /*  facbuf is populated by p1,m1,p2,m2, ...
-    where 
+    where
     p[i] * m[i] = m[i-1]
     m0 = n                  */
-static 
+static
 void kf_factor(int n,int * facbuf)
 {
     int p=4;
@@ -382,15 +385,15 @@ kiss_fft_cfg kiss_fft_alloc(int nfft,int inverse_fft,void * mem,size_t * lenmem 
         switch (nfft)
         {
         case 450:
-            init_twiddles(&st, twiddles_450, nfft);
+            init_twiddles_flash(&st, twiddles_450, nfft);
             break;
 
         case 1024:
-            init_twiddles(&st, twiddles_1024, nfft);
+            init_twiddles_flash(&st, twiddles_1024, nfft);
             break;
-        
+
         case 3200:
-            init_twiddles(&st, twiddles_3200, nfft);
+            init_twiddles_flash(&st, twiddles_3200, nfft);
             break;
 
         default:
@@ -404,15 +407,15 @@ kiss_fft_cfg kiss_fft_alloc(int nfft,int inverse_fft,void * mem,size_t * lenmem 
     //     switch (nfft)
     //     {
     //     case 8000:
-    //         init_twiddles(&st, twiddles_8000, nfft);
+    //         init_twiddles_flash(&st, twiddles_8000, nfft);
     //         break;
 
     //     case 1024:
-    //         init_twiddles(&st, twiddles_1024, nfft);
+    //         init_twiddles_flash(&st, twiddles_1024, nfft);
     //         break;
-        
+
     //     case 450:
-    //         init_twiddles(&st, twiddles_450, nfft);
+    //         init_twiddles_flash(&st, twiddles_450, nfft);
     //         break;
 
     //     default:
@@ -430,11 +433,16 @@ kiss_fft_cfg kiss_fft_alloc(int nfft,int inverse_fft,void * mem,size_t * lenmem 
 /*
     Function to read the precomputed twiddle factors inside the FFTR cfg structure
 */
-void init_twiddles(kiss_fft_cfg *st, const twiddles_t *twiddles, int16_t len){
+
+void init_twiddles_flash(kiss_fft_cfg *st, twiddles_t *twiddles, int16_t len){
+    twiddles_t *buffer =(twiddles_t*) malloc(len*sizeof(twiddles_t));
+    uint32_t source_flash = (uint32_t)heep_get_flash_address_offset((uint32_t *)twiddles);
+    if(w25q128jw_read_standard(source_flash, buffer, len*sizeof(twiddles_t))!=FLASH_OK)printf("Error reading from flash\n");
     for(int16_t i=0; i<len; i++){
-        (*st)->twiddles[i].r = twiddles[i].cosine;
-        (*st)->twiddles[i].i = twiddles[i].sine;
+        (*st)->twiddles[i].r = buffer[i].cosine;
+        (*st)->twiddles[i].i = buffer[i].sine;
     }
+    free(buffer);
 }
 
 

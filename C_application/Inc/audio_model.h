@@ -60,8 +60,8 @@ num_t audio_predict(num_t *feat);
 */
 typedef struct node
 {
-    int16_t type;
-    int16_t id;
+    int8_t type;
+    int8_t id;
 } audio_NODE_T;
 
 
