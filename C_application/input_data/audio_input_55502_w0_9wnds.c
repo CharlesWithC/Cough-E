@@ -1,6 +1,11 @@
 #include "audio_input_55502_w0_9wnds.h"
 
-audio_input_t __attribute__((section(".xheep_data_flash_only"))) __attribute__ ((aligned (16))) audio_in = {
+#ifdef USE_FLASH
+audio_input_t __attribute__((section(".xheep_data_flash_only"))) __attribute__ ((aligned (16))) audio_in =
+#else
+audio_input_t audio_in =
+#endif
+{
 	{
 		-0.23713567644428393,
 		-0.23850356302529466,

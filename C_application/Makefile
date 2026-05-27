@@ -3,7 +3,7 @@ CC 			=	gcc
 APP 		= 	cough-e
 BUILD_DIR 	= 	build
 
-SRC_DIRS 	= 	Src kiss_fftr
+SRC_DIRS 	= 	Src kiss_fftr input_data
 SRC 		= 	$(foreach c, $(SRC_DIRS), $(wildcard $c/*.c))
 
 INC_DIRS 	= 	Inc ./ kiss_fftr universal range_analysis

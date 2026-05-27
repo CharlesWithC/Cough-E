@@ -1,6 +1,11 @@
 #include "twiddles_win08_fs8000.h"
 
-twiddles_t __attribute__((section(".xheep_data_flash_only"))) __attribute__ ((aligned (16))) twiddles_3200[3200] = {
+#ifdef USE_FLASH
+twiddles_t __attribute__((section(".xheep_data_flash_only"))) __attribute__ ((aligned (16))) twiddles_3200[3200] =
+#else
+twiddles_t twiddles_3200[3200] =
+#endif
+{
 	{ 1.000000, -0.000000 },
 	{ 0.999998, -0.001963 },
 	{ 0.999992, -0.003927 },
@@ -3203,7 +3208,12 @@ twiddles_t __attribute__((section(".xheep_data_flash_only"))) __attribute__ ((al
 	{ 0.999998, 0.001963 }
 };
 
-twiddles_t __attribute__((section(".xheep_data_flash_only"))) __attribute__ ((aligned (16))) twiddles_450[450] = {
+#ifdef USE_FLASH
+twiddles_t __attribute__((section(".xheep_data_flash_only"))) __attribute__ ((aligned (16))) twiddles_450[450] =
+#else
+twiddles_t twiddles_450[450] =
+#endif
+{
 	{ 1.000000, -0.000000 },
 	{ 0.999903, -0.013962 },
 	{ 0.999610, -0.027922 },
@@ -3656,7 +3666,12 @@ twiddles_t __attribute__((section(".xheep_data_flash_only"))) __attribute__ ((al
 	{ 0.999903, 0.013962 }
 };
 
-twiddles_t __attribute__((section(".xheep_data_flash_only"))) __attribute__ ((aligned (16))) twiddles_1024[1024] = {
+#ifdef USE_FLASH
+twiddles_t __attribute__((section(".xheep_data_flash_only"))) __attribute__ ((aligned (16))) twiddles_1024[1024] =
+#else
+twiddles_t twiddles_1024[1024] =
+#endif
+{
 	{ 1.000000, -0.000000 },
 	{ 0.999981, -0.006136 },
 	{ 0.999925, -0.012272 },
@@ -4683,7 +4698,12 @@ twiddles_t __attribute__((section(".xheep_data_flash_only"))) __attribute__ ((al
 	{ 0.999981, 0.006136 }
 };
 
-twiddles_t __attribute__((section(".xheep_data_flash_only"))) __attribute__ ((aligned (16))) twiddles_1600[1600] = {
+#ifdef USE_FLASH
+twiddles_t __attribute__((section(".xheep_data_flash_only"))) __attribute__ ((aligned (16))) twiddles_1600[1600] =
+#else
+twiddles_t twiddles_1600[1600] =
+#endif
+{
 	{ -0.000982, -1.000000 },
 	{ -0.001963, -0.999998 },
 	{ -0.002945, -0.999996 },
@@ -6286,7 +6306,12 @@ twiddles_t __attribute__((section(".xheep_data_flash_only"))) __attribute__ ((al
 	{ -1.000000, -0.000000 }
 };
 
-twiddles_t __attribute__((section(".xheep_data_flash_only"))) __attribute__ ((aligned (16))) twiddles_225[225] = {
+#ifdef USE_FLASH
+twiddles_t __attribute__((section(".xheep_data_flash_only"))) __attribute__ ((aligned (16))) twiddles_225[225] =
+#else
+twiddles_t twiddles_225[225] =
+#endif
+{
 	{ -0.006981, -0.999976 },
 	{ -0.013962, -0.999903 },
 	{ -0.020942, -0.999781 },
@@ -6514,7 +6539,12 @@ twiddles_t __attribute__((section(".xheep_data_flash_only"))) __attribute__ ((al
 	{ -1.000000, -0.000000 }
 };
 
-twiddles_t __attribute__((section(".xheep_data_flash_only"))) __attribute__ ((aligned (16))) twiddles_512[512] = {
+#ifdef USE_FLASH
+twiddles_t __attribute__((section(".xheep_data_flash_only"))) __attribute__ ((aligned (16))) twiddles_512[512] =
+#else
+twiddles_t twiddles_512[512] =
+#endif
+{
 	{ -0.003068, -0.999995 },
 	{ -0.006136, -0.999981 },
 	{ -0.009204, -0.999958 },

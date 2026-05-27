@@ -14,7 +14,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 // #include "twiddles.h"
 #include <stdlib.h>
+
+#ifdef USE_FLASH
 #include <w25q128jw.h>
+#endif
 
 #include "twiddles_win08_fs8000.h"
 
@@ -26,7 +29,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 /**
  * Custom function to initialize the twiddles specific for the CoughDetetc application
 */
-void init_twiddles_flash(kiss_fft_cfg *st, twiddles_t *twiddles, int16_t len);
+void init_twiddles(kiss_fft_cfg *st, twiddles_t *twiddles, int16_t len);
 
 static void kf_bfly2(
         kiss_fft_cpx * Fout,
@@ -385,15 +388,15 @@ kiss_fft_cfg kiss_fft_alloc(int nfft,int inverse_fft,void * mem,size_t * lenmem 
         switch (nfft)
         {
         case 450:
-            init_twiddles_flash(&st, twiddles_450, nfft);
+            init_twiddles(&st, twiddles_450, nfft);
             break;
 
         case 1024:
-            init_twiddles_flash(&st, twiddles_1024, nfft);
+            init_twiddles(&st, twiddles_1024, nfft);
             break;
 
         case 3200:
-            init_twiddles_flash(&st, twiddles_3200, nfft);
+            init_twiddles(&st, twiddles_3200, nfft);
             break;
 
         default:
@@ -407,15 +410,15 @@ kiss_fft_cfg kiss_fft_alloc(int nfft,int inverse_fft,void * mem,size_t * lenmem 
     //     switch (nfft)
     //     {
     //     case 8000:
-    //         init_twiddles_flash(&st, twiddles_8000, nfft);
+    //         init_twiddles(&st, twiddles_8000, nfft);
     //         break;
 
     //     case 1024:
-    //         init_twiddles_flash(&st, twiddles_1024, nfft);
+    //         init_twiddles(&st, twiddles_1024, nfft);
     //         break;
 
     //     case 450:
-    //         init_twiddles_flash(&st, twiddles_450, nfft);
+    //         init_twiddles(&st, twiddles_450, nfft);
     //         break;
 
     //     default:
@@ -434,7 +437,8 @@ kiss_fft_cfg kiss_fft_alloc(int nfft,int inverse_fft,void * mem,size_t * lenmem 
     Function to read the precomputed twiddle factors inside the FFTR cfg structure
 */
 
-void init_twiddles_flash(kiss_fft_cfg *st, twiddles_t *twiddles, int16_t len){
+void init_twiddles(kiss_fft_cfg *st, twiddles_t *twiddles, int16_t len){
+    #ifdef USE_FLASH
     twiddles_t *buffer =(twiddles_t*) malloc(len*sizeof(twiddles_t));
     uint32_t source_flash = (uint32_t)heep_get_flash_address_offset((uint32_t *)twiddles);
     if(w25q128jw_read_standard(source_flash, buffer, len*sizeof(twiddles_t))!=FLASH_OK)printf("Error reading from flash\n");
@@ -443,6 +447,12 @@ void init_twiddles_flash(kiss_fft_cfg *st, twiddles_t *twiddles, int16_t len){
         (*st)->twiddles[i].i = buffer[i].sine;
     }
     free(buffer);
+    #else
+    for(int16_t i=0; i<len; i++){
+        (*st)->twiddles[i].r = twiddles[i].cosine;
+        (*st)->twiddles[i].i = twiddles[i].sine;
+    }
+    #endif
 }
 
 

@@ -2,7 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
+
+#ifdef USE_FLASH
 #include <w25q128jw.h>
+#endif
 
 #include <main.h>
 
@@ -98,11 +101,15 @@ int main(){
             }
 
             // Extract IMU features
+            #ifdef USE_FLASH
             num_t *buffer = (num_t*)malloc(WINDOW_SAMP_IMU*Num_IMU_signals*sizeof(num_t));
             uint32_t source_flash = (uint32_t)heep_get_flash_address_offset((uint32_t *)&imu_in[idx_start_window]);
             if(w25q128jw_read_standard(source_flash, buffer, WINDOW_SAMP_IMU*Num_IMU_signals*sizeof(num_t))!=FLASH_OK) printf("Error reading from flash\n");
 
             imu_features(imu_features_selector, (num_t (*)[Num_IMU_signals])buffer, WINDOW_SAMP_IMU, imu_feature_array);
+            #else
+            imu_features(imu_features_selector, &imu_in[idx_start_window], WINDOW_SAMP_IMU, imu_feature_array);
+            #endif
 
             // Fill the array of final imu features to feed into the IMU model
             for(int16_t j=0; j<N_IMU_FEATURES; j++){
@@ -140,11 +147,15 @@ int main(){
             }
 
             // Extract AUDIO features
+            #ifdef USE_FLASH
             num_t *buffer = (num_t*)malloc(WINDOW_SAMP_AUDIO*sizeof(num_t));
             uint32_t source_flash = (uint32_t)heep_get_flash_address_offset((uint32_t *)&audio_in.air[idx_start_window]);
             if(w25q128jw_read_standard(source_flash, buffer, WINDOW_SAMP_AUDIO*sizeof(num_t))!=FLASH_OK) printf("Error reading from flash\n");
 
             audio_features(audio_features_selector, buffer, WINDOW_SAMP_AUDIO, AUDIO_FS, audio_feature_array);
+            #else
+            audio_features(audio_features_selector, &audio_in.air[idx_start_window], WINDOW_SAMP_AUDIO, AUDIO_FS, audio_feature_array);
+            #endif
 
             // Fill the array of fifeatures_imu_modelnal audio features to feed into the AUDIO model
             for(int16_t j=0; j<N_AUDIO_FEATURES; j++){
@@ -172,7 +183,11 @@ int main(){
             }
 
             // Identify the peaks
+            #ifdef USE_FLASH
             _get_cough_peaks(buffer, WINDOW_SAMP_AUDIO, AUDIO_FS, &starts[n_peaks], &ends[n_peaks], &locs[n_peaks], &peaks[n_peaks], &new_added);
+            #else
+            _get_cough_peaks(&audio_in.air[idx_start_window], WINDOW_SAMP_AUDIO, AUDIO_FS, &starts[n_peaks], &ends[n_peaks], &locs[n_peaks], &peaks[n_peaks], &new_added);
+            #endif
 
             for(uint16_t j=0; j<new_added; j++){
                 starts[n_peaks+j] += idx_start_window;
