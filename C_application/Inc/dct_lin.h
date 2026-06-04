@@ -3,12 +3,7 @@
 
 #include <types.h>
 
-#ifdef USE_FLASH
-num_t __attribute__((section(".xheep_data_flash_only"))) __attribute__ ((aligned (16))) dct_cos[16384] =
-#else
-static const num_t dct_cos[16384] =
-#endif
-{
+num_t FLASH dct_cos[16384] = {
 1.000000,
 1.000000,
 1.000000,

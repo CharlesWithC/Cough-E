@@ -18,11 +18,11 @@
     1 --> extract the corresponding feature
     0 --> non extract the corresponding feature
 */
-static const int8_t imu_features_selector[Number_IMU_Features] = {
+static const int8_t GCRAM imu_features_selector[Number_IMU_Features] = {
     1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1,
 };
 
-static const int8_t imu_bio_feats_selector[Number_bio_features] = {
+static const int8_t GCRAM imu_bio_feats_selector[Number_bio_features] = {
     1,  // Gender
     1   // BMI
 };
@@ -72,7 +72,7 @@ typedef struct imu_node_children
     imu_NODE_T child_right;
 } imu_node_children_t;
 
-static const imu_node_children_t imu_children[IMU_N_TREES][IMU_MAX_NODES] = {
+static const imu_node_children_t GCRAM imu_children[IMU_N_TREES][IMU_MAX_NODES] = {
 	{
 		{{IMU_NODE_T, 1}, {IMU_NODE_T, 2}},
 		{{IMU_NODE_T, 3}, {IMU_NODE_T, 4}},
@@ -3984,7 +3984,7 @@ static const imu_node_children_t imu_children[IMU_N_TREES][IMU_MAX_NODES] = {
 
 };
 
-static const float imu_scores[IMU_N_TREES][IMU_MAX_LEAVES] = {
+static const float GCRAM imu_scores[IMU_N_TREES][IMU_MAX_LEAVES] = {
 	{
 		-0.5951458,
 		-0.120000005,
@@ -7996,7 +7996,7 @@ static const float imu_scores[IMU_N_TREES][IMU_MAX_LEAVES] = {
 
 };
 
-static const float imu_values_comp[IMU_N_TREES][IMU_MAX_NODES] = {
+static const float GCRAM imu_values_comp[IMU_N_TREES][IMU_MAX_NODES] = {
 	{
 		0.31357142,
 		1.5,
@@ -11908,7 +11908,7 @@ static const float imu_values_comp[IMU_N_TREES][IMU_MAX_NODES] = {
 
 };
 
-static const int16_t imu_feat_comp[IMU_N_TREES][IMU_MAX_NODES] = {
+static const int16_t GCRAM imu_feat_comp[IMU_N_TREES][IMU_MAX_NODES] = {
 	{
 		16,
 		20,

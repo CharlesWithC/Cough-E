@@ -1,11 +1,7 @@
 #include "imu_input_55502_w0_9wnds.h"
+#include "types.h"
 
-#ifdef USE_FLASH
-num_t __attribute__((section(".xheep_data_flash_only"))) __attribute__ ((aligned (16))) imu_in[IMU_LEN][6] =
-#else
-num_t imu_in[IMU_LEN][6] =
-#endif
-{
+num_t FLASH imu_in[IMU_LEN][6] = {
 	{
 		-0.57,
 		1.5,

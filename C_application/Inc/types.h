@@ -19,4 +19,12 @@
     #endif
 #endif
 
+#ifdef LIMITED_MEMORY
+#define FLASH __attribute__((section(".xheep_data_flash_only"))) __attribute__ ((aligned (16)))
+#define GCRAM __attribute__((section(".xheep_data_gcram"))) __attribute__ ((aligned (16)))
+#else
+#define FLASH
+#define GCRAM
+#endif
+
 #endif

@@ -18,11 +18,11 @@
     1 --> extract the corresponding feature
     0 --> non extract the corresponding feature
 */
-static const int8_t audio_features_selector[Number_AUDIO_Features] = {
+static const int8_t GCRAM audio_features_selector[Number_AUDIO_Features] = {
     0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 };
 
-static const int8_t audio_bio_feats_selector[Number_bio_features] = {
+static const int8_t GCRAM audio_bio_feats_selector[Number_bio_features] = {
     1,  // Gender
     0   // BMI
 };
@@ -74,7 +74,7 @@ typedef struct node_children
     audio_NODE_T child_right;
 } audio_node_children_t;
 
-static const audio_node_children_t audio_children[AUD_N_TREES][AUD_MAX_NODES] = {
+static const audio_node_children_t GCRAM audio_children[AUD_N_TREES][AUD_MAX_NODES] = {
 	{
 		{{AUD_NODE_T, 1}, {AUD_NODE_T, 2}},
 		{{AUD_NODE_T, 3}, {AUD_NODE_T, 4}},
@@ -3340,7 +3340,7 @@ static const audio_node_children_t audio_children[AUD_N_TREES][AUD_MAX_NODES] = 
 
 };
 
-static const float audio_scores[AUD_N_TREES][MAX_LEAVES] = {
+static const float GCRAM audio_scores[AUD_N_TREES][MAX_LEAVES] = {
 	{
 		0.5647059,
 		-0.15,
@@ -6706,7 +6706,7 @@ static const float audio_scores[AUD_N_TREES][MAX_LEAVES] = {
 
 };
 
-static const float audio_values_comp[AUD_N_TREES][AUD_MAX_NODES] = {
+static const float GCRAM audio_values_comp[AUD_N_TREES][AUD_MAX_NODES] = {
 	{
 		-19.455618,
 		7.0475206,
@@ -9972,7 +9972,7 @@ static const float audio_values_comp[AUD_N_TREES][AUD_MAX_NODES] = {
 
 };
 
-static const int16_t audio_feat_comp[AUD_N_TREES][AUD_MAX_NODES] = {
+static const int16_t GCRAM audio_feat_comp[AUD_N_TREES][AUD_MAX_NODES] = {
 	{
 		68,
 		81,
