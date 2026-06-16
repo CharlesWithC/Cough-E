@@ -1,7 +1,7 @@
 #include "twiddles_win08_fs8000.h"
 #include "types.h"
 
-twiddles_t FLASH twiddles_3200[3200] = {
+twiddles_t CARUS0 twiddles_3200[3200] = {
 	{ 1.000000, -0.000000 },
 	{ 0.999998, -0.001963 },
 	{ 0.999992, -0.003927 },
@@ -3204,7 +3204,7 @@ twiddles_t FLASH twiddles_3200[3200] = {
 	{ 0.999998, 0.001963 }
 };
 
-twiddles_t FLASH twiddles_450[450] = {
+twiddles_t CARUS0 twiddles_450[450] = {
 	{ 1.000000, -0.000000 },
 	{ 0.999903, -0.013962 },
 	{ 0.999610, -0.027922 },
@@ -3657,7 +3657,7 @@ twiddles_t FLASH twiddles_450[450] = {
 	{ 0.999903, 0.013962 }
 };
 
-twiddles_t FLASH twiddles_1024[1024] = {
+twiddles_t CARUS1 twiddles_1024[1024] = {
 	{ 1.000000, -0.000000 },
 	{ 0.999981, -0.006136 },
 	{ 0.999925, -0.012272 },
@@ -4684,7 +4684,7 @@ twiddles_t FLASH twiddles_1024[1024] = {
 	{ 0.999981, 0.006136 }
 };
 
-twiddles_t FLASH twiddles_1600[1600] = {
+twiddles_t CARUS1 twiddles_1600[1600] = {
 	{ -0.000982, -1.000000 },
 	{ -0.001963, -0.999998 },
 	{ -0.002945, -0.999996 },
@@ -6287,7 +6287,7 @@ twiddles_t FLASH twiddles_1600[1600] = {
 	{ -1.000000, -0.000000 }
 };
 
-twiddles_t FLASH twiddles_225[225] = {
+twiddles_t CARUS0 twiddles_225[225] = {
 	{ -0.006981, -0.999976 },
 	{ -0.013962, -0.999903 },
 	{ -0.020942, -0.999781 },
@@ -6515,7 +6515,7 @@ twiddles_t FLASH twiddles_225[225] = {
 	{ -1.000000, -0.000000 }
 };
 
-twiddles_t FLASH twiddles_512[512] = {
+twiddles_t CARUS1 twiddles_512[512] = {
 	{ -0.003068, -0.999995 },
 	{ -0.006136, -0.999981 },
 	{ -0.009204, -0.999958 },

@@ -1,6 +1,6 @@
-#ifndef USE_W2
-#ifndef _IMU_INPUT_55502_W0_9_H_
-#define _IMU_INPUT_55502_W0_9_H_
+#ifdef USE_W2
+#ifndef _IMU_INPUT_55502_W2_H_
+#define _IMU_INPUT_55502_W2_H_
 
 #include <types.h>
 
@@ -12,7 +12,7 @@
 	Note that each sample contains the meaasurement of each of
 	the three axis of the accelerometer and gyroscope.
 */
-#define IMU_LEN 720
+#define IMU_LEN 30
 
 
 

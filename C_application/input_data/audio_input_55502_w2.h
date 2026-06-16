@@ -1,14 +1,14 @@
-#ifndef USE_W2
-#ifndef _AUDIO_INPUT_55502_W0_9_H_
-#define _AUDIO_INPUT_55502_W0_9_H_
+#ifdef USE_W2
+#ifndef _AUDIO_INPUT_55502_W2_H_
+#define _AUDIO_INPUT_55502_W2_H_
 
 #include <types.h>
 
 /* Sampling frequency */
-#define AUDIO_FS  8000
+#define AUDIO_FS  16000
 
 /* Number of samples per each audiosignal */
-#define AUDIO_LEN   57600
+#define AUDIO_LEN   4800
 
 
 /*

@@ -2,6 +2,7 @@
 #include <inttypes.h>
 
 #include <types.h>
+#include <main.h>
 #include <time_domain_feat.h>
 #include <feature_extraction.h>
 #include <frequency_features.h>
@@ -150,6 +151,8 @@ int is_required(const int8_t *features_selector, uint16_t start_index, uint16_t 
 }
 
 
+num_t DINTL magnitudes[(WINDOW_SAMP_AUDIO / 2) + 1];
+num_t DINTL frequencies[(WINDOW_SAMP_AUDIO / 2) + 1];
 void fft_based_features(const int8_t *features_selector, const num_t *sig, int16_t len, int16_t fs, num_t *feats){
 
     // FFT-dependent features' indexes
@@ -159,9 +162,9 @@ void fft_based_features(const int8_t *features_selector, const num_t *sig, int16
 
         RA_LOG_ARRAY("AUDIO_FFT", "fft_based_features", "sig_input", sig, len);
 
-        int16_t fft_size = (len / 2) + 1;
-        num_t *magnitudes = (num_t*) malloc(fft_size * sizeof(num_t));
-        num_t *frequencies = (num_t*) malloc(fft_size *sizeof(num_t));
+        // int16_t fft_size = (len / 2) + 1;
+        // num_t *magnitudes = (num_t*) malloc(fft_size * sizeof(num_t));
+        // num_t *frequencies = (num_t*) malloc(fft_size *sizeof(num_t));
         num_t sum_mags = 0.0;
 
         compute_rfft(sig, len, fs, magnitudes, frequencies, &sum_mags);
@@ -216,8 +219,8 @@ void fft_based_features(const int8_t *features_selector, const num_t *sig, int16
             }
         }
 
-        free(magnitudes);
-        free(frequencies);
+        // free(magnitudes);
+        // free(frequencies);
     }
 }
 
@@ -507,24 +510,31 @@ void compute_imu_family(const int8_t *features_selector, const num_t signal[][Nu
 //////////////////////////////////////////////////////////////////////////////////
 
 void audio_features(const int8_t *features_selector, const num_t *sig, int16_t len, int16_t fs, num_t *feats){
+    // NOTE: We assume `len` is always `WINDOW_SAMP_AUDIO` for statically allocating memory.
+    printf("AUDIO BEGIN\n");
 
     /* FFT based features */
     fft_based_features(features_selector, sig, len, fs, feats);
+    printf("FFT PASS\n");
 
     /* Periodogram-based features */
     periodogram_based_features(features_selector, sig, len, fs, feats);
+    printf("PER PASS\n");
 
     // /* MFCCs features */
     // mfcc_features(features_selector, sig, len, feats);
 
     /* MEL SPECTROGRAM features */
     mel_spectrogram_features(features_selector, sig, len, feats);
+    printf("MEL PASS\n");
 
     /* Mean-based features */
     mean_based_features(features_selector, sig, len, feats);
+    printf("MEA PASS\n");
 
     /* EEPD features */
     eepd_features(features_selector, sig, len, fs, feats);
+    printf("EEP PASS\n");
 
 }
 

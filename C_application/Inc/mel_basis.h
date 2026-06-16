@@ -22,7 +22,7 @@
     For each row, the non-zero elements are stored one after the other, so I just
     need to store the indexes of the first and last element
 */
- static const int16_t GCRAM mel_nz_indexes[MEL_ROWS][2] = {
+ static const int16_t DINTL mel_nz_indexes[MEL_ROWS][2] = {
 
 	{1, 19},
 	{10, 28},
@@ -92,7 +92,7 @@
 };
 
 
- static const float GCRAM mel_basis[MEL_ROWS][MAX_NZ_ELEMS] = {
+ static const float DINTL mel_basis[MEL_ROWS][MAX_NZ_ELEMS] = {
 
 	{
 		0.0030031611677259207,

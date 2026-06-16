@@ -8,7 +8,7 @@
 #include <bio_features.h>
 
 #define N_IMU_FEATURES            34
-#define N_BIO_FEATURES_IMU        1
+#define N_BIO_FEATURES_IMU        2
 
 #define TOT_FEATURES_IMU_MODEL_IMU    (N_IMU_FEATURES + N_BIO_FEATURES_IMU)
 
@@ -18,11 +18,11 @@
     1 --> extract the corresponding feature
     0 --> non extract the corresponding feature
 */
-static const int8_t GCRAM imu_features_selector[Number_IMU_Features] = {
+static const int8_t imu_features_selector[Number_IMU_Features] = {
     1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1,
 };
 
-static const int8_t GCRAM imu_bio_feats_selector[Number_bio_features] = {
+static const int8_t imu_bio_feats_selector[Number_bio_features] = {
     1,  // Gender
     1   // BMI
 };

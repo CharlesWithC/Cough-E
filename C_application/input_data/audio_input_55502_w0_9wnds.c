@@ -1,3 +1,4 @@
+#ifndef USE_W2
 #include "audio_input_55502_w0_9wnds.h"
 #include "types.h"
 
@@ -57607,3 +57608,4 @@ audio_input_t FLASH audio_in = {
 
 
 };
+#endif

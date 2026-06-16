@@ -1,3 +1,5 @@
+#ifndef USE_W2
+
 #include "imu_input_55502_w0_9wnds.h"
 #include "types.h"
 
@@ -5765,3 +5767,5 @@ num_t FLASH imu_in[IMU_LEN][6] = {
 
 
 };
+
+#endif

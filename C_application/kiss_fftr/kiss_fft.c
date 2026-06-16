@@ -15,7 +15,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 // #include "twiddles.h"
 #include <stdlib.h>
 
-#ifdef USE_FLASH
+#ifdef HEEPATIA
 #include <w25q128jw.h>
 #endif
 
@@ -438,21 +438,10 @@ kiss_fft_cfg kiss_fft_alloc(int nfft,int inverse_fft,void * mem,size_t * lenmem 
 */
 
 void init_twiddles(kiss_fft_cfg *st, twiddles_t *twiddles, int16_t len){
-    #ifdef USE_FLASH
-    twiddles_t *buffer =(twiddles_t*) malloc(len*sizeof(twiddles_t));
-    uint32_t source_flash = (uint32_t)heep_get_flash_address_offset((uint32_t *)twiddles);
-    if(w25q128jw_read_standard(source_flash, buffer, len*sizeof(twiddles_t))!=FLASH_OK)printf("Error reading from flash\n");
-    for(int16_t i=0; i<len; i++){
-        (*st)->twiddles[i].r = buffer[i].cosine;
-        (*st)->twiddles[i].i = buffer[i].sine;
-    }
-    free(buffer);
-    #else
     for(int16_t i=0; i<len; i++){
         (*st)->twiddles[i].r = twiddles[i].cosine;
         (*st)->twiddles[i].i = twiddles[i].sine;
     }
-    #endif
 }
 
 

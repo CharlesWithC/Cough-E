@@ -61,7 +61,6 @@ void compute_rfft(const num_t *sig, int16_t len, int16_t fs, num_t *mags, num_t 
 
 
 void _rfft(const num_t *sig, int16_t len, num_t *real, num_t *imag){
-
     kiss_fftr_cfg cfg = kiss_fftr_alloc(len, 0, 0, 0);
     kiss_fft_cpx *cx_out = (kiss_fft_cpx *) malloc(len * sizeof(kiss_fft_cpx));
 

@@ -4,9 +4,10 @@
 #include <types.h>
 
 #define NPERSEG 900     // number of samples in each window of the welch method
+#define PSDSIZE (int16_t)(NPERSEG / 2) + 1
 #define NOVERLAP 450    // number of overlapping samples between subsequent windows
 
- static const float GCRAM hann_window[NPERSEG] = {
+ static const float DINTL hann_window[NPERSEG] = {
 0.0,
 1.2184647302626583e-05,
 4.873799534788059e-05,

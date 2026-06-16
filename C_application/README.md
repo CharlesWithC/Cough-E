@@ -22,7 +22,7 @@ Compilation and execution are triggerred by means of a Makefile through the foll
 - `make`: to build the application. This will generate a `cough-e` executable file.
 - `make run`: to build and launch the execution
 
-To compile on `x-heep`, use `make app PROJECT=cough_e LINKER=flash_load COMPILER_FLAGS="-DUSE_FLASH"` to enable flash to reduce ram use.
+To compile on `x-heep`, use `make app PROJECT=cough_e LINKER=flash_load COMPILER_FLAGS="-DHEEPATIA"` to enable flash to reduce ram use.
 
 By default, builtin `float` is used. To use posit32 from universal number, compile with `make CC=g++ CFLAGS=-DUSE_UNUM_POSIT`. Note that `gcc>=16` is required for `c++20` standard.
 

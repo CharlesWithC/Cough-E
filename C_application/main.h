@@ -6,16 +6,21 @@
 //////////////////////////////////////
 /* Model to be used                 */
 //////////////////////////////////////
-#include <audio_model.h>            
-#include <imu_model.h>              
+#include <audio_model.h>
+#include <imu_model.h>
 //////////////////////////////////////
 
 
 //////////////////////////////////////
 /* Input data                       */
 // ///////////////////////////////////
+#ifndef USE_W2
 #include <input_data/audio_input_55502_w0_9wnds.h>
 #include <input_data/imu_input_55502_w0_9wnds.h>
+#else
+#include <input_data/audio_input_55502_w2.h>
+#include <input_data/imu_input_55502_w2.h>
+#endif
 #include <input_data/bio_input_55502.h>
 //////////////////////////////////////
 

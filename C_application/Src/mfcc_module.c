@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <inttypes.h>
 
-#ifdef USE_FLASH
+#ifdef HEEPATIA
 #include <w25q128jw.h>
 #endif
 
@@ -217,19 +217,19 @@ void _dct_linear(num_t *x, int16_t len, num_t *y){
 
     num_t cos_v = 0.0;
 
-    #ifdef USE_FLASH
+    #ifdef HEEPATIA
     num_t *buffer = (num_t*)malloc(len * sizeof(num_t));
     #endif
 
     for(int16_t k=0; k<len; k++){
-        #ifdef USE_FLASH
+        #ifdef HEEPATIA
         uint32_t source_flash = (uint32_t)heep_get_flash_address_offset((uint32_t *)&dct_cos[(len * k)]);
         if(w25q128jw_read_standard(source_flash, buffer, len*sizeof(num_t))!=FLASH_OK) printf("Error reading from flash\n");
         #endif
 
         sum = 0.0;
         for(int16_t n=0; n<len; n++){
-            #ifdef USE_FLASH
+            #ifdef HEEPATIA
             cos_v = buffer[n];
             #else
             cos_v = dct_cos[(len * k) + n];

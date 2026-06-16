@@ -27,7 +27,7 @@ typedef struct all_filters {
 /* Parameters for the various filters.                      */
 /* b and a are the coefficients of the transfer function    */
 /* zi are the initial states of the filter                  */
-static const all_filters_t GCRAM filters_parameters = {{
+static const all_filters_t DINTL filters_parameters = {{
 	{
 		// [50 - 100]
 		{ 0.00972234054502324, 0.0, -0.00972234054502324 },
@@ -147,9 +147,9 @@ static const all_filters_t GCRAM filters_parameters = {{
 
 
 // Parameters of the second filter used in the EEPD function. These are the same for every band
- static const num_t GCRAM b_second[3] = { 3.844633506752846e-06, 7.689267013505692e-06, 3.844633506752846e-06 };
- static const num_t GCRAM a_second[3] = { 1.0, -1.9944464105419268, 0.9944617890759538 };
+ static const num_t DINTL b_second[3] = { 3.844633506752846e-06, 7.689267013505692e-06, 3.844633506752846e-06 };
+ static const num_t DINTL a_second[3] = { 1.0, -1.9944464105419268, 0.9944617890759538 };
 
- static const num_t GCRAM zi_second[2] = { 0.9999961553614867, -0.9944579444374683 };
+ static const num_t DINTL zi_second[2] = { 0.9999961553614867, -0.9944579444374683 };
 
 #endif
