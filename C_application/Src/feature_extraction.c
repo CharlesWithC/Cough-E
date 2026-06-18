@@ -511,30 +511,24 @@ void compute_imu_family(const int8_t *features_selector, const num_t signal[][Nu
 
 void audio_features(const int8_t *features_selector, const num_t *sig, int16_t len, int16_t fs, num_t *feats){
     // NOTE: We assume `len` is always `WINDOW_SAMP_AUDIO` for statically allocating memory.
-    printf("AUDIO BEGIN\n");
 
     /* FFT based features */
     fft_based_features(features_selector, sig, len, fs, feats);
-    printf("FFT PASS\n");
 
     /* Periodogram-based features */
     periodogram_based_features(features_selector, sig, len, fs, feats);
-    printf("PER PASS\n");
 
     // /* MFCCs features */
     // mfcc_features(features_selector, sig, len, feats);
 
     /* MEL SPECTROGRAM features */
     mel_spectrogram_features(features_selector, sig, len, feats);
-    printf("MEL PASS\n");
 
     /* Mean-based features */
     mean_based_features(features_selector, sig, len, feats);
-    printf("MEA PASS\n");
 
     /* EEPD features */
     eepd_features(features_selector, sig, len, fs, feats);
-    printf("EEP PASS\n");
 
 }
 

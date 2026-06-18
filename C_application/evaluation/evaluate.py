@@ -14,15 +14,20 @@ Usage:
     python C_application/evaluation/evaluate.py full --subjects 14287 14342         # specific subjects
     python C_application/evaluation/evaluate.py full --dataset_path /path/to/data   # custom dataset path
     python C_application/evaluation/evaluate.py aggregate --csv C_application/evaluation/results.csv  # re-aggregate from CSV
+    python C_application/evaluation/evaluate.py full -j 8                           # run with 8 parallel threads
 """
 
 import argparse
+import concurrent.futures
 import csv
 import json
 import os
+import queue
 import re
+import shutil
 import subprocess
 import sys
+import tempfile
 from datetime import datetime
 from timescoring.annotations import Annotation
 from timescoring import scoring
@@ -52,15 +57,9 @@ MIN_OVERLAP = MIN_COUGH_DURATION / 0.8  # 0.125
 # Paths (relative to repo root)
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 C_APP_DIR = os.path.join(REPO_ROOT, "C_application")
-MAIN_H_PATH = os.path.join(C_APP_DIR, "main.h")
 INPUT_DATA_DIR = os.path.join(C_APP_DIR, "input_data")
-BUILD_DIR = os.path.join(C_APP_DIR, "build")
-EXECUTABLE = os.path.join(BUILD_DIR, "cough-e")
 
 DEFAULT_DATASET_PATH = os.path.join(REPO_ROOT, "Datasets", "full_dataset_test")
-
-# Original main.h content for backup/restore
-MAIN_H_ORIGINAL = None
 
 CSV_FIELDNAMES = [
     "subject", "trial", "movement", "noise", "sound",
@@ -72,26 +71,13 @@ NUM_FMT = "float" # or, "unum-posit"
 
 
 # ──────────────────────────────────────────────
-#  main.h management
+#  Isolated Workspace Management
 # ──────────────────────────────────────────────
 
-def backup_main_h():
-    """Save current main.h content so it can be restored after evaluation."""
-    global MAIN_H_ORIGINAL
-    with open(MAIN_H_PATH, 'r') as f:
-        MAIN_H_ORIGINAL = f.read()
-
-
-def restore_main_h():
-    """Restore main.h to its original content."""
-    if MAIN_H_ORIGINAL is not None:
-        with open(MAIN_H_PATH, 'w') as f:
-            f.write(MAIN_H_ORIGINAL)
-
-
-def update_main_h(audio_relpath, imu_relpath, bio_relpath):
-    """Replace the 3 input data #include lines in main.h."""
-    with open(MAIN_H_PATH, 'r') as f:
+def update_main_h(ws_path, audio_relpath, imu_relpath, bio_relpath):
+    """Replace the 3 input data #include lines in a workspace's main.h."""
+    main_h_path = os.path.join(ws_path, "main.h")
+    with open(main_h_path, 'r') as f:
         content = f.read()
 
     content = re.sub(r'#include <input_data/.*audio_input.*\.h>',
@@ -101,38 +87,36 @@ def update_main_h(audio_relpath, imu_relpath, bio_relpath):
     content = re.sub(r'#include <input_data/.*bio_input.*\.h>',
                      f'#include <input_data/{bio_relpath}>', content)
 
-    with open(MAIN_H_PATH, 'w') as f:
+    with open(main_h_path, 'w') as f:
         f.write(content)
 
 
-# ──────────────────────────────────────────────
-#  Compile & run
-# ──────────────────────────────────────────────
-
-def compile_c_app():
-    """Compile the C application with EVALUATION_MODE enabled. Returns True on success."""
+def compile_c_app(ws_path):
+    """Compile the C application in the isolated workspace. Returns True on success."""
     result = None
     if NUM_FMT == "float":
-        result = subprocess.run(["make", "-C", C_APP_DIR, "CFLAGS=-DEVALUATION_MODE"],
+        result = subprocess.run(["make", "-C", ws_path, "CFLAGS=-DEVALUATION_MODE"],
                                 capture_output=True, text=True)
     elif NUM_FMT == "unum-posit":
-        result = subprocess.run(["make", "-C", C_APP_DIR, "CC=g++", "CFLAGS=-DEVALUATION_MODE -DUSE_UNUM_POSIT"],
+        result = subprocess.run(["make", "-C", ws_path, "CC=g++", "CFLAGS=-DEVALUATION_MODE -DUSE_UNUM_POSIT"],
                                 capture_output=True, text=True)
     else:
         print("  Invalid --num-fmt argument")
         return False
+
     if result.returncode != 0:
-        print(f"  Compilation failed: {result.stderr}")
+        print(f"  Compilation failed in {ws_path}: {result.stderr}")
         return False
     return True
 
 
-def run_c_app():
-    """Run the compiled C application and return stdout."""
+def run_c_app(ws_path):
+    """Run the compiled C application from the workspace and return stdout."""
+    executable = os.path.join(ws_path, "build", "cough-e")
     try:
-        result = subprocess.run([EXECUTABLE], capture_output=True, text=True, timeout=60)
+        result = subprocess.run([executable], capture_output=True, text=True, timeout=120)
     except subprocess.TimeoutExpired:
-        print("    WARNING: C app timed out after 60s (possible stuck)", flush=True)
+        print(f"    WARNING: C app timed out after 120s in {ws_path} (possible stuck)", flush=True)
         return ""
     return result.stdout
 
@@ -144,12 +128,6 @@ def run_c_app():
 def parse_c_output(output, audio_fs=AUDIO_FS_TARGET):
     """
     Parse C application output to extract detected cough segments.
-
-    The C app's FSM resets when IMU data runs out (re-processing from the start).
-    We detect this by grouping segments by postprocessing period and stopping
-    when a period's segments match an earlier period (indicating FSM restart).
-
-    Returns list of (start_sec, end_sec) tuples.
     """
     periods = []
     current_period_segs = []
@@ -166,7 +144,6 @@ def parse_c_output(output, audio_fs=AUDIO_FS_TARGET):
             periods.append(current_period_segs)
             current_period_segs = []
 
-    # Detect FSM reset: stop at first repeated period signature
     seen_signatures = set()
     first_pass_periods = []
     for period_segs in periods:
@@ -176,7 +153,6 @@ def parse_c_output(output, audio_fs=AUDIO_FS_TARGET):
         seen_signatures.add(sig)
         first_pass_periods.append(period_segs)
 
-    # Flatten and deduplicate, converting samples to seconds
     segments = []
     seen_segments = set()
     for period_segs in first_pass_periods:
@@ -216,16 +192,13 @@ def get_recording_duration(dataset_path, subj_id, trial, mov, noise, sound):
                             'imu.csv')
     if os.path.exists(imu_path):
         with open(imu_path, 'r') as f:
-            n_lines = sum(1 for _ in f) - 1  # subtract header
+            n_lines = sum(1 for _ in f) - 1
         return n_lines / IMU_FS
     return 0.0
 
 
 def create_binary_mask(events, duration):
-    """
-    Create a binary mask at FS_IMU resolution from a list of (start, end) events.
-    Mirrors edge_ai.get_ground_truth_regions().
-    """
+    """Create a binary mask at FS_IMU resolution from a list of (start, end) events."""
     n_samples = int(round(duration * FS_IMU))
     mask = np.zeros(n_samples)
     for start, end in events:
@@ -242,11 +215,7 @@ def create_binary_mask(events, duration):
 # ──────────────────────────────────────────────
 
 def score_recording(gt_events, pred_events, duration):
-    """
-    Compute event-based scoring using timescoring.EventScoring.
-
-    Parameters match ML_methodology/config/scoring/default.yaml.
-    """
+    """Compute event-based scoring using timescoring.EventScoring."""
     gt_mask = create_binary_mask(gt_events, duration)
     pred_mask = create_binary_mask(pred_events, duration)
 
@@ -273,27 +242,25 @@ def score_recording(gt_events, pred_events, duration):
 #  Per-recording evaluation
 # ──────────────────────────────────────────────
 
-def evaluate_recording(subj_id, trial, mov, noise, sound,
-                       dataset_path, input_data_dir):
-    """Full pipeline for a single recording: transform -> compile -> run -> parse -> score."""
+def evaluate_recording_isolated(subj_id, trial, mov, noise, sound, dataset_path, ws_path):
+    """Full pipeline for a single recording bounded to an isolated workspace."""
+    input_data_dir = os.path.join(ws_path, "input_data")
+
     result = transform_recording(subj_id, trial, mov, noise, sound,
                                  dataset_path, input_data_dir)
     if result is None:
         return None
 
     suffix, audio_relpath, imu_relpath, bio_relpath = result
-    update_main_h(audio_relpath, imu_relpath, bio_relpath)
+    update_main_h(ws_path, audio_relpath, imu_relpath, bio_relpath)
 
-    if not compile_c_app():
-        print(f"  FAILED to compile for {suffix}")
+    if not compile_c_app(ws_path):
         return None
 
-    try:
-        output = run_c_app()
-    except subprocess.TimeoutExpired:
-        print(f"  TIMEOUT for {suffix}")
-        return None
-
+    output = run_c_app(ws_path)
+    if not output:
+       	print(f"  [-WARN] No output at {ws_path} (likely segfault).")
+       	shutil.copytree(ws_path, ws_path + '_WARN')
     pred_segments = parse_c_output(output)
     gt_events = load_ground_truth(dataset_path, subj_id, trial, mov, noise, sound)
     duration = get_recording_duration(dataset_path, subj_id, trial, mov, noise, sound)
@@ -311,36 +278,96 @@ def evaluate_recording(subj_id, trial, mov, noise, sound,
     return scores
 
 
+def _worker_task(task_args, dataset_path, workspaces):
+    """Pulls an available workspace, runs eval, then releases it back to the queue."""
+    subj_id, trial, mov, noise, sound = task_args
+    ws_path = workspaces.get()
+    try:
+        return evaluate_recording_isolated(
+            subj_id, trial, mov, noise, sound,
+            dataset_path, ws_path
+        )
+    finally:
+        workspaces.put(ws_path)
+
+
 def evaluate_subjects(dataset_path, subjects=None,
                       trials=TRIALS, movements=MOVEMENTS,
-                      noises=NOISES, sounds=SOUNDS):
-    """Evaluate all recordings for the given subjects. Backs up and restores main.h."""
+                      noises=NOISES, sounds=SOUNDS, jobs=1):
+    """Evaluate all recordings via a thread pool with isolated workspaces."""
     if subjects is None:
         subjects = sorted([
             s for s in os.listdir(dataset_path)
             if os.path.isdir(os.path.join(dataset_path, s))
         ])
 
-    backup_main_h()
     all_results = []
+    temp_dirs = []
+    workspaces = queue.Queue()
 
+    print(f"\nSetting up {jobs} isolated C_application workspaces...")
     try:
+        # Initialize pool directories to prevent make/file collisions
+        for i in range(jobs):
+            ws_path = tempfile.mkdtemp(prefix=f"cough_e_eval_worker_{i}_")
+
+            # Copy C_APP_DIR but ignore dotfiles, evaluation, and input_data
+            shutil.copytree(
+                C_APP_DIR,
+                ws_path,
+                dirs_exist_ok=True,
+                ignore=shutil.ignore_patterns('.*', 'evaluation', 'input_data')
+            )
+
+            # Re-create the input_data directory wrapper in the worker
+            ws_input_data = os.path.join(ws_path, "input_data")
+            os.makedirs(ws_input_data, exist_ok=True)
+
+            # Symlink existing static directories back to the main C_application/input_data
+            main_input_data = os.path.join(C_APP_DIR, "input_data")
+            if os.path.exists(main_input_data):
+                for item in os.listdir(main_input_data):
+                    main_item_path = os.path.join(main_input_data, item)
+                    if os.path.isdir(main_item_path) and not item.startswith('.'):
+                        ws_item_path = os.path.join(ws_input_data, item)
+                        os.symlink(main_item_path, ws_item_path)
+
+            workspaces.put(ws_path)
+            temp_dirs.append(ws_path)
+
+        tasks = []
         for subj_id in subjects:
-            print(f"\n=== Subject {subj_id} ===")
             for trial in trials:
                 for mov in movements:
                     for noise in noises:
                         for sound in sounds:
-                            rec_id = f"t{trial}_{mov}_{noise}_{sound}"
-                            result = evaluate_recording(
-                                subj_id, trial, mov, noise, sound,
-                                dataset_path, INPUT_DATA_DIR)
-                            if result is not None:
-                                all_results.append(result)
-                                print(f"  {rec_id}: TP_evt={result['tp_evt']} "
-                                      f"FP_evt={result['fp_evt']} FN_evt={result['fn_evt']}")
+                            tasks.append((subj_id, trial, mov, noise, sound))
+
+        print(f"Beginning evaluation of {len(tasks)} recordings...")
+        with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as executor:
+            future_to_task = {
+                executor.submit(_worker_task, t, dataset_path, workspaces): t
+                for t in tasks
+            }
+
+            for future in concurrent.futures.as_completed(future_to_task):
+                task_args = future_to_task[future]
+                subj_id, trial, mov, noise, sound = task_args
+                rec_id = f"t{trial}_{mov}_{noise}_{sound}"
+
+                try:
+                    result = future.result()
+                    if result is not None:
+                        all_results.append(result)
+                        print(f"  [{subj_id}] {rec_id}: TP_evt={result['tp_evt']} "
+                              f"FP_evt={result['fp_evt']} FN_evt={result['fn_evt']}")
+                except Exception as exc:
+                    print(f"  [{subj_id}] {rec_id} generated an exception: {exc}")
+
     finally:
-        restore_main_h()
+        print("\nCleaning up workspaces...")
+        for d in temp_dirs:
+            shutil.rmtree(d, ignore_errors=True)
 
     return all_results
 
@@ -499,6 +526,7 @@ def cmd_run(args):
         subjects=args.subjects,
         sounds=args.sounds,
         noises=args.noises,
+        jobs=args.jobs
     )
 
     if not results:
@@ -537,10 +565,10 @@ def main():
 
     parser = argparse.ArgumentParser(
         description="Evaluate Cough-E C application against full_dataset_test")
-    parser.add_argument("--num-fmt", type=str, default=NUM_FMT)
     subparsers = parser.add_subparsers(dest="command")
 
     def add_common_args(p):
+        p.add_argument("--num-fmt", type=str, default=NUM_FMT)
         p.add_argument("--dataset_path", type=str, default=DEFAULT_DATASET_PATH,
                         help=f"Path to full_dataset_test (default: {DEFAULT_DATASET_PATH})")
         p.add_argument("--subjects", nargs="+", type=str, default=None,
@@ -549,6 +577,8 @@ def main():
         p.add_argument("--noises", nargs="+", type=str, default=NOISES)
         p.add_argument("--output_dir", type=str, default=None,
                         help="Output directory (default: evaluation/)")
+        p.add_argument("-j", "--jobs", type=int, default=1,
+                        help="Number of threads for parallel evaluation (default: 1)")
 
     p_transform = subparsers.add_parser("transform", help="Generate C headers from dataset")
     add_common_args(p_transform)
@@ -569,7 +599,6 @@ def main():
     args = parser.parse_args()
     NUM_FMT = args.num_fmt
 
-    # Default to 'full' when no subcommand given
     if args.command is None:
         args = parser.parse_args(["full"])
 

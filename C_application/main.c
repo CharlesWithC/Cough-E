@@ -64,10 +64,12 @@ num_t GCRAM imu_buffer[WINDOW_SAMP_AUDIO];
 #endif
 
 int main(){
+    #ifdef HEEPATIA
     if (w25q128jw_init(spi_flash) != FLASH_OK){
         printf("Error initializing the flash memory\n");
         return EXIT_FAILURE;
     }
+    #endif
 
     for(uint16_t i=0, idx = 0; i<Number_AUDIO_Features; i++){
         if(audio_features_selector[i] == 1){
@@ -90,7 +92,6 @@ int main(){
     while(1){
         idx_start_window = get_idx_window();
         printf("Start: %d\n", idx_start_window);
-        printf("Model: %d\n", fsm_state.model);
 
         if(fsm_state.model == IMU_MODEL){
             if(idx_start_window >= IMU_LEN){
