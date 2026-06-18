@@ -7,8 +7,8 @@
 //////////////////////////////////////
 /* Model to be used                 */
 //////////////////////////////////////
-#include <audio_model.h>            
-#include <imu_model.h>              
+#include <audio_model.h>
+#include <imu_model.h>
 #ifdef FXP_MODE
 #include <model_fxp.h>
 #endif
@@ -18,9 +18,9 @@
 //////////////////////////////////////
 /* Input data                       */
 // ///////////////////////////////////
-#include <input_data/20724/audio_input_20724_t1_sit_music_cough.h>
-#include <input_data/20724/imu_input_20724_t1_sit_music_cough.h>
-#include <input_data/20724/bio_input_20724.h>
+#include <input_data/audio_input_55502_w0_9wnds.h>
+#include <input_data/imu_input_55502_w0_9wnds.h>
+#include <input_data/bio_input_55502.h>
 //////////////////////////////////////
 
 

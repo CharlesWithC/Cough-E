@@ -2,6 +2,7 @@
 #define _AUDIO_MODEL_
 
 #include <inttypes.h>
+#include <types.h>
 
 #include <core/fxp_core.h>
 #include <audio_features.h>
@@ -66,7 +67,7 @@ static const uint8_t audio_model_feature_frac[83] = {
  * @param *feat 	:	pointer to the features to be processed
 */
 #ifndef FXP_MODE
-float audio_predict(float *feat);
+real_t audio_predict(real_t *feat);
 #endif
 
 
@@ -3357,7 +3358,7 @@ static const audio_node_children_t audio_children[AUD_N_TREES][AUD_MAX_NODES] = 
 };
 
 #ifndef FXP_MODE
-static const float audio_scores[AUD_N_TREES][MAX_LEAVES] = {
+static const real_t audio_scores[AUD_N_TREES][MAX_LEAVES] = {
 	{
 		0.5647059,
 		-0.15,
@@ -6723,7 +6724,7 @@ static const float audio_scores[AUD_N_TREES][MAX_LEAVES] = {
 
 };
 
-static const float audio_values_comp[AUD_N_TREES][AUD_MAX_NODES] = {
+static const real_t audio_values_comp[AUD_N_TREES][AUD_MAX_NODES] = {
 	{
 		-19.455618,
 		7.0475206,

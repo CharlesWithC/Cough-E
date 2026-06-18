@@ -1,6 +1,9 @@
 #ifndef _MEL_BASIS_SMALL_H_
 #define _MEL_BASIS_SMALL_H_
 
+#include <stdint.h>
+#include <types.h>
+
 // This file contains the MEL matrix for projecting a power spectrum into a mel basis
 // The numbers are hardcoded and taken from python.
 
@@ -12,10 +15,10 @@
 #define MEL_ROWS		64
 #define MEL_COLUMNS		1025
 
-#define MAX_NZ_ELEMS    73  // max number of non-zero elements 
+#define MAX_NZ_ELEMS    73  // max number of non-zero elements
 
-/* 
-    Indexes of the first and last non-zero elements for each row of the mel basis. 
+/*
+    Indexes of the first and last non-zero elements for each row of the mel basis.
     For each row, the non-zero elements are stored one after the other, so I just
     need to store the indexes of the first and last element
 */
@@ -89,7 +92,7 @@
 };
 
 
- static const float mel_basis[MEL_ROWS][MAX_NZ_ELEMS] = {
+ static const real_t mel_basis[MEL_ROWS][MAX_NZ_ELEMS] = {
 
 	{
 		0.0030031611677259207,
@@ -2219,7 +2222,7 @@
 		0.00037311477353796363,
 		0.00018655738676898181,
 	},
-	
+
 
 };
 

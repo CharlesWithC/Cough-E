@@ -1,7 +1,6 @@
 #ifndef _FEATURE_EXTRACTION_H
 #define _FEATURE_EXTRACTION_H
 
-#include <stdlib.h>
 #include <imu_features.h>
 #include <core/fxp_core.h>
 
@@ -13,7 +12,7 @@ typedef cough_imu_sample_t imu_sample_t;
     Computes features from the AUDIO signal, passed as parameter.
 
     @param *features_selector   :   one-hot vector for the features to extract (0: DO NOT extract, 1: DO extract)
-    @param *sig                 :   the signal to be processed    
+    @param *sig                 :   the signal to be processed
     @param len                  :   the length of the signal
     @param fs                   :   the sampling frequency
     @param *feats               :   array to be filled with the extracted features

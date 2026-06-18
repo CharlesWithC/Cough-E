@@ -2,13 +2,9 @@
 #define _POSTPROCESSING_H_
 
 #include <inttypes.h>
-#include <stdlib.h>
+#include <types.h>
 #include <core/fxp_core.h>
 #include <helpers.h>
-
-#ifndef FXP_MODE
-#include <math.h>
-#endif
 
 // Maximum number of peaks expected between one output and the next one
 #define MAX_PEAKS_EXPECTED      50
@@ -44,8 +40,8 @@
 typedef int16_t postproc_sample_t;
 typedef int16_t postproc_peak_t;
 #else
-typedef float postproc_sample_t;
-typedef float postproc_peak_t;
+typedef real_t postproc_sample_t;
+typedef real_t postproc_peak_t;
 #endif
 
 

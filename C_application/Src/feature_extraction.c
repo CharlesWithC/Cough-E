@@ -1,5 +1,5 @@
-#include <stdio.h>
 #include <inttypes.h>
+#include <types.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -53,7 +53,7 @@ int is_required(const int8_t *features_selector, uint16_t start_index, uint16_t 
     @param fs                   :   sampling frequency
     @param *feats               :   array of extracted features
 */
-void fft_based_features(const int8_t *features_selector, const float *sig, int16_t len, int16_t fs, float *feats);
+void fft_based_features(const int8_t *features_selector, const real_t *sig, int16_t len, int16_t fs, real_t *feats);
 
 
 /**
@@ -64,7 +64,7 @@ void fft_based_features(const int8_t *features_selector, const float *sig, int16
     @param len                  :   length of the signal
     @param *feats               :   array of extracted features
 */
-void periodogram_based_features(const int8_t *features_selector, const float *sig, int16_t len, int16_t fs, float *feats);
+void periodogram_based_features(const int8_t *features_selector, const real_t *sig, int16_t len, int16_t fs, real_t *feats);
 
 
 /**
@@ -75,7 +75,7 @@ void periodogram_based_features(const int8_t *features_selector, const float *si
     @param len                  :   length of the signal
     @param *feats               :   array of extracted features
 */
-void mfcc_features(const int8_t *features_selector, const float *sig, int16_t len, float *feats);
+void mfcc_features(const int8_t *features_selector, const real_t *sig, int16_t len, real_t *feats);
 
 
 /**
@@ -86,7 +86,7 @@ void mfcc_features(const int8_t *features_selector, const float *sig, int16_t le
     @param len                  :   length of the signal
     @param *feats               :   array of extracted features
 */
-void mel_spectrogram_features(const int8_t *features_selector, const float *sig, int16_t len, float *feats);
+void mel_spectrogram_features(const int8_t *features_selector, const real_t *sig, int16_t len, real_t *feats);
 
 /**
     Computes the required mean-based features of the audio signal
@@ -96,7 +96,7 @@ void mel_spectrogram_features(const int8_t *features_selector, const float *sig,
     @param len                  :   length of the signal
     @param *feats               :   array of extracted features
 */
-void mean_based_features(const int8_t *features_selector, const float *sig, int16_t len, float *feats);
+void mean_based_features(const int8_t *features_selector, const real_t *sig, int16_t len, real_t *feats);
 
 
 /**
@@ -108,7 +108,7 @@ void mean_based_features(const int8_t *features_selector, const float *sig, int1
     @param fs                   :   sampling frequency
     @param *feats               :   array of extracted features
 */
-void eepd_features(const int8_t *features_selector, const float *sig, int16_t len, int16_t fs, float *feats);
+void eepd_features(const int8_t *features_selector, const real_t *sig, int16_t len, int16_t fs, real_t *feats);
 
 
 /**
@@ -126,7 +126,7 @@ void eepd_features(const int8_t *features_selector, const float *sig, int16_t le
     @param sig_feat_idx         :   starting index of the features for the IMU signal inside the features_selector vector
     @param *feats               :   array of extracted features
 */
-void compute_imu_family(const int8_t *features_selector, const float signal[][Num_IMU_signals], int16_t len, int8_t signal_idx, int8_t sig_feat_idx, float *feats);
+void compute_imu_family(const int8_t *features_selector, const real_t signal[][Num_IMU_signals], int16_t len, int8_t signal_idx, int8_t sig_feat_idx, real_t *feats);
 
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -145,10 +145,10 @@ int is_required(const int8_t *features_selector, uint16_t start_index, uint16_t 
     return 0;
 }
 
-static void imu_run_float_features(const int8_t *features_selector,
-                                   float *sig,
+static void imu_run_real_t_features(const int8_t *features_selector,
+                                   real_t *sig,
                                    int16_t len,
-                                   float *feats)
+                                   real_t *feats)
 {
     if (features_selector[LINE_LENGTH]) {
         feats[LINE_LENGTH] = get_line_length(sig, len);
@@ -163,20 +163,20 @@ static void imu_run_float_features(const int8_t *features_selector,
         feats[ROOT_MEANS_SQUARED_IMU] = get_rms(sig, len);
     }
     if (features_selector[CREST_FACTOR_IMU]) {
-        float rms = get_rms(sig, len);
+        real_t rms = get_rms(sig, len);
         feats[CREST_FACTOR_IMU] = (rms > 0.0f) ? (get_max(sig, len) / rms) : 0.0f;
     }
     for (uint8_t i = 0; i < N_AZC; i++) {
         uint8_t idx = (uint8_t)(APPROXIMATE_ZERO_CROSSING + i);
         if (features_selector[idx]) {
-            float eps = EPSILON_START + (EPSILON_STEP * (float)i);
-            feats[idx] = (float)azc_computation(sig, len, eps);
+            real_t eps = EPSILON_START + (EPSILON_STEP * (real_t)i);
+            feats[idx] = (real_t)azc_computation(sig, len, eps);
         }
     }
 }
 
 
-void fft_based_features(const int8_t *features_selector, const float *sig, int16_t len, int16_t fs, float *feats){
+void fft_based_features(const int8_t *features_selector, const real_t *sig, int16_t len, int16_t fs, real_t *feats){
 
     // FFT-dependent features' indexes
     // 0  : 6  the singular ones
@@ -188,9 +188,9 @@ void fft_based_features(const int8_t *features_selector, const float *sig, int16
     RA_LOG_ARRAY("AUDIO_FFT", "fft_based_features", "sig_input", sig, len);
 
     int16_t fft_size = (len / 2) + 1;
-    float *magnitudes = (float*) malloc(fft_size * sizeof(float));
-    float *frequencies = (float*) malloc(fft_size *sizeof(float));
-    float sum_mags = 0.0f;
+    real_t *magnitudes = (real_t*) malloc(fft_size * sizeof(real_t));
+    real_t *frequencies = (real_t*) malloc(fft_size *sizeof(real_t));
+    real_t sum_mags = 0.0f;
 
     if(!magnitudes || !frequencies){
         free(magnitudes);
@@ -201,41 +201,41 @@ void fft_based_features(const int8_t *features_selector, const float *sig, int16
     compute_rfft(sig, len, fs, magnitudes, frequencies, &sum_mags);
 
     if(features_selector[SPECTRAL_DECREASE]){
-        float spectral_decrease = compute_spec_decrease(magnitudes, frequencies, (len/2)+1, sum_mags);
+        real_t spectral_decrease = compute_spec_decrease(magnitudes, frequencies, (len/2)+1, sum_mags);
         feats[SPECTRAL_DECREASE] = spectral_decrease;
     }
 
     if(features_selector[SPECTRAL_SLOPE]){
-        float spectral_slope = compute_spectral_slope(magnitudes, frequencies, (len/2)+1, sum_mags);
+        real_t spectral_slope = compute_spectral_slope(magnitudes, frequencies, (len/2)+1, sum_mags);
         feats[SPECTRAL_SLOPE] = spectral_slope;
     }
 
     if(features_selector[SPECTRAL_ROLLOFF]){
-        float spectral_rolloff = compute_rolloff(magnitudes, frequencies, (len/2)+1, sum_mags);
+        real_t spectral_rolloff = compute_rolloff(magnitudes, frequencies, (len/2)+1, sum_mags);
         feats[SPECTRAL_ROLLOFF] = spectral_rolloff;
     }
 
     if(is_required(features_selector, SPECTRAL_CENTROID, SPECTRAL_SKEW)){
-        float spectral_cetroid = compute_centroid(magnitudes, frequencies, (len/2)+1, sum_mags);
+        real_t spectral_cetroid = compute_centroid(magnitudes, frequencies, (len/2)+1, sum_mags);
 
         if(features_selector[SPECTRAL_CENTROID]){
             feats[SPECTRAL_CENTROID] = spectral_cetroid;
         }
 
         if(is_required(features_selector, SPECTRAL_SPREAD, SPECTRAL_SKEW)){
-            float spectral_spread = compute_spread(magnitudes, frequencies, (len/2)+1, sum_mags, spectral_cetroid);
+            real_t spectral_spread = compute_spread(magnitudes, frequencies, (len/2)+1, sum_mags, spectral_cetroid);
 
             if(features_selector[SPECTRAL_SPREAD]){
                 feats[SPECTRAL_SPREAD] = spectral_spread;
             }
 
             if(features_selector[SPECTRAL_KURTOSIS]){
-                float kurt = compute_kurt(magnitudes, frequencies, (len/2)+1, sum_mags, spectral_cetroid, spectral_spread);
+                real_t kurt = compute_kurt(magnitudes, frequencies, (len/2)+1, sum_mags, spectral_cetroid, spectral_spread);
                 feats[SPECTRAL_KURTOSIS] = kurt;
             }
 
             if(features_selector[SPECTRAL_SKEW]){
-                float skew = compute_skew(magnitudes, frequencies, (len/2)+1, sum_mags, spectral_cetroid, spectral_spread);
+                real_t skew = compute_skew(magnitudes, frequencies, (len/2)+1, sum_mags, spectral_cetroid, spectral_spread);
                 feats[SPECTRAL_SKEW] = skew;
             }
         }
@@ -246,7 +246,7 @@ void fft_based_features(const int8_t *features_selector, const float *sig, int16
 }
 
 
-void periodogram_based_features(const int8_t *features_selector, const float *sig, int16_t len, int16_t fs, float *feats){
+void periodogram_based_features(const int8_t *features_selector, const real_t *sig, int16_t len, int16_t fs, real_t *feats){
 
     // Periodogram dependent features' indexes
     // 7  : 9 for the singular ones
@@ -258,8 +258,8 @@ void periodogram_based_features(const int8_t *features_selector, const float *si
     RA_LOG_ARRAY("AUDIO_PSD", "periodogram_based_features", "sig_input", sig, len);
 
     int16_t psd_size = (NPERSEG / 2) + 1;
-    float *psd = (float*)malloc(psd_size * sizeof(float));
-    float *freqs = (float*)malloc(psd_size * sizeof(float));
+    real_t *psd = (real_t*)malloc(psd_size * sizeof(real_t));
+    real_t *freqs = (real_t*)malloc(psd_size * sizeof(real_t));
     if(!psd || !freqs){
         free(psd);
         free(freqs);
@@ -269,29 +269,29 @@ void periodogram_based_features(const int8_t *features_selector, const float *si
     compute_periodogram(sig, len, fs, psd, freqs);
 
     if(features_selector[SPECTRAL_FLATNESS]){
-       float spectral_flatness = compute_flatness(psd, psd_size);
+       real_t spectral_flatness = compute_flatness(psd, psd_size);
        feats[SPECTRAL_FLATNESS] = spectral_flatness;
     }
 
     if(features_selector[SPECTRAL_STD]){
-        float spectral_std = compute_std(psd, psd_size);
+        real_t spectral_std = compute_std(psd, psd_size);
         feats[SPECTRAL_STD] = spectral_std;
     }
 
 
     if(features_selector[SPECTRAL_ENTROPY]){
-        float spectral_entr = compute_spectral_entropy(psd, psd_size);
+        real_t spectral_entr = compute_spectral_entropy(psd, psd_size);
         feats[SPECTRAL_ENTROPY] = spectral_entr;
     }
 
 
     if(features_selector[DOMINANT_FREQUENCY]){
-        float dominant_freq = get_domiant_freq(psd, freqs, psd_size);
+        real_t dominant_freq = get_domiant_freq(psd, freqs, psd_size);
         feats[DOMINANT_FREQUENCY] = dominant_freq;
     }
 
     if(is_required(features_selector, POWER_SPECTRAL_DENSITY, POWER_SPECTRAL_DENSITY + N_PSD - 1)){
-        float *band_powers = (float*)malloc(N_PSD * sizeof(float));
+        real_t *band_powers = (real_t*)malloc(N_PSD * sizeof(real_t));
         normalized_bandpowers(psd, freqs, psd_size, &features_selector[POWER_SPECTRAL_DENSITY], band_powers);
         for(int8_t i=0; i<N_PSD; i++){
             feats[POWER_SPECTRAL_DENSITY + i] = band_powers[i];
@@ -305,14 +305,14 @@ void periodogram_based_features(const int8_t *features_selector, const float *si
 }
 
 
-void mfcc_features(const int8_t *features_selector, const float *sig, int16_t len, float *feats){
+void mfcc_features(const int8_t *features_selector, const real_t *sig, int16_t len, real_t *feats){
 
     // 13 : 38 for the MFCCs features
     if(is_required(features_selector, MEL_FREQUENCY_CEPSTRAL_COEFFICIENT, ZERO_CROSSING_RATE - 1)){
         // compute MFCCs
 
-        float *mean_mfcc = (float*)malloc(N_MFCC * sizeof(float));
-        float *std_mfcc = (float*)malloc(N_MFCC * sizeof(float));
+        real_t *mean_mfcc = (real_t*)malloc(N_MFCC * sizeof(real_t));
+        real_t *std_mfcc = (real_t*)malloc(N_MFCC * sizeof(real_t));
         get_mfcc_features(sig, len, mean_mfcc, std_mfcc);
 
         // stores first the mean and then the std, one after the other
@@ -328,7 +328,7 @@ void mfcc_features(const int8_t *features_selector, const float *sig, int16_t le
 }
 
 
-void mel_spectrogram_features(const int8_t *features_selector, const float *sig, int16_t len, float *feats){
+void mel_spectrogram_features(const int8_t *features_selector, const real_t *sig, int16_t len, real_t *feats){
 
     if(is_required(features_selector, MEL_FREQUENCY_CEPSTRAL_COEFFICIENT, ZERO_CROSSING_RATE - 1)){
 
@@ -355,10 +355,10 @@ void mel_spectrogram_features(const int8_t *features_selector, const float *sig,
         }
 
         // Arrays to temporary store the features
-        float *mean_mel_spectr = (float*)malloc(n_mels_needed * sizeof(float));
-        float *std_mel_spectr = (float*)malloc(n_mels_needed * sizeof(float));
-        float *max_mel_spectr = (float*)malloc(n_mels_needed * sizeof(float));
-        float *entropy_mel_spectr = (float*)malloc(n_mels_needed * sizeof(float));
+        real_t *mean_mel_spectr = (real_t*)malloc(n_mels_needed * sizeof(real_t));
+        real_t *std_mel_spectr = (real_t*)malloc(n_mels_needed * sizeof(real_t));
+        real_t *max_mel_spectr = (real_t*)malloc(n_mels_needed * sizeof(real_t));
+        real_t *entropy_mel_spectr = (real_t*)malloc(n_mels_needed * sizeof(real_t));
 
         get_mel_spectrogram_features(sig, len, idxs_needed, n_mels_needed, mean_mel_spectr, std_mel_spectr, max_mel_spectr, entropy_mel_spectr);
 
@@ -383,7 +383,7 @@ void mel_spectrogram_features(const int8_t *features_selector, const float *sig,
 }
 
 
-void mean_based_features(const int8_t *features_selector, const float *sig, int16_t len, float *feats){
+void mean_based_features(const int8_t *features_selector, const real_t *sig, int16_t len, real_t *feats){
 
     // 39 : 41 for the singular ones
     if(is_required(features_selector, ROOT_MEANS_SQUARED, CREST_FACTOR)){
@@ -391,20 +391,20 @@ void mean_based_features(const int8_t *features_selector, const float *sig, int1
         RA_LOG_ARRAY("AUDIO_FFT", "mean_based_features", "sig_input", sig, len);
 
         // compute mean
-        float *zero_mean = (float *) malloc(len * sizeof(float));  // to store the signal after subtracting the mean
+        real_t *zero_mean = (real_t *) malloc(len * sizeof(real_t));  // to store the signal after subtracting the mean
         sub_mean(sig, zero_mean, len);
         RA_LOG_ARRAY("AUDIO_FFT", "mean_based_features", "zero_mean", zero_mean, len);
 
 
         if(features_selector[ZERO_CROSSING_RATE]){
             // compute ZCR
-            float zcr = compute_zrc(zero_mean, len);
+            real_t zcr = compute_zrc(zero_mean, len);
             feats[ZERO_CROSSING_RATE] = zcr;
         }
 
         if(features_selector[ROOT_MEANS_SQUARED] || features_selector[CREST_FACTOR]){
             // compute RMS
-            float rms = get_rms(zero_mean, len);
+            real_t rms = get_rms(zero_mean, len);
             RA_LOG_SCALAR("AUDIO_FFT", "audio_rms", "result", rms);
 
             if(features_selector[ROOT_MEANS_SQUARED]){
@@ -414,8 +414,8 @@ void mean_based_features(const int8_t *features_selector, const float *sig, int1
 
             if(features_selector[CREST_FACTOR]){
                 // compute CREST
-                float peak = get_max(zero_mean, len);
-                float crest_factor = peak / rms;
+                real_t peak = get_max(zero_mean, len);
+                real_t crest_factor = peak / rms;
                 RA_LOG_SCALAR("AUDIO_FFT", "audio_crest", "peak", peak);
                 RA_LOG_SCALAR("AUDIO_FFT", "audio_crest", "result", crest_factor);
                 feats[CREST_FACTOR] = crest_factor;
@@ -427,7 +427,7 @@ void mean_based_features(const int8_t *features_selector, const float *sig, int1
 }
 
 
-void eepd_features(const int8_t *features_selector, const float *sig, int16_t len, int16_t fs, float *feats){
+void eepd_features(const int8_t *features_selector, const real_t *sig, int16_t len, int16_t fs, real_t *feats){
 
     // 42 : 61 for the singular ones
     if(is_required(features_selector, ENERGY_ENVELOPE_PEAK_DETECT, (ENERGY_ENVELOPE_PEAK_DETECT+N_EEPD-1))){    // -1 since it's the last one, otherwise it will check one index more
@@ -452,12 +452,12 @@ static const char *_imu_signal_names[] = {
 };
 #endif
 
-void compute_imu_family(const int8_t *features_selector, const float signal[][Num_IMU_signals], int16_t len, int8_t signal_idx, int8_t sig_feat_idx, float *feats){
+void compute_imu_family(const int8_t *features_selector, const real_t signal[][Num_IMU_signals], int16_t len, int8_t signal_idx, int8_t sig_feat_idx, real_t *feats){
 
     if(is_required(features_selector, sig_feat_idx, sig_feat_idx+Num_imu_feat_families-1)){
 
         // Extract samples for the required signal axis
-        float *signal_samples = (float*)malloc(len * sizeof(float));
+        real_t *signal_samples = (real_t*)malloc(len * sizeof(real_t));
         for(int16_t i=0; i<len; i++){
             signal_samples[i] = signal[i][signal_idx];
         }
@@ -465,7 +465,7 @@ void compute_imu_family(const int8_t *features_selector, const float signal[][Nu
         RA_LOG_ARRAY("IMU_RAW", "imu_features", _imu_signal_names[signal_idx], signal_samples, len);
 
         RA_SET_IMU_CTX("IMU_RAW");
-        imu_run_float_features(&features_selector[sig_feat_idx], signal_samples, len, &feats[sig_feat_idx]);
+        imu_run_real_t_features(&features_selector[sig_feat_idx], signal_samples, len, &feats[sig_feat_idx]);
         RA_CLEAR_IMU_CTX();
         free(signal_samples);
     }
@@ -479,7 +479,7 @@ void compute_imu_family(const int8_t *features_selector, const float signal[][Nu
 /*                      Global functions definitions                            */
 //////////////////////////////////////////////////////////////////////////////////
 
-void audio_features(const int8_t *features_selector, const float *sig, int16_t len, int16_t fs, float *feats){
+void audio_features(const int8_t *features_selector, const real_t *sig, int16_t len, int16_t fs, real_t *feats){
 
     /* FFT based features */
     fft_based_features(features_selector, sig, len, fs, feats);
@@ -503,7 +503,7 @@ void audio_features(const int8_t *features_selector, const float *sig, int16_t l
 
 
 
-void imu_features(const int8_t *features_selector, const float sig[][Num_IMU_signals], int16_t len, float *feats){
+void imu_features(const int8_t *features_selector, const real_t sig[][Num_IMU_signals], int16_t len, real_t *feats){
 
     // Here len is the IMU_DIM_1 macro in the hardcoded samples
 
@@ -527,15 +527,15 @@ void imu_features(const int8_t *features_selector, const float sig[][Num_IMU_sig
     // GYRO_R
     compute_imu_family(features_selector, sig, len, GYROSCOPE_R, GYRO_R_FEAT, feats);
 
-    // Combine signals via L2 norm (float mode)
-    float *combo_signal = (float*)malloc(len * sizeof(float));
+    // Combine signals via L2 norm (real_t mode)
+    real_t *combo_signal = (real_t*)malloc(len * sizeof(real_t));
 
     RA_SET_IMU_CTX("IMU_L2_ACCEL");
     for(int16_t i=0; i<len; i++){
         combo_signal[i] = L2_norm(&sig[i][0], 3);
     }
     RA_IMU_LOG_ARRAY("imu_features", "sig_input", combo_signal, len);
-    imu_run_float_features(&features_selector[ACCEL_COMBO], combo_signal, len, &feats[ACCEL_COMBO]);
+    imu_run_real_t_features(&features_selector[ACCEL_COMBO], combo_signal, len, &feats[ACCEL_COMBO]);
     RA_CLEAR_IMU_CTX();
 
     RA_SET_IMU_CTX("IMU_L2_GYRO");
@@ -543,7 +543,7 @@ void imu_features(const int8_t *features_selector, const float sig[][Num_IMU_sig
         combo_signal[i] = L2_norm(&sig[i][3], 3);
     }
     RA_IMU_LOG_ARRAY("imu_features", "sig_input", combo_signal, len);
-    imu_run_float_features(&features_selector[GYRO_COMBO], combo_signal, len, &feats[GYRO_COMBO]);
+    imu_run_real_t_features(&features_selector[GYRO_COMBO], combo_signal, len, &feats[GYRO_COMBO]);
     RA_CLEAR_IMU_CTX();
 
     free(combo_signal);

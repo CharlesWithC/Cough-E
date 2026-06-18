@@ -291,8 +291,8 @@ static void compute_imu_float_features(const int8_t *selector,
     }
 
     for (int16_t i = 0; i < len; i++) {
-        l2a[i] = sqrtf(sig[i][0] * sig[i][0] + sig[i][1] * sig[i][1] + sig[i][2] * sig[i][2]);
-        l2g[i] = sqrtf(sig[i][3] * sig[i][3] + sig[i][4] * sig[i][4] + sig[i][5] * sig[i][5]);
+        l2a[i] = sqrtreal(sig[i][0] * sig[i][0] + sig[i][1] * sig[i][1] + sig[i][2] * sig[i][2]);
+        l2g[i] = sqrtreal(sig[i][3] * sig[i][3] + sig[i][4] * sig[i][4] + sig[i][5] * sig[i][5]);
     }
 
     const int base[8] = {

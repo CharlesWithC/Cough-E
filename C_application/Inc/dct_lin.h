@@ -1,7 +1,9 @@
 #ifndef _DCT_LIN_H_
 #define _DCT_LIN_H_
 
- static const float dct_cos[16384] = {
+#include <types.h>
+
+ static const real_t dct_cos[16384] = {
 1.000000,
 1.000000,
 1.000000,

@@ -7,7 +7,7 @@ BUILD_DIR 	= 	build
 SRC_DIRS 	= 	Src kiss_fftr FxP/imu FxP/audio
 SRC 		= 	$(foreach c, $(SRC_DIRS), $(wildcard $c/*.c))
 
-INC_DIRS 	= 	Inc FxP ./ kiss_fftr range_analysis
+INC_DIRS 	= 	Inc FxP universal/include/sw libposit/include ./ kiss_fftr range_analysis
 INC 		= 	$(foreach d, $(INC_DIRS), -I$d)
 
 TWIDDLE_GENERATOR = kiss_fftr/gen_twiddles_fixed.py
@@ -32,23 +32,27 @@ COMP_STRING += 	"|++++++++++++++++++++++++++++++++|\n"
 # @echo "Running with command:"
 
 
-EXEC_STRING =	" |++++++++++++++++++++++++++++++++|\n" 
-EXEC_STRING +=	"|     Start of execution...      |\n" 
-EXEC_STRING +=	"|++++++++++++++++++++++++++++++++|\n" 
+EXEC_STRING =	" |++++++++++++++++++++++++++++++++|\n"
+EXEC_STRING +=	"|     Start of execution...      |\n"
+EXEC_STRING +=	"|++++++++++++++++++++++++++++++++|\n"
 
-
-$(TWIDDLE_Q15) $(TWIDDLE_Q31): $(TWIDDLE_GENERATOR)
-	python3 $(TWIDDLE_GENERATOR) --formats q15 q31 --out-dir kiss_fftr
 
 all: $(TWIDDLE_Q15) $(TWIDDLE_Q31)
 	@mkdir -p $(BUILD_DIR)
 	$(CC) -Wall -o $(BUILD_DIR)/$(APP) main.c $(SRC) $(INC) $(MATH) -O3 -g $(CFLAGS)
 	@echo $(COMP_STRING)
 
-
 run: all
 	@echo $(EXEC_STRING)
 	@./$(BUILD_DIR)/$(APP)
+
+$(TWIDDLE_Q15) $(TWIDDLE_Q31): $(TWIDDLE_GENERATOR)
+	python3 $(TWIDDLE_GENERATOR) --formats q15 q31 --out-dir kiss_fftr
+
+submodule:
+	git submodule update --init
+	cd universal && git sparse-checkout init --no-cone && git sparse-checkout set sparse-checkout set /include/sw
+	cd libposit && git sparse-checkout init --no-cone && git sparse-checkout set sparse-checkout set /include
 
 clean:
 	rm -rf $(BUILD_DIR)

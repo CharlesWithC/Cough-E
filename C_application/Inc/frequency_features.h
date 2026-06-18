@@ -1,7 +1,8 @@
-#ifndef _FREQ_FEAT_H_  
+#ifndef _FREQ_FEAT_H_
 #define _FREQ_FEAT_H_
 
 #include <inttypes.h>
+#include <types.h>
 #include <welch_psd.h>
 
 /*
@@ -9,7 +10,7 @@
 */
 
 
-/// @brief Computes the Real FFT of a time signal sig. 
+/// @brief Computes the Real FFT of a time signal sig.
 /// It stores the magnitudes, the frequencies and the sum of all the magnitudes inside
 /// *mags, *freqs abd *sum_mags, respectively.
 /// Note that also the sampling_frequency (fs) and the length (len) of the signal are required as inputs
@@ -19,8 +20,8 @@
 /// @param fs           sampling frequency
 /// @param *mags        pointer of the array in which to store the magnitudes of the result
 /// @param *freqs       pointer of the array in which to store the frequencies of the result
-/// @param *sum_mags    pointer to the value that stores the sum of the resulting magnitudes 
-void compute_rfft(const float *sig, int16_t len, int16_t fs, float *mags, float *freqs, float *sum_mags);
+/// @param *sum_mags    pointer to the value that stores the sum of the resulting magnitudes
+void compute_rfft(const real_t *sig, int16_t len, int16_t fs, real_t *mags, real_t *freqs, real_t *sum_mags);
 
 
 
@@ -30,7 +31,7 @@ void compute_rfft(const float *sig, int16_t len, int16_t fs, float *mags, float 
 /// @param fs       sampling frequency
 /// @param *psd     pointer to the array that stores the resulting power spectral densities
 /// @param *freqs   pointer to the array that stores the resulting frequencies
-void compute_periodogram(const float *sig, int16_t len, int16_t fs, float *psd, float *freqs);
+void compute_periodogram(const real_t *sig, int16_t len, int16_t fs, real_t *psd, real_t *freqs);
 
 
 
@@ -39,8 +40,8 @@ void compute_periodogram(const float *sig, int16_t len, int16_t fs, float *psd, 
 /// @param *freqs       pointer to the frequencies
 /// @param len          length
 /// @param sum_mags     sum of the magnitues
-/// @return spectral decrease 
-float compute_spec_decrease(float* mags, float* freqs, int16_t len, float sum_mags);
+/// @return spectral decrease
+real_t compute_spec_decrease(real_t* mags, real_t* freqs, int16_t len, real_t sum_mags);
 
 
 
@@ -48,9 +49,9 @@ float compute_spec_decrease(float* mags, float* freqs, int16_t len, float sum_ma
 /// @param *mags        pointer to the magnitudes
 /// @param *freqs       pointer to the frequencies
 /// @param len          length
-/// @param sum_mags     sum of the magnitues 
+/// @param sum_mags     sum of the magnitues
 /// @return spectral slope
-float compute_spectral_slope(float *mags, float *freqs, int16_t len, float sum_mags);
+real_t compute_spectral_slope(real_t *mags, real_t *freqs, int16_t len, real_t sum_mags);
 
 
 
@@ -58,9 +59,9 @@ float compute_spectral_slope(float *mags, float *freqs, int16_t len, float sum_m
 /// @param *mags        pointer to the magnitudes
 /// @param *freqs       pointer to the frequencies
 /// @param len          length
-/// @param sum_mags     sum of the magnitues 
+/// @param sum_mags     sum of the magnitues
 /// @return rolloff
-float compute_rolloff(float *mags, float *freqs, int16_t len, float sum_mags);
+real_t compute_rolloff(real_t *mags, real_t *freqs, int16_t len, real_t sum_mags);
 
 
 
@@ -68,9 +69,9 @@ float compute_rolloff(float *mags, float *freqs, int16_t len, float sum_mags);
 /// @param *mags        pointer to the magnitudes
 /// @param *freqs       pointer to the frequencies
 /// @param len          length
-/// @param sum_mags     sum of the magnitues 
+/// @param sum_mags     sum of the magnitues
 /// @return centroid
-float compute_centroid(float *mags, float *freqs, int16_t len, float sum_mags);
+real_t compute_centroid(real_t *mags, real_t *freqs, int16_t len, real_t sum_mags);
 
 
 
@@ -79,10 +80,10 @@ float compute_centroid(float *mags, float *freqs, int16_t len, float sum_mags);
 /// @param *mags        pointer to the magnitudes
 /// @param *freqs       pointer to the frequencies
 /// @param len          length
-/// @param sum_mags     sum of the magnitues 
+/// @param sum_mags     sum of the magnitues
 /// @param centroid     centroid
 /// @return spread
-float compute_spread(float *mags, float *freqs, int16_t len, float sum_mags, float centroid);
+real_t compute_spread(real_t *mags, real_t *freqs, int16_t len, real_t sum_mags, real_t centroid);
 
 
 
@@ -91,11 +92,11 @@ float compute_spread(float *mags, float *freqs, int16_t len, float sum_mags, flo
 /// @param *mags        pointer to the magnitudes
 /// @param *freqs       pointer to the frequencies
 /// @param len          length
-/// @param sum_mags     sum of the magnitues 
+/// @param sum_mags     sum of the magnitues
 /// @param centroid     centroid
 /// @param spread       spread
 /// @return kurtosis
-float compute_kurt(float *mags, float *freqs, int16_t len, float sum_mags, float centroid, float spread);
+real_t compute_kurt(real_t *mags, real_t *freqs, int16_t len, real_t sum_mags, real_t centroid, real_t spread);
 
 
 
@@ -104,11 +105,11 @@ float compute_kurt(float *mags, float *freqs, int16_t len, float sum_mags, float
 /// @param *mags        pointer to the magnitudes
 /// @param *freqs       pointer to the frequencies
 /// @param len          length
-/// @param sum_mags     sum of the magnitues 
+/// @param sum_mags     sum of the magnitues
 /// @param centroid     centroid
 /// @param spread       spread
 /// @return skewness
-float compute_skew(float *mags, float *freqs, int16_t len, float sum_mags, float centroid, float spread);
+real_t compute_skew(real_t *mags, real_t *freqs, int16_t len, real_t sum_mags, real_t centroid, real_t spread);
 
 
 
@@ -116,7 +117,7 @@ float compute_skew(float *mags, float *freqs, int16_t len, float sum_mags, float
 /// @param *x   pointer to the signal
 /// @param len  lenght of the signal
 /// @return     the flatness of the signal
-float compute_flatness(float *x, int16_t len);
+real_t compute_flatness(real_t *x, int16_t len);
 
 
 
@@ -124,7 +125,7 @@ float compute_flatness(float *x, int16_t len);
 /// @param *x   pointer to the signal
 /// @param len  lenght of the signal
 /// @return     the standard deviation of the signal
-float compute_std(float *x, int16_t len);
+real_t compute_std(real_t *x, int16_t len);
 
 
 
@@ -132,16 +133,16 @@ float compute_std(float *x, int16_t len);
 /// @param *x   pointer to the signal
 /// @param len  lenght of the signal
 /// @return     the spectral entropy of the signal
-float compute_spectral_entropy(float *x, int16_t len);
+real_t compute_spectral_entropy(real_t *x, int16_t len);
 
 
 
 /// @brief  Returns the frequency at which the maximum psd is found
 /// @param *psd     pointer power spectral density of the signal
 /// @param *freqs   pointer to the frequencies
-/// @param len      lenght 
+/// @param len      lenght
 /// @return         the dominant frequency
-float get_domiant_freq(float *psd, float *freqs, int16_t len);
+real_t get_domiant_freq(real_t *psd, real_t *freqs, int16_t len);
 
 
 
@@ -154,7 +155,7 @@ float get_domiant_freq(float *psd, float *freqs, int16_t len);
 /// @param len              lenght
 /// @param *psd_selector    pointer to the selector for the psd
 /// @param *band_powers     poitner to the resulting band powers
-void normalized_bandpowers(float *psd, float *freqs, int16_t len, const int8_t *psd_selector, float *band_powers);
+void normalized_bandpowers(real_t *psd, real_t *freqs, int16_t len, const int8_t *psd_selector, real_t *band_powers);
 
 
 
@@ -169,7 +170,7 @@ void normalized_bandpowers(float *psd, float *freqs, int16_t len, const int8_t *
 /// @param len      lenght of the signal
 /// @param n_frames number of frames
 /// @param *coeffs  pointer to the resulting coefficients
-void mfcc_computation(const float *x, int16_t len, int16_t n_frames, float *coeffs);
+void mfcc_computation(const real_t *x, int16_t len, int16_t n_frames, real_t *coeffs);
 
 
 
@@ -178,7 +179,7 @@ void mfcc_computation(const float *x, int16_t len, int16_t n_frames, float *coef
 /// @param len          lenght of the signa;
 /// @param *mean_mfcc   pointer to the resulting mean of the MFCC
 /// @param *std_mfcc    pointer to the resulting standard deviation of the MFCC
-void get_mfcc_features(const float *x, int16_t len, float *mean_mfcc, float *std_mfcc);
+void get_mfcc_features(const real_t *x, int16_t len, real_t *mean_mfcc, real_t *std_mfcc);
 
 
 
@@ -191,6 +192,6 @@ void get_mfcc_features(const float *x, int16_t len, float *mean_mfcc, float *std
 /// @param *std_mel_spectr      pointer to the resulting standard deviations of the mels
 /// @param *max_mel_spectr      pointer to the resulting max of the mels
 /// @param *entropy_mel_spectr  pointer to the resulting entropies of the mels
-void get_mel_spectrogram_features(const float *x, int16_t len, uint8_t *idx_needed, uint8_t n_mels_needed, float *mean_mel_spectr, float *std_mel_spectr, float *max_mel_spectr, float *entropy_mel_spectr);
+void get_mel_spectrogram_features(const real_t *x, int16_t len, uint8_t *idx_needed, uint8_t n_mels_needed, real_t *mean_mel_spectr, real_t *std_mel_spectr, real_t *max_mel_spectr, real_t *entropy_mel_spectr);
 
 #endif

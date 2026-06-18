@@ -2,6 +2,7 @@
 #define _AUDIO_FEATURES_H_
 
 #include <inttypes.h>
+#include <types.h>
 
 #include <core/fxp_core.h>
 
@@ -11,9 +12,9 @@
 #define WIND_LEN_AUD_NUM 4U
 #define WIND_LEN_AUD_DEN 5U
 #ifndef FXP_MODE
-#define WIND_LEN_AUD    ((float)WIND_LEN_AUD_NUM / (float)WIND_LEN_AUD_DEN)
+#define WIND_LEN_AUD    ((real_t)WIND_LEN_AUD_NUM / (real_t)WIND_LEN_AUD_DEN)
 #endif
-#define OVERLAP_AUD     50  
+#define OVERLAP_AUD     50
 
 // audio samples in a window
 #define WINDOW_SAMP_AUDIO   ((int16_t)(((uint32_t)AUDIO_FS * WIND_LEN_AUD_NUM) / WIND_LEN_AUD_DEN))
@@ -26,8 +27,8 @@
 #define AUDIO_STEP_TICKS    ((uint32_t)AUDIO_STEP)
 
 #ifndef FXP_MODE
-#define AUDIO_OVERLAP_SEC   (float)(WIND_LEN_AUD * (OVERLAP_AUD / 100.0))
-#define AUDIO_STEP_SEC      (float)(WIND_LEN_AUD  - AUDIO_OVERLAP_SEC)
+#define AUDIO_OVERLAP_SEC   (real_t)(WIND_LEN_AUD * (OVERLAP_AUD / 100.0))
+#define AUDIO_STEP_SEC      (real_t)(WIND_LEN_AUD  - AUDIO_OVERLAP_SEC)
 #endif
 
 
@@ -70,7 +71,7 @@ static const band_t psd_bands[N_PSD] = {
 #define N_EEPD (EEPD_END - EEPD_START) / EEPD_BANDWIDTH
 
 
-/* All the families of features used. The values of the enum are adjusted 
+/* All the families of features used. The values of the enum are adjusted
    considering the amount of features for every family */
 enum audio_features_families{
     SPECTRAL_DECREASE,
