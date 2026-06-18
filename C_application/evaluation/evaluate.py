@@ -11,20 +11,24 @@ Pipeline per recording:
 
 Usage:
     python C_application/evaluation/evaluate.py
-    python C_application/evaluation/evaluate.py --mode fxp
+    python C_application/evaluation/evaluate.py -j 4
+    python C_application/evaluation/evaluate.py --mode fxp -j 8
     python C_application/evaluation/evaluate.py --mode fxp --twiddle 32
     python C_application/evaluation/evaluate.py --mode fxp-error
 """
 
 import argparse
+import concurrent.futures
 import csv
 import hashlib
 import json
 import os
+import queue
 import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from datetime import datetime
 
 import numpy as np
@@ -67,28 +71,19 @@ except ModuleNotFoundError as exc:
 #  Constants
 # ──────────────────────────────────────────────
 
-# Scoring parameters (matching ML_methodology/config/scoring/default.yaml)
 TOLERANCE_START = 0.25
 TOLERANCE_END = 0.25
 MIN_COUGH_DURATION = 0.1
 MAX_EVENT_DURATION = 0.6
 MIN_DURATION_BTWN_EVENTS = 0
-MIN_OVERLAP = MIN_COUGH_DURATION / 0.8  # 0.125
+MIN_OVERLAP = MIN_COUGH_DURATION / 0.8
 
-# Paths (relative to repo root)
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 C_APP_DIR = os.path.join(REPO_ROOT, "C_application")
-MAIN_H_PATH = os.path.join(C_APP_DIR, "main.h")
 INPUT_DATA_DIR = os.path.join(C_APP_DIR, "input_data")
-BUILD_DIR = os.path.join(C_APP_DIR, "build")
-EXECUTABLE = os.path.join(BUILD_DIR, "cough-e")
 
 DEFAULT_DATASET_PATH = os.path.join(REPO_ROOT, "Datasets", "full_dataset_test")
-
 FXP_DIR = os.path.join(os.path.dirname(__file__), "fxp")
-
-# Original main.h content for backup/restore
-MAIN_H_ORIGINAL = None
 
 CSV_FIELDNAMES = [
     "subject", "trial", "movement", "noise", "sound",
@@ -105,23 +100,10 @@ class EvaluationError(RuntimeError):
 #  main.h management
 # ──────────────────────────────────────────────
 
-def backup_main_h():
-    """Save current main.h content so it can be restored after evaluation."""
-    global MAIN_H_ORIGINAL
-    with open(MAIN_H_PATH, 'r') as f:
-        MAIN_H_ORIGINAL = f.read()
-
-
-def restore_main_h():
-    """Restore main.h to its original content."""
-    if MAIN_H_ORIGINAL is not None:
-        with open(MAIN_H_PATH, 'w') as f:
-            f.write(MAIN_H_ORIGINAL)
-
-
-def update_main_h(audio_relpath, imu_relpath, bio_relpath):
-    """Replace the 3 input data #include lines in main.h."""
-    with open(MAIN_H_PATH, 'r') as f:
+def update_main_h(ws_path, audio_relpath, imu_relpath, bio_relpath):
+    """Replace the 3 input data #include lines in the workspace main.h."""
+    main_h_path = os.path.join(ws_path, "main.h")
+    with open(main_h_path, 'r') as f:
         content = f.read()
 
     content = re.sub(r'#include <input_data/.*audio_input.*\.h>',
@@ -131,7 +113,7 @@ def update_main_h(audio_relpath, imu_relpath, bio_relpath):
     content = re.sub(r'#include <input_data/.*bio_input.*\.h>',
                      f'#include <input_data/{bio_relpath}>', content)
 
-    with open(MAIN_H_PATH, 'w') as f:
+    with open(main_h_path, 'w') as f:
         f.write(content)
 
 
@@ -139,12 +121,12 @@ def update_main_h(audio_relpath, imu_relpath, bio_relpath):
 #  Compile & run
 # ──────────────────────────────────────────────
 
-def compile_c_app(extra_flags=""):
-    """Compile the C application with EVALUATION_MODE enabled. Returns True on success."""
+def compile_c_app(ws_path, extra_flags=""):
+    """Compile the C application with EVALUATION_MODE enabled in the workspace."""
     flags = "-DEVALUATION_MODE"
     if extra_flags:
         flags += " " + extra_flags
-    result = subprocess.run(["make", "-C", C_APP_DIR, f"CFLAGS={flags}"],
+    result = subprocess.run(["make", "-C", ws_path, f"CFLAGS={flags}"],
                             capture_output=True, text=True)
     if result.returncode != 0:
         print(f"  Compilation failed: {result.stderr}")
@@ -152,10 +134,11 @@ def compile_c_app(extra_flags=""):
     return True
 
 
-def run_c_app():
-    """Run the compiled C application and return stdout."""
+def run_c_app(ws_path):
+    """Run the compiled C application from the workspace and return stdout."""
+    executable = os.path.join(ws_path, "build", "cough-e")
     try:
-        result = subprocess.run([EXECUTABLE], capture_output=True, text=True, timeout=60)
+        result = subprocess.run([executable], capture_output=True, text=True, timeout=60)
     except subprocess.TimeoutExpired:
         print("    WARNING: C app timed out after 60s (possible stuck)", flush=True)
         return ""
@@ -167,15 +150,6 @@ def run_c_app():
 # ──────────────────────────────────────────────
 
 def parse_c_output(output, audio_fs=AUDIO_FS_TARGET):
-    """
-    Parse C application output to extract detected cough segments.
-
-    The C app's FSM resets when IMU data runs out (re-processing from the start).
-    We detect this by grouping segments by postprocessing period and stopping
-    when a period's segments match an earlier period (indicating FSM restart).
-
-    Returns list of (start_sec, end_sec) tuples.
-    """
     periods = []
     current_period_segs = []
 
@@ -191,7 +165,6 @@ def parse_c_output(output, audio_fs=AUDIO_FS_TARGET):
             periods.append(current_period_segs)
             current_period_segs = []
 
-    # Detect FSM reset: stop at first repeated period signature
     seen_signatures = set()
     first_pass_periods = []
     for period_segs in periods:
@@ -201,7 +174,6 @@ def parse_c_output(output, audio_fs=AUDIO_FS_TARGET):
         seen_signatures.add(sig)
         first_pass_periods.append(period_segs)
 
-    # Flatten and deduplicate, converting samples to seconds
     segments = []
     seen_segments = set()
     for period_segs in first_pass_periods:
@@ -219,7 +191,6 @@ def parse_c_output(output, audio_fs=AUDIO_FS_TARGET):
 # ──────────────────────────────────────────────
 
 def load_ground_truth(dataset_path, subj_id, trial, mov, noise, sound):
-    """Load ground truth cough events. Returns empty list for non-cough sounds."""
     if sound != "cough":
         return []
     gt_path = os.path.join(dataset_path, subj_id,
@@ -234,23 +205,18 @@ def load_ground_truth(dataset_path, subj_id, trial, mov, noise, sound):
 
 
 def get_recording_duration(dataset_path, subj_id, trial, mov, noise, sound):
-    """Get recording duration in seconds from IMU CSV line count."""
     imu_path = os.path.join(dataset_path, subj_id,
                             f'trial_{trial}', f'mov_{mov}',
                             f'background_noise_{noise}', sound,
                             'imu.csv')
     if os.path.exists(imu_path):
         with open(imu_path, 'r') as f:
-            n_lines = sum(1 for _ in f) - 1  # subtract header
+            n_lines = sum(1 for _ in f) - 1
         return n_lines / IMU_FS
     return 0.0
 
 
 def create_binary_mask(events, duration):
-    """
-    Create a binary mask at FS_IMU resolution from a list of (start, end) events.
-    Mirrors edge_ai.get_ground_truth_regions().
-    """
     n_samples = int(round(duration * FS_IMU))
     mask = np.zeros(n_samples)
     for start, end in events:
@@ -267,11 +233,6 @@ def create_binary_mask(events, duration):
 # ──────────────────────────────────────────────
 
 def score_recording(gt_events, pred_events, duration):
-    """
-    Compute event-based scoring using timescoring.EventScoring.
-
-    Parameters match ML_methodology/config/scoring/default.yaml.
-    """
     if Annotation is None or scoring is None:
         raise RuntimeError(
             "timescoring is required for ML event metrics. "
@@ -304,11 +265,9 @@ def score_recording(gt_events, pred_events, duration):
 #  Per-recording evaluation
 # ──────────────────────────────────────────────
 
-def evaluate_recording(subj_id, trial, mov, noise, sound,
-                       dataset_path, input_data_dir):
-    """Full pipeline for a single recording: transform -> compile -> run -> parse -> score."""
-    if not hasattr(evaluate_recording, "_extra_flags"):
-        evaluate_recording._extra_flags = ""
+def evaluate_recording_isolated(subj_id, trial, mov, noise, sound,
+                                dataset_path, ws_path, extra_flags=""):
+    input_data_dir = os.path.join(ws_path, "input_data")
 
     result = transform_recording(subj_id, trial, mov, noise, sound,
                                  dataset_path, input_data_dir)
@@ -316,17 +275,15 @@ def evaluate_recording(subj_id, trial, mov, noise, sound,
         raise EvaluationError(f"transform failed for {subj_id} t{trial} {mov} {noise} {sound}")
     suffix, audio_relpath, imu_relpath, bio_relpath = result
 
-    update_main_h(audio_relpath, imu_relpath, bio_relpath)
+    update_main_h(ws_path, audio_relpath, imu_relpath, bio_relpath)
 
-    if not compile_c_app(extra_flags=evaluate_recording._extra_flags):
+    if not compile_c_app(ws_path, extra_flags=extra_flags):
         print(f"  FAILED to compile for {suffix}")
         raise EvaluationError(f"C application compile failed for {suffix}")
 
-    try:
-        output = run_c_app()
-    except subprocess.TimeoutExpired:
-        print(f"  TIMEOUT for {suffix}")
-        raise EvaluationError(f"C application timed out for {suffix}") from None
+    output = run_c_app(ws_path)
+    if not output:
+        raise EvaluationError(f"C application produced no output (or timed out) for {suffix}")
 
     pred_segments = parse_c_output(output)
     gt_events = load_ground_truth(dataset_path, subj_id, trial, mov, noise, sound)
@@ -345,8 +302,19 @@ def evaluate_recording(subj_id, trial, mov, noise, sound,
     return scores
 
 
+def _worker_task(task_args, dataset_path, workspaces, extra_flags):
+    subj_id, trial, mov, noise, sound = task_args
+    ws_path = workspaces.get()
+    try:
+        return evaluate_recording_isolated(
+            subj_id, trial, mov, noise, sound,
+            dataset_path, ws_path, extra_flags
+        )
+    finally:
+        workspaces.put(ws_path)
+
+
 def get_subject_ids(dataset_path):
-    """Return ordered subject IDs for the dataset."""
     return sorted([
         s for s in os.listdir(dataset_path)
         if os.path.isdir(os.path.join(dataset_path, s))
@@ -360,7 +328,6 @@ def _recording_path(dataset_path, subj_id, trial, mov, noise, sound):
 
 
 def iter_existing_recordings(dataset_path):
-    """Return the real non-empty dataset recordings in canonical evaluation order."""
     recordings = []
     for subj_id in get_subject_ids(dataset_path):
         for trial in TRIALS:
@@ -373,28 +340,65 @@ def iter_existing_recordings(dataset_path):
     return recordings
 
 
-def evaluate_subjects(dataset_path):
-    """Evaluate all recordings. Backs up and restores main.h."""
-    backup_main_h()
+def evaluate_subjects(dataset_path, jobs=1, extra_flags=""):
     all_results = []
     recordings = iter_existing_recordings(dataset_path)
     print(f"Expected recordings: {len(recordings)}")
 
+    temp_dirs = []
+    workspaces = queue.Queue()
+
+    print(f"\nSetting up {jobs} isolated workspaces in /tmp...")
     try:
-        current_subject = None
-        for subj_id, trial, mov, noise, sound in recordings:
-            if subj_id != current_subject:
-                current_subject = subj_id
-                print(f"\n=== Subject {subj_id} ===")
-            rec_id = f"t{trial}_{mov}_{noise}_{sound}"
-            result = evaluate_recording(
-                subj_id, trial, mov, noise, sound,
-                dataset_path, INPUT_DATA_DIR)
-            all_results.append(result)
-            print(f"  {rec_id}: TP_evt={result['tp_evt']} "
-                  f"FP_evt={result['fp_evt']} FN_evt={result['fn_evt']}")
+        for i in range(jobs):
+            ws_path = tempfile.mkdtemp(dir="/tmp", prefix=f"cough_e_eval_worker_{i}_")
+
+            shutil.copytree(
+                C_APP_DIR,
+                ws_path,
+                dirs_exist_ok=True,
+                ignore=shutil.ignore_patterns('.*', 'evaluation', 'input_data')
+            )
+
+            ws_input_data = os.path.join(ws_path, "input_data")
+            os.makedirs(ws_input_data, exist_ok=True)
+
+            main_input_data = os.path.join(C_APP_DIR, "input_data")
+            if os.path.exists(main_input_data):
+                for item in os.listdir(main_input_data):
+                    main_item_path = os.path.join(main_input_data, item)
+                    if os.path.isdir(main_item_path) and not item.startswith('.'):
+                        ws_item_path = os.path.join(ws_input_data, item)
+                        os.symlink(main_item_path, ws_item_path)
+
+            workspaces.put(ws_path)
+            temp_dirs.append(ws_path)
+
+        print(f"Beginning parallel evaluation of {len(recordings)} recordings...")
+        with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as executor:
+            future_to_rec = {
+                executor.submit(_worker_task, rec, dataset_path, workspaces, extra_flags): rec
+                for rec in recordings
+            }
+
+            for future in concurrent.futures.as_completed(future_to_rec):
+                rec = future_to_rec[future]
+                subj_id, trial, mov, noise, sound = rec
+                rec_id = f"t{trial}_{mov}_{noise}_{sound}"
+
+                try:
+                    result = future.result()
+                    if result is not None:
+                        all_results.append(result)
+                        print(f"  [{subj_id}] {rec_id}: TP_evt={result['tp_evt']} "
+                              f"FP_evt={result['fp_evt']} FN_evt={result['fn_evt']}")
+                except Exception as exc:
+                    print(f"  [{subj_id}] {rec_id} generated an exception: {exc}")
+
     finally:
-        restore_main_h()
+        print("\nCleaning up workspaces...")
+        for d in temp_dirs:
+            shutil.rmtree(d, ignore_errors=True)
 
     if len(all_results) != len(recordings):
         raise EvaluationError(f"processed {len(all_results)} of {len(recordings)} expected recordings")
@@ -407,7 +411,6 @@ def evaluate_subjects(dataset_path):
 # ──────────────────────────────────────────────
 
 def compute_aggregate_metrics(results):
-    """Compute aggregate event-based metrics across all recordings."""
     total_duration_hrs = sum(r["duration"] for r in results) / 3600.0
 
     tp = sum(r["tp_evt"] for r in results)
@@ -432,7 +435,6 @@ def compute_aggregate_metrics(results):
 # ──────────────────────────────────────────────
 
 def save_results_csv(results, output_path):
-    """Save per-recording results to CSV."""
     with open(output_path, 'w', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=CSV_FIELDNAMES)
         writer.writeheader()
@@ -442,7 +444,6 @@ def save_results_csv(results, output_path):
 
 
 def save_summary_json(aggregate, output_path, per_subject=None):
-    """Save aggregate metrics to JSON."""
     class NumpyEncoder(json.JSONEncoder):
         def default(self, obj):
             if isinstance(obj, (np.integer,)):
@@ -476,7 +477,6 @@ def save_summary_json(aggregate, output_path, per_subject=None):
 
 
 def build_per_subject_json(per_subject):
-    """Build per-subject metrics dict for JSON output."""
     result = {}
     for subj, a in per_subject.items():
         result[subj] = {
@@ -494,7 +494,6 @@ def build_per_subject_json(per_subject):
 
 
 def print_results(results, aggregate):
-    """Print per-subject and overall results to terminal."""
     print("\n" + "=" * 70)
     print("EVALUATION RESULTS")
     print("=" * 70)
@@ -523,12 +522,12 @@ def print_results(results, aggregate):
 
     return per_subject
 
+
 # ──────────────────────────────────────────────
 #  FxP-vs-float kernel error mode
 # ──────────────────────────────────────────────
 
 def _fxp_build_tag(*parts):
-    """Create a compact unique tag for per-recording harness build artifacts."""
     raw = "__".join(str(part) for part in parts)
     safe = re.sub(r"[^A-Za-z0-9_]+", "_", raw).strip("_")
     digest = hashlib.sha1(raw.encode("utf-8")).hexdigest()[:10]
@@ -536,7 +535,6 @@ def _fxp_build_tag(*parts):
 
 
 def _cleanup_fxp_harness(binary_path, build_tag):
-    """Remove per-recording harness artifacts after the harness has run."""
     if binary_path:
         try:
             os.remove(binary_path)
@@ -548,7 +546,6 @@ def _cleanup_fxp_harness(binary_path, build_tag):
 
 
 def _compile_fxp_error_harness(audio_relpath, imu_relpath, twiddle):
-    """Recompile the FxP error harness against a specific recording's headers."""
     tag = _fxp_build_tag("stage", twiddle, audio_relpath, imu_relpath)
     target = f"fxp_stage_harness_{tag}"
     header_flags = (
@@ -567,7 +564,6 @@ def _compile_fxp_error_harness(audio_relpath, imu_relpath, twiddle):
 
 
 def _compile_fxp_progressive_harness(audio_relpath, imu_relpath, bio_relpath, twiddle):
-    """Build the mixed float/FxP progressive feature-block harness."""
     tag = _fxp_build_tag("progressive", twiddle, audio_relpath, imu_relpath, bio_relpath)
     target = f"fxp_progressive_harness_{tag}"
     header_flags = (
@@ -588,7 +584,6 @@ def _compile_fxp_progressive_harness(audio_relpath, imu_relpath, bio_relpath, tw
 
 
 def _parse_fxp_kernel_acc(output):
-    """Parse FXP_KERNEL_ACC lines into {(block, kernel): accumulator dict}."""
     rows = {}
     for line in output.splitlines():
         if not line.startswith("FXP_KERNEL_ACC,"):
@@ -610,7 +605,6 @@ def _parse_fxp_kernel_acc(output):
 
 
 def _merge_acc(into, frm):
-    """Sum partial accumulators (per recording) into a running total."""
     for key, src in frm.items():
         dst = into.setdefault(key, {
             "n": 0, "sum_sq_err": 0.0,
@@ -624,9 +618,7 @@ def _merge_acc(into, frm):
 
 
 def _acc_to_metrics(acc):
-    """Convert raw accumulator state to absolute deviation metrics."""
     import math
-
     if acc["n"] <= 0:
         return 0.0, 0.0
     rmse = math.sqrt(acc["sum_sq_err"] / acc["n"])
@@ -634,7 +626,6 @@ def _acc_to_metrics(acc):
 
 
 def _print_fxp_table(table, header):
-    """Print kernel error rows grouped by block (audio first, then imu)."""
     print(header)
     for block in ("audio", "imu"):
         kernels = sorted(k for (b, k) in table if b == block)
@@ -647,7 +638,6 @@ def _print_fxp_table(table, header):
 
 
 def _evaluate_fxp_errors(dataset_path, twiddle):
-    """Loop the dataset, compile the FxP harness per recording, accumulate kernel errors."""
     overall = {}
     per_subject = {}
     n_recordings = 0
@@ -816,16 +806,15 @@ def _compile_flags_for_mode(mode, twiddle):
     return f"-DFXP_MODE -DFIXED_POINT={twiddle}"
 
 
-def _run_mode_eval(mode, twiddle):
+def _run_mode_eval(mode, twiddle, jobs):
     compile_flags = _compile_flags_for_mode(mode, twiddle)
-    evaluate_recording._extra_flags = compile_flags
 
     if mode == "float":
         print("Using float mode compile flags")
     else:
         print(f"Using fxp mode compile flags: {compile_flags}")
 
-    results = evaluate_subjects(DEFAULT_DATASET_PATH)
+    results = evaluate_subjects(DEFAULT_DATASET_PATH, jobs=jobs, extra_flags=compile_flags)
     if not results:
         print("No recordings processed. Check the default dataset path.")
         sys.exit(1)
@@ -855,6 +844,8 @@ def main(argv=None):
                         help="KissFFT twiddle precision (FxP audio uses 32-bit KissFFT)")
     parser.add_argument("--fxp-block", choices=FXP_BLOCKS,
                         help="run mixed float/FxP ML metrics with only this feature block replaced by FxP outputs")
+    parser.add_argument("-j", "--jobs", type=int, default=1,
+                        help="Number of threads for parallel evaluation (default: 1)")
 
     args = parser.parse_args(argv)
     try:
@@ -865,7 +856,7 @@ def main(argv=None):
         elif args.mode == "fxp-error":
             _evaluate_fxp_errors(DEFAULT_DATASET_PATH, args.twiddle)
         else:
-            _run_mode_eval(args.mode, args.twiddle)
+            _run_mode_eval(args.mode, args.twiddle, args.jobs)
     except EvaluationError as exc:
         print(f"\nEvaluation aborted: {exc}", file=sys.stderr)
         sys.exit(1)
