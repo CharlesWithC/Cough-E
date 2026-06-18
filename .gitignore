@@ -7,6 +7,7 @@ __pycache__/
 C_application/build/
 
 # Local editor formatting
+compile_flags.txt
 .clang-format
 .vscode/*.json
 
@@ -34,7 +35,7 @@ C_application/evaluation/fxp/.fxp_stage_harness.build.lock
 C_application/range_analysis/
 
 # Local dataset
-datasets/
+Datasets/
 
 # Overleaf docs
 C_application/OVERLEAF.md
