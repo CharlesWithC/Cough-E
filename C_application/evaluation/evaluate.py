@@ -259,7 +259,7 @@ def evaluate_recording_isolated(subj_id, trial, mov, noise, sound, dataset_path,
 
     output = run_c_app(ws_path)
     if not output:
-       	print(f"  [-WARN] No output at {ws_path} (likely segfault).")
+       	print(f"  [WARN] No output at {ws_path} (likely segfault).")
        	shutil.copytree(ws_path, ws_path + '_WARN')
     pred_segments = parse_c_output(output)
     gt_events = load_ground_truth(dataset_path, subj_id, trial, mov, noise, sound)

@@ -94,7 +94,7 @@ int main(){
         printf("Start: %d\n", idx_start_window);
 
         if(fsm_state.model == IMU_MODEL){
-            if(idx_start_window >= IMU_LEN){
+            if(idx_start_window + WINDOW_SAMP_IMU >= IMU_LEN){
                 // printf("RESET\n");
                 init_state();
                 idx_start_window = get_idx_window();
@@ -133,7 +133,7 @@ int main(){
             }
         }
         else {
-            if(idx_start_window >= AUDIO_LEN){
+            if(idx_start_window + WINDOW_SAMP_AUDIO >= AUDIO_LEN){
                 break;
                 init_state();
                 idx_start_window = get_idx_window();
