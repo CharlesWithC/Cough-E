@@ -2,6 +2,7 @@
 #define _IMU_MODEL_H_
 
 #include <inttypes.h>
+#include <types.h>
 
 #include <core/fxp_core.h>
 #include <imu_features.h>
@@ -64,7 +65,7 @@ static const uint8_t imu_model_feature_frac[35] = {
  * Returns the model confidence for the current window to be COUGH
 */
 #ifndef FXP_MODE
-float imu_predict(float *feat);
+real_t imu_predict(real_t *feat);
 #endif
 
 
@@ -4001,7 +4002,7 @@ static const imu_node_children_t imu_children[IMU_N_TREES][IMU_MAX_NODES] = {
 };
 
 #ifndef FXP_MODE
-static const float imu_scores[IMU_N_TREES][IMU_MAX_LEAVES] = {
+static const real_t imu_scores[IMU_N_TREES][IMU_MAX_LEAVES] = {
 	{
 		-0.5951458,
 		-0.120000005,
@@ -8013,7 +8014,7 @@ static const float imu_scores[IMU_N_TREES][IMU_MAX_LEAVES] = {
 
 };
 
-static const float imu_values_comp[IMU_N_TREES][IMU_MAX_NODES] = {
+static const real_t imu_values_comp[IMU_N_TREES][IMU_MAX_NODES] = {
 	{
 		0.31357142,
 		1.5,

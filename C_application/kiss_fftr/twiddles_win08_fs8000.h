@@ -1,11 +1,12 @@
 #ifndef _TWIDDLES_H_
 #define _TWIDDLES_H_
 
+#include <types.h>
 
 typedef struct twiddles_entry
 {
-	float cosine;
-	float sine;
+	real_t cosine;
+	real_t sine;
 } twiddles_t;
 
 static const twiddles_t twiddles_3200[3200] = {

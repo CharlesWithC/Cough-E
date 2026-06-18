@@ -2,6 +2,7 @@
 #define _IMU_FEATURES_H_
 
 #include <inttypes.h>
+#include <types.h>
 
 #include <core/fxp_core.h>
 
@@ -10,7 +11,7 @@
 #define WIND_LEN_IMU_NUM 1U
 #define WIND_LEN_IMU_DEN 2U
 #ifndef FXP_MODE
-#define WIND_LEN_IMU    ((float)WIND_LEN_IMU_NUM / (float)WIND_LEN_IMU_DEN)
+#define WIND_LEN_IMU    ((real_t)WIND_LEN_IMU_NUM / (real_t)WIND_LEN_IMU_DEN)
 #endif
 #define OVERLAP_IMU     50
 
@@ -22,14 +23,14 @@
 #define IMU_STEP_TICKS      ((uint32_t)(((uint64_t)IMU_STEP * AUDIO_FS) / IMU_FS))
 
 #ifndef FXP_MODE
-#define IMU_OVERLAP_SEC     (float)(WIND_LEN_IMU * (OVERLAP_IMU / 100.0))
-#define IMU_STEP_SEC        (float)(WIND_LEN_IMU - IMU_OVERLAP_SEC)
+#define IMU_OVERLAP_SEC     (real_t)(WIND_LEN_IMU * (OVERLAP_IMU / 100.0))
+#define IMU_STEP_SEC        (real_t)(WIND_LEN_IMU - IMU_OVERLAP_SEC)
 #endif
 
 /**
  * Epsilon tolerance value for the AZC computation
 */
-#define EPSILON_START   0.3 
+#define EPSILON_START   0.3
 #define EPSILON_END     1.0
 #define EPSILON_STEP    0.1
 
@@ -74,7 +75,7 @@ enum imu_signal_features {
     ACCEL_X_FEAT,
     ACCEL_Y_FEAT = ACCEL_X_FEAT + Num_imu_feat_families,
     ACCEL_Z_FEAT = ACCEL_Y_FEAT + Num_imu_feat_families,
-    
+
     GYRO_Y_FEAT = ACCEL_Z_FEAT + Num_imu_feat_families,
     GYRO_P_FEAT = GYRO_Y_FEAT + Num_imu_feat_families,
     GYRO_R_FEAT = GYRO_P_FEAT + Num_imu_feat_families,

@@ -1,5 +1,6 @@
-#include <stdio.h>
 #include <inttypes.h>
+#include <types.h>
+#include <helpers.h>
 
 #include <imu_model.h>
 
@@ -52,20 +53,20 @@ fxp_q16_t imu_predict(const fxp_feat_t *feats)
 #include <math.h>
 #include <range_analysis.h>
 
-float _imu_sigmoid(float score)
+real_t _imu_sigmoid(real_t score)
 {
     if (score < 0.0f) {
-        float z = expf(score);
+        real_t z = expreal(score);
         return z / (1.0f + z);
     }
-    return (1.0f / (1.0f + expf(-score)));
+    return (1.0f / (1.0f + expreal(-score)));
 }
 
-float imu_predict(float *feats)
+real_t imu_predict(real_t *feats)
 {
     RA_LOG_ARRAY("CLASSIFY", "imu_predict", "feats_input", feats, TOT_FEATURES_IMU_MODEL_IMU);
 
-    float score = 0.0f;
+    real_t score = 0.0f;
     int16_t current_node = 0;
     int16_t child_type = 0;
 
@@ -91,7 +92,7 @@ float imu_predict(float *feats)
 
     RA_LOG_SCALAR("CLASSIFY", "imu_predict", "score", score);
 
-    float res = _imu_sigmoid(score);
+    real_t res = _imu_sigmoid(score);
     RA_LOG_SCALAR("CLASSIFY", "_imu_sigmoid", "result", res);
     return res;
 }

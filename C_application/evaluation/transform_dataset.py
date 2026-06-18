@@ -62,6 +62,7 @@ def generate_audio_header(audio, audio_len, suffix, output_dir):
     with open(os.path.join(output_dir, filename), 'w') as f:
         f.write(f"#ifndef {guard}\n")
         f.write(f"#define {guard}\n\n\n")
+        f.write(f"#include <types.h>\n\n")
         f.write("/* Sampling frequency */\n")
         f.write(f"#define AUDIO_FS  {AUDIO_FS_TARGET}\n\n")
         f.write("/* Number of samples per each audiosignal */\n")
@@ -74,7 +75,7 @@ def generate_audio_header(audio, audio_len, suffix, output_dir):
         f.write("*/\n")
         f.write(f"typedef struct audio_input_{suffix}\n")
         f.write("{\n")
-        f.write("    float air[AUDIO_LEN];\n")
+        f.write("    real_t air[AUDIO_LEN];\n")
         f.write("} audio_input_t;\n\n")
         f.write("static const audio_input_t audio_in = {\n\n")
         f.write("\t{\n")
@@ -98,6 +99,7 @@ def generate_imu_header(imu_data, imu_len, suffix, output_dir):
     with open(os.path.join(output_dir, filename), 'w') as f:
         f.write(f"#ifndef {guard}\n")
         f.write(f"#define {guard}\n\n")
+        f.write(f"#include <types.h>\n\n")
         f.write("/* Sampling frequency of the IMU signal */\n")
         f.write(f"#define IMU_FS {IMU_FS}\n\n")
         f.write("/* \n")
@@ -118,7 +120,7 @@ def generate_imu_header(imu_data, imu_len, suffix, output_dir):
         f.write("\t\tGyroscope_r\n")
         f.write("\t}\n")
         f.write("*/\n\n")
-        f.write(f"static const float imu_in[IMU_LEN][6] = {{\n\n")
+        f.write(f"static const real_t imu_in[IMU_LEN][6] = {{\n\n")
 
         for i in range(imu_len):
             row = imu_data[i]
@@ -153,8 +155,9 @@ def generate_bio_header(bio_path, subj_id, output_dir):
     with open(filepath, 'w') as f:
         f.write(f"#ifndef {guard}\n")
         f.write(f"#define {guard}\n\n")
-        f.write(f"static const float gender = {int(gender)};\n")
-        f.write(f"static const float bmi = {bmi};\n\n")
+        f.write(f"#include <types.h>\n\n")
+        f.write(f"static const real_t gender = {int(gender)};\n")
+        f.write(f"static const real_t bmi = {bmi};\n\n")
         f.write("#endif\n")
 
     return filename

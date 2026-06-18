@@ -1,14 +1,15 @@
 #ifndef _FILTERS_PARAMETERS_H
 #define _FILTERS_PARAMETERS_H
 
-#define PADLEN 9    // Length of the padding applied for the filtering
+#include <types.h>
 
+#define PADLEN 9    // Length of the padding applied for the filtering
 
 // Holds the coefficients of the filter and its initial states
 typedef struct filter_param {
-    float b[3];
-    float a[3];
-    float zi[2];
+    real_t b[3];
+    real_t a[3];
+    real_t zi[2];
 } filter_param_t;
 
 
@@ -145,9 +146,9 @@ static const all_filters_t filters_parameters = {{
 
 
 // Parameters of the second filter used in the EEPD function. These are the same for every band
- static const float b_second[3] = { 3.844633506752846e-06, 7.689267013505692e-06, 3.844633506752846e-06 };
- static const float a_second[3] = { 1.0, -1.9944464105419268, 0.9944617890759538 };
+ static const real_t b_second[3] = { 3.844633506752846e-06, 7.689267013505692e-06, 3.844633506752846e-06 };
+ static const real_t a_second[3] = { 1.0, -1.9944464105419268, 0.9944617890759538 };
 
- static const float zi_second[2] = { 0.9999961553614867, -0.9944579444374683 };
+ static const real_t zi_second[2] = { 0.9999961553614867, -0.9944579444374683 };
 
 #endif

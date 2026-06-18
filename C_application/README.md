@@ -69,6 +69,18 @@ Build and run the fixed-point application:
 make run CFLAGS="-DFXP_MODE -DFIXED_POINT=32"
 ```
 
+Build the universal posit application:
+
+```sh
+make CC="g++" CFLAGS="-DUPOS_MODE"
+```
+
+Build and run the universal posit application:
+
+```sh
+make run CC="g++" CFLAGS="-DUPOS_MODE"
+```
+
 Clean the local build output:
 
 ```sh

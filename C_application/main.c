@@ -48,10 +48,10 @@ int main(void)
     }
 
     feat_t *audio_feature_array = (feat_t *)malloc((size_t)Number_AUDIO_Features * sizeof(feat_t));
-    memset(audio_feature_array, 0, (size_t)Number_AUDIO_Features * sizeof(feat_t));
+    for (int i = 0; i < Number_AUDIO_Features; i++) audio_feature_array[i] = 0;
 
     feat_t *imu_feature_array = (feat_t *)malloc((size_t)Number_IMU_Features * sizeof(feat_t));
-    memset(imu_feature_array, 0, (size_t)Number_IMU_Features * sizeof(feat_t));
+    for (int i = 0; i < Number_IMU_Features; i++) imu_feature_array[i] = 0;
 
     feat_t *features_audio_model = (feat_t *)malloc((size_t)TOT_FEATURES_AUDIO_MODEL_AUDIO * sizeof(feat_t));
     feat_t *features_imu_model = (feat_t *)malloc((size_t)TOT_FEATURES_IMU_MODEL_IMU * sizeof(feat_t));

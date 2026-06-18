@@ -1,10 +1,12 @@
 #ifndef _WELCH_PSD_H_
 #define _WELCH_PSD_H_
 
+#include <types.h>
+
 #define NPERSEG 900     // number of samples in each window of the welch method
 #define NOVERLAP 450    // number of overlapping samples between subsequent windows
 
- static const float hann_window[NPERSEG] = {
+ static const real_t hann_window[NPERSEG] = {
 0.0,
 1.2184647302626583e-05,
 4.873799534788059e-05,

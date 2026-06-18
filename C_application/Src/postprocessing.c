@@ -1,6 +1,5 @@
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <types.h>
 
 #include <postprocessing.h>
 #include <range_analysis.h>
@@ -375,15 +374,15 @@ uint16_t _clean_cough_segments(uint16_t *starts_idxs,
  * The resulting signal is first downsampled and normalized by subtracting the mean
  * and dividing by the maximum absolute value.
  */
-static float *_downsample(const float *sig, int16_t len, int16_t fs, int16_t *new_len)
+static real_t *_downsample(const real_t *sig, int16_t len, int16_t fs, int16_t *new_len)
 {
     RA_LOG_ARRAY("POSTPROC", "_downsample", "sig_input", sig, len);
 
     int8_t scale_factor = fs / FS_DOWNSAMPLE;
     *new_len = len / scale_factor;
 
-    float *res = (float *)malloc(*new_len * sizeof(float));
-    float mean = 0.0f;
+    real_t *res = (real_t *)malloc(*new_len * sizeof(real_t));
+    real_t mean = 0.0f;
 
     for (int16_t i = 0; i < *new_len; i++) {
         res[i] = sig[i * scale_factor];
@@ -396,7 +395,7 @@ static float *_downsample(const float *sig, int16_t len, int16_t fs, int16_t *ne
     sub_constant(res, *new_len, mean, res);
     RA_LOG_ARRAY("POSTPROC", "_downsample", "zero_mean", res, *new_len);
 
-    float max_abs = vect_max_abs_value(res, *new_len);
+    real_t max_abs = vect_max_abs_value(res, *new_len);
     RA_LOG_SCALAR("POSTPROC", "_downsample", "max_abs", max_abs);
     vect_div_const(res, *new_len, max_abs, res);
     RA_LOG_ARRAY("POSTPROC", "_downsample", "result", res, *new_len);
@@ -404,29 +403,29 @@ static float *_downsample(const float *sig, int16_t len, int16_t fs, int16_t *ne
     return res;
 }
 
-void _get_cough_peaks(const float *seg,
+void _get_cough_peaks(const real_t *seg,
                       int16_t len,
                       int16_t fs,
                       uint16_t *starts,
                       uint16_t *ends,
                       uint16_t *peaks_locs,
-                      float *peaks_amps,
+                      real_t *peaks_amps,
                       uint16_t *new_added)
 {
     RA_LOG_ARRAY("POSTPROC", "_get_cough_peaks", "seg_input", seg, len);
 
     int16_t downsample_len = 0.0;
-    float *downsample_seg = _downsample(seg, len, fs, &downsample_len);
+    real_t *downsample_seg = _downsample(seg, len, fs, &downsample_len);
 
-    float *seg_squared = (float *)malloc(downsample_len * sizeof(float));
+    real_t *seg_squared = (real_t *)malloc(downsample_len * sizeof(real_t));
     vect_mult(downsample_seg, downsample_seg, downsample_len, seg_squared);
     RA_LOG_ARRAY("POSTPROC", "_get_cough_peaks", "seg_squared", seg_squared, downsample_len);
 
-    float peak = vect_max_value(seg_squared, downsample_len);
+    real_t peak = vect_max_value(seg_squared, downsample_len);
     RA_LOG_SCALAR("POSTPROC", "_get_cough_peaks", "peak", peak);
 
-    float th_low = sqrtf(vect_mean(seg_squared, downsample_len));
-    float th_high = 0.25f * peak + 0.75f * th_low;
+    real_t th_low = sqrtreal(vect_mean(seg_squared, downsample_len));
+    real_t th_high = 0.25f * peak + 0.75f * th_low;
     RA_LOG_SCALAR("POSTPROC", "_get_cough_peaks", "th_low", th_low);
     RA_LOG_SCALAR("POSTPROC", "_get_cough_peaks", "th_high", th_high);
 
@@ -509,14 +508,14 @@ void _get_cough_peaks(const float *seg,
 uint16_t _clean_cough_segments(uint16_t *starts_idxs,
                                uint16_t *ends_idxs,
                                uint16_t *peaks_locs,
-                               float *peaks,
+                               real_t *peaks,
                                uint16_t n_peaks,
                                uint16_t fs)
 {
-    float min_dist_btwn_cough_peaks = COUGH_BURST_MIN_DUR + COUGH_EXP_MIN_DUR;
-    float min_time_before_peak = COUGH_BURST_MIN_DUR / 2;
-    float min_time_after_peak = COUGH_BURST_MIN_DUR / 2 + COUGH_EXP_MIN_DUR;
-    float max_dist_btwn_cough_peaks_in_burst = COUGH_EXP_MAX_DUR + COUGH_BURST_MIN_DUR;
+    real_t min_dist_btwn_cough_peaks = COUGH_BURST_MIN_DUR + COUGH_EXP_MIN_DUR;
+    real_t min_time_before_peak = COUGH_BURST_MIN_DUR / 2;
+    real_t min_time_after_peak = COUGH_BURST_MIN_DUR / 2 + COUGH_EXP_MIN_DUR;
+    real_t max_dist_btwn_cough_peaks_in_burst = COUGH_EXP_MAX_DUR + COUGH_BURST_MIN_DUR;
 
     uint16_t *sorted_idxs = (uint16_t *)malloc(n_peaks * sizeof(uint16_t));
     argsort(peaks_locs, n_peaks, sorted_idxs);
@@ -534,7 +533,7 @@ uint16_t _clean_cough_segments(uint16_t *starts_idxs,
     uint16_t locs_final[n_peaks];
     uint16_t n_peaks_final = 0;
 
-    float dist = 0;
+    real_t dist = 0;
     uint16_t tmp_start = 0;
     uint16_t tmp_end = 0;
     uint16_t tmp_loc = 0;
@@ -546,7 +545,7 @@ uint16_t _clean_cough_segments(uint16_t *starts_idxs,
             tmp_loc = peaks_locs[i];
 
             for (uint16_t j = (i + 1); j < n_peaks; j++) {
-                dist = (peaks_locs[j] - peaks_locs[i]) / (float)fs;
+                dist = (peaks_locs[j] - peaks_locs[i]) / (real_t)fs;
                 if (dist < min_dist_btwn_cough_peaks) {
                     idxs_merged[n_peaks_merged] = j;
                     n_peaks_merged++;
@@ -568,13 +567,13 @@ uint16_t _clean_cough_segments(uint16_t *starts_idxs,
         }
     }
 
-    float *cough_distances = (float *)malloc((uint32_t)((n_peaks_final - 1) * sizeof(float)));
+    real_t *cough_distances = (real_t *)malloc((uint32_t)((n_peaks_final - 1) * sizeof(real_t)));
 
     for (uint16_t i = 0; i < (n_peaks_final - 1); i++) {
-        cough_distances[i] = (locs_final[i + 1] - locs_final[i]) / (float)fs;
+        cough_distances[i] = (locs_final[i + 1] - locs_final[i]) / (real_t)fs;
     }
 
-    float *cough_burst_distances = (float *)malloc((n_peaks_final - 1) * sizeof(float));
+    real_t *cough_burst_distances = (real_t *)malloc((n_peaks_final - 1) * sizeof(real_t));
     uint16_t n_busts_dists = 0;
     for (uint16_t i = 0; i < (n_peaks_final - 1); i++) {
         if (cough_distances[i] <= max_dist_btwn_cough_peaks_in_burst) {
@@ -585,7 +584,7 @@ uint16_t _clean_cough_segments(uint16_t *starts_idxs,
 
     free(cough_distances);
 
-    float avg_cough_end_times = min_time_after_peak;
+    real_t avg_cough_end_times = min_time_after_peak;
 
     if (n_busts_dists > 0) {
         avg_cough_end_times = vect_mean(cough_burst_distances, n_busts_dists) - COUGH_BURST_MAX_DUR;
@@ -593,20 +592,20 @@ uint16_t _clean_cough_segments(uint16_t *starts_idxs,
 
     free(cough_burst_distances);
 
-    float time_start_peak = 0.0;
-    float time_to_next_peak = 0.0;
+    real_t time_start_peak = 0.0;
+    real_t time_to_next_peak = 0.0;
     uint16_t cough_series_count = 0;
-    float series_multiplier = 0.0;
+    real_t series_multiplier = 0.0;
 
     for (uint16_t i = 0; i < n_peaks_final; i++) {
-        time_start_peak = (locs_final[i] - starts_idxs[i]) / (float)fs;
+        time_start_peak = (locs_final[i] - starts_idxs[i]) / (real_t)fs;
 
         if (time_start_peak < min_time_before_peak) {
-            starts_idxs[i] = locs_final[i] - (uint16_t)(min_time_before_peak * fs);
+            starts_idxs[i] = locs_final[i] - (uint16_t)(float)(min_time_before_peak * fs);
         }
 
         if (i < (n_peaks_final - 1)) {
-            time_to_next_peak = (float)(locs_final[i + 1] - locs_final[i]) / fs;
+            time_to_next_peak = (real_t)(locs_final[i + 1] - locs_final[i]) / fs;
         } else {
             time_to_next_peak = 100;
         }
@@ -621,7 +620,7 @@ uint16_t _clean_cough_segments(uint16_t *starts_idxs,
                 series_multiplier = 1;
             }
 
-            ends_idxs[i] = locs_final[i] + (uint16_t)(series_multiplier * avg_cough_end_times * fs);
+            ends_idxs[i] = locs_final[i] + (uint16_t)(float)(series_multiplier * avg_cough_end_times * fs);
             cough_series_count = 0;
         } else {
             cough_series_count++;
