@@ -121,7 +121,7 @@ void mel_spectrogram_full(const float *x, int16_t len, int16_t n_frames, float *
     // the result matrix is saved one row after the other
     for(int16_t i=0; i<MEL_ROWS; i++){              // rows in the mel basis
         for(int16_t j=0; j<n_frames; j++){          // columns for frames_powers and raws for mel_basis
-            for(int16_t k=mel_nz_indexes[i][0]; k<=mel_nz_indexes[i][1]; k++){   // columns in the mel basis
+            for(int16_t k=mel_nz_indexes[i][0]; k<mel_nz_indexes[i][1]; k++){   // columns in the mel basis
                     res[(i*n_frames) + j] += mel_basis[i][k - mel_nz_indexes[i][0]] * frames_power[(j*MEL_COLUMNS) + k];
             }
         }
@@ -151,7 +151,7 @@ void mel_spectrogram(const float *x, int16_t len, int16_t n_frames, uint8_t *idx
         if(i == idx_required[current_idx]){
 
             for(int16_t j=0; j<n_frames; j++){          // columns for frames_powers and raws for mel_basis
-                for(int16_t k=mel_nz_indexes[i][0]; k<=mel_nz_indexes[i][1]; k++){   // columns in the mel basis
+                for(int16_t k=mel_nz_indexes[i][0]; k<mel_nz_indexes[i][1]; k++){   // columns in the mel basis
                         res[(current_idx*n_frames) + j] += mel_basis[i][k - mel_nz_indexes[i][0]] * frames_power[(j*MEL_COLUMNS) + k];
                 }
             }

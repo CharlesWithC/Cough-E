@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <inttypes.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <time_domain_feat.h>
 #include <feature_extraction.h>
@@ -33,7 +34,7 @@ int _ra_imu_active = 0;
 
 /**
     Given the features selector vector and two indexes (start and end), it
-    returns 1 if feature_selector has at least a 1 in the range specified 
+    returns 1 if feature_selector has at least a 1 in the range specified
     by the indexes, 0 otherwise
 
     @param *features_selector   :   one-hot vector for which features to extract
@@ -132,7 +133,7 @@ void compute_imu_family(const int8_t *features_selector, const float signal[][Nu
 //////////////////////////////////////////////////////////////////////////////////
 /*                      Local functions definitions                             */
 //////////////////////////////////////////////////////////////////////////////////
-    
+
 
 int is_required(const int8_t *features_selector, uint16_t start_index, uint16_t end_index){
 
@@ -208,12 +209,12 @@ void fft_based_features(const int8_t *features_selector, const float *sig, int16
         float spectral_slope = compute_spectral_slope(magnitudes, frequencies, (len/2)+1, sum_mags);
         feats[SPECTRAL_SLOPE] = spectral_slope;
     }
-    
+
     if(features_selector[SPECTRAL_ROLLOFF]){
         float spectral_rolloff = compute_rolloff(magnitudes, frequencies, (len/2)+1, sum_mags);
         feats[SPECTRAL_ROLLOFF] = spectral_rolloff;
     }
-    
+
     if(is_required(features_selector, SPECTRAL_CENTROID, SPECTRAL_SKEW)){
         float spectral_cetroid = compute_centroid(magnitudes, frequencies, (len/2)+1, sum_mags);
 
@@ -323,7 +324,7 @@ void mfcc_features(const int8_t *features_selector, const float *sig, int16_t le
 
         free(mean_mfcc);
         free(std_mfcc);
-    }    
+    }
 }
 
 
@@ -337,6 +338,7 @@ void mel_spectrogram_features(const int8_t *features_selector, const float *sig,
 
         // Indexes of the Mel bins required for the features computation
         uint8_t *idxs_needed = (uint8_t*)malloc(N_MFCC * sizeof(uint8_t));
+        memset(idxs_needed, 0, N_MFCC * sizeof(uint8_t));
 
         // Counts the number of MEL features needed and fills the indexes needed
         uint8_t n_mels_needed = 0;
@@ -505,7 +507,7 @@ void imu_features(const int8_t *features_selector, const float sig[][Num_IMU_sig
 
     // Here len is the IMU_DIM_1 macro in the hardcoded samples
 
-    // ACCEL_X  
+    // ACCEL_X
     compute_imu_family(features_selector, sig, len, ACCELEROMETER_X, ACCEL_X_FEAT, feats);
 
     // ACCEL_Y
