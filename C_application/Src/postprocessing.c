@@ -5,7 +5,7 @@
 #include <range_analysis.h>
 
 #ifdef FXP_MODE
-#include <core/fxp_core.h>
+#include <FxP/core/fxp_core.h>
 #endif
 
 /**

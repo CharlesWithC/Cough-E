@@ -91,8 +91,8 @@
 
 };
 
-
- static const real_t mel_basis[MEL_ROWS][MAX_NZ_ELEMS] = {
+// 4672 values * 4 bytes = 18688 bytes
+ static const real_t DINTL mel_basis[MEL_ROWS][MAX_NZ_ELEMS] = {
 
 	{
 		0.0030031611677259207,

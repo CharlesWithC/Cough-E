@@ -6,7 +6,7 @@
 
 #ifdef FXP_MODE
 #include <model_fxp.h>
-#include <core/fxp_core.h>
+#include <FxP/core/fxp_core.h>
 
 // Thresholds in imu_values_comp are pre-quantized to each feature's native
 // Q-format by generate_fxp_tables.py, so the runtime only has to pick the

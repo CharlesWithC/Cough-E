@@ -3,11 +3,52 @@
 
 #include <inttypes.h>
 #include <types.h>
+#include <math.h>
 
-real_t expreal(real_t x);
-real_t sqrtreal(real_t x);
-real_t logreal(real_t x);
-real_t log10real(real_t x);
+static inline real_t expreal(real_t x){
+    #ifdef UPOS_MODE
+    return sw::universal::exp(x);
+    #else
+    return expf(x);
+    #endif
+}
+
+static inline real_t sqrtreal(real_t x){
+    #ifdef UPOS_MODE
+    return sw::universal::sqrt(x);
+    #else
+    return sqrtf(x);
+    #endif
+}
+
+static inline real_t logreal(real_t x){
+    #ifdef UPOS_MODE
+    return sw::universal::log(x);
+    #else
+    return logf(x);
+    #endif
+}
+
+static inline real_t log10real(real_t x){
+    #ifdef UPOS_MODE
+    return sw::universal::log10(x);
+    #else
+    return log10f(x);
+    #endif
+}
+
+#ifdef HEEPATIA_MODE
+#include <w25q128jw.h>
+static inline void read_flash(const void *src, void *dest, uint32_t len) {
+    uint32_t source_flash = (uint32_t)heep_get_flash_address_offset((uint32_t *)src);
+    if(w25q128jw_read_standard(source_flash, dest, len) != FLASH_OK) printf("FLASH READ ERROR\n");
+}
+#else
+#include <string.h>
+static inline void read_flash(const void *src, void *dest, uint32_t len) {
+    memcpy(dest, src, len);
+}
+#endif
 
 /**
  * Enums of the available types on which to call the `order_by_idxs()` function.

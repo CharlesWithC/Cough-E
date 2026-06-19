@@ -3,7 +3,7 @@
 #include <inttypes.h>
 
 #include <audio_features.h>
-#include <core/fxp_core.h>
+#include <FxP/core/fxp_core.h>
 
 #if defined(FXP_MODE) && defined(FIXED_POINT)
 

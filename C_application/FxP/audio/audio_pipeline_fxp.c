@@ -2,14 +2,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <audio/audio_pipeline_fxp.h>
-
 #include <kiss_fftr.h>
 #include <mfcc_module.h>
 #include <welch_psd.h>
 
-#include <audio/audio_tables_q15.h>
-#include <core/fxp_log_exp.h>
+#ifdef FXP_MODE
+#include <FxP/audio/audio_pipeline_fxp.h>
+#include <FxP/audio/audio_tables_q15.h>
+#include <FxP/core/fxp_log_exp.h>
+#endif
 
 #if defined(FXP_MODE) && defined(FIXED_POINT)
 /* -------------------------------------------------------------------------- */

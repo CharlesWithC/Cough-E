@@ -11,8 +11,12 @@
 #include <imu_features.h>
 #include <postprocessing.h>
 
+#ifdef HEEPATIA_MODE
+#include <w25q128jw.h>
+#endif
+
 #ifdef FXP_MODE
-#include <core/fxp_core.h>
+#include <FxP/core/fxp_core.h>
 typedef fxp_q16_t score_t;
 #define SCORE_THRESHOLD_AUDIO ((score_t)FXP_AUDIO_SCORE_TH_Q16)
 #define SCORE_THRESHOLD_IMU ((score_t)FXP_IMU_SCORE_TH_Q16)
@@ -27,8 +31,38 @@ static inline uint8_t is_cough(score_t score, score_t threshold)
     return (score >= threshold) ? 1U : 0U;
 }
 
+#ifdef HEEPATIA_MODE
+// store heap data in gcram (in this case, virtual gcram for fpga purpose)
+// this only works with the modified linker in this branch
+#include <sys/types.h>
+#include <errno.h>
+extern char __virtgcram_heap_start[];
+extern char __virtgcram_heap_end[];
+
+static char *current_heap_ptr = __virtgcram_heap_start;
+
+void *__wrap__sbrk(ptrdiff_t incr) {
+    char *prev_heap_ptr = current_heap_ptr;
+
+    if (current_heap_ptr + incr > __virtgcram_heap_end) {
+        errno = ENOMEM;
+        return (void *)-1;
+    }
+
+    current_heap_ptr += incr;
+    return (void *)prev_heap_ptr;
+}
+#endif
+
 int main(void)
 {
+#ifdef HEEPATIA_MODE
+    if (w25q128jw_init(spi_flash) != FLASH_OK){
+        printf("FLASH INIT ERROR\n");
+        return EXIT_FAILURE;
+    }
+#endif
+
     int16_t *indexes_audio_f = (int16_t *)malloc((size_t)N_AUDIO_FEATURES * sizeof(int16_t));
     int8_t *indexes_imu_f = (int8_t *)malloc((size_t)N_IMU_FEATURES * sizeof(int8_t));
 
@@ -114,8 +148,9 @@ int main(void)
     gender_feature = cough_source_feat(gender);
     bmi_feature = cough_source_feat(bmi);
 #else
-    const audio_sample_t *audio_runtime_in = audio_in.air;
-    const imu_sample_t (*imu_runtime_in)[Num_IMU_signals] = imu_in;
+    // for non-fxp, we route all data through `read_flash` for consistency
+    audio_sample_t *audio_buf = (real_t *)malloc(WINDOW_SAMP_AUDIO * sizeof(real_t));
+    imu_sample_t (*imu_buf)[Num_IMU_signals] = (real_t (*)[Num_IMU_signals])malloc(WINDOW_SAMP_IMU * Num_IMU_signals * sizeof(real_t));
     gender_feature = (feat_t)gender;
     bmi_feature = (feat_t)bmi;
 #endif
@@ -131,8 +166,15 @@ int main(void)
                 idx_start_window = get_idx_window();
             }
 
+#ifdef FXP_MODE
+            const imu_sample_t (*imu_signal)[Num_IMU_signals] = &imu_runtime_in[idx_start_window];
+#else
+            const imu_sample_t (*imu_signal)[Num_IMU_signals] = imu_buf;
+            read_flash(&imu_in[idx_start_window], imu_buf, WINDOW_SAMP_IMU * Num_IMU_signals * sizeof(real_t));
+#endif
+
             imu_features(imu_features_selector,
-                         &imu_runtime_in[idx_start_window],
+                         imu_signal,
                          WINDOW_SAMP_IMU,
                          imu_feature_array);
 
@@ -153,8 +195,15 @@ int main(void)
                 break;
             }
 
+#ifdef FXP_MODE
+            const audio_sample_t *audio_signal = &audio_runtime_in[idx_start_window];
+#else
+            const audio_sample_t *audio_signal = audio_buf;
+            read_flash(&audio_in.air[idx_start_window], audio_buf, WINDOW_SAMP_AUDIO * sizeof(real_t));
+#endif
+
             audio_features(audio_features_selector,
-                           &audio_runtime_in[idx_start_window],
+                           audio_signal,
                            WINDOW_SAMP_AUDIO,
                            AUDIO_FS,
                            audio_feature_array);
@@ -172,7 +221,7 @@ int main(void)
             audio_score = audio_predict(features_audio_model);
             fsm_state.model_cls_out = is_cough(audio_score, SCORE_THRESHOLD_AUDIO) ? COUGH_OUT : NON_COUGH_OUT;
 
-            _get_cough_peaks(&audio_runtime_in[idx_start_window], WINDOW_SAMP_AUDIO, AUDIO_FS,
+            _get_cough_peaks(audio_signal, WINDOW_SAMP_AUDIO, AUDIO_FS,
                              &starts[n_peaks], &ends[n_peaks], &locs[n_peaks], &peaks[n_peaks], &new_added);
 
             for (uint16_t j = 0; j < new_added; j++) {

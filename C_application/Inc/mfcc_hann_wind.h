@@ -5,7 +5,8 @@
 
 #define HANN_SIZE   2048
 
- static const real_t hann_mfcc_wind[HANN_SIZE] = {
+// 2048 values * 4 bytes = 8192 bytes
+ static const real_t DINTL hann_mfcc_wind[HANN_SIZE] = {
     0.0,
 2.35309521190441e-06,
 9.412358699445456e-06,

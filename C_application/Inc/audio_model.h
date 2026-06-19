@@ -4,7 +4,7 @@
 #include <inttypes.h>
 #include <types.h>
 
-#include <core/fxp_core.h>
+#include <FxP/core/fxp_core.h>
 #include <audio_features.h>
 #include <bio_features.h>
 
@@ -91,7 +91,8 @@ typedef struct node_children
     audio_NODE_T child_right;
 } audio_node_children_t;
 
-static const audio_node_children_t audio_children[AUD_N_TREES][AUD_MAX_NODES] = {
+// 5400 values * 8 bytes = 43200 bytes ~ 42.2kB
+static const audio_node_children_t DINTL audio_children[AUD_N_TREES][AUD_MAX_NODES] = {
 	{
 		{{AUD_NODE_T, 1}, {AUD_NODE_T, 2}},
 		{{AUD_NODE_T, 3}, {AUD_NODE_T, 4}},
@@ -3358,7 +3359,8 @@ static const audio_node_children_t audio_children[AUD_N_TREES][AUD_MAX_NODES] = 
 };
 
 #ifndef FXP_MODE
-static const real_t audio_scores[AUD_N_TREES][MAX_LEAVES] = {
+// 5500 values * 4 bytes = 22000 bytes ~ 21.5kB
+static const real_t CARUS0 audio_scores[AUD_N_TREES][MAX_LEAVES] = {
 	{
 		0.5647059,
 		-0.15,
@@ -6724,7 +6726,8 @@ static const real_t audio_scores[AUD_N_TREES][MAX_LEAVES] = {
 
 };
 
-static const real_t audio_values_comp[AUD_N_TREES][AUD_MAX_NODES] = {
+// 5400 values * 4 bytes = 21600 bytes ~ 21.1kB
+static const real_t CARUS0 audio_values_comp[AUD_N_TREES][AUD_MAX_NODES] = {
 	{
 		-19.455618,
 		7.0475206,
@@ -9992,7 +9995,8 @@ static const real_t audio_values_comp[AUD_N_TREES][AUD_MAX_NODES] = {
 
 #endif /* !FXP_MODE */
 
-static const int16_t audio_feat_comp[AUD_N_TREES][AUD_MAX_NODES] = {
+// 5400 values * 2 bytes = 10800 bytes ~ 10.6kB
+static const int16_t CARUS0 audio_feat_comp[AUD_N_TREES][AUD_MAX_NODES] = {
 	{
 		68,
 		81,

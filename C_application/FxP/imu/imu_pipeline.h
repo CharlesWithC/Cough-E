@@ -5,7 +5,7 @@
 #include <imu_features.h>
 
 #ifdef FXP_MODE
-#include <core/fxp_core.h>
+#include <FxP/core/fxp_core.h>
 
 /* -------------------------------------------------------------------------- */
 /*  IMU feature dispatch entry points                                          */

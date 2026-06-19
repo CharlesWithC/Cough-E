@@ -3,7 +3,7 @@
 
 #include <types.h>
 
- static const real_t dct_cos[16384] = {
+static const real_t FLASH dct_cos[16384] = {
 1.000000,
 1.000000,
 1.000000,

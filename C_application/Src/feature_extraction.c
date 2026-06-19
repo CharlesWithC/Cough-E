@@ -15,9 +15,9 @@
 #include <range_analysis.h>
 
 #if defined(FXP_MODE) && defined(FIXED_POINT)
-#include <audio/audio_pipeline_fxp.h>
-#include <core/fxp_core.h>
-#include <imu/imu_pipeline.h>
+#include <FxP/audio/audio_pipeline_fxp.h>
+#include <FxP/core/fxp_core.h>
+#include <FxP/imu/imu_pipeline.h>
 #endif
 
 #ifdef RANGE_ANALYSIS
