@@ -3,7 +3,7 @@
 
 #include <inttypes.h>
 #include <types.h>
-#include <core/fxp_core.h>
+#include <FxP/core/fxp_core.h>
 #include <helpers.h>
 
 // Maximum number of peaks expected between one output and the next one

@@ -5,7 +5,7 @@
 #include <inttypes.h>
 
 #include <audio_model.h>
-#include <core/fxp_core.h>
+#include <FxP/core/fxp_core.h>
 #include <imu_model.h>
 
 #define FXP_AUDIO_SCORE_TH_Q16 ((fxp_q16_t) - 55528) /* logit(0.30) in Q16 */

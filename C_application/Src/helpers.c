@@ -13,38 +13,6 @@
 // Fisher definition
 #define KURT_FISHER_CONST   3
 
-real_t expreal(real_t x){
-    #ifdef UPOS_MODE
-    return sw::universal::exp(x);
-    #else
-    return expf(x);
-    #endif
-}
-
-real_t sqrtreal(real_t x){
-    #ifdef UPOS_MODE
-    return sw::universal::sqrt(x);
-    #else
-    return sqrtf(x);
-    #endif
-}
-
-real_t logreal(real_t x){
-    #ifdef UPOS_MODE
-    return sw::universal::log(x);
-    #else
-    return logf(x);
-    #endif
-}
-
-real_t log10real(real_t x){
-    #ifdef UPOS_MODE
-    return sw::universal::log10(x);
-    #else
-    return log10f(x);
-    #endif
-}
-
 // Internal functions to support some computations
 void _find_max(real_t *x, int16_t len, real_t *max_value, int16_t *max_index);
 real_t _simpson_step(real_t *x, real_t spacing, int16_t start, int16_t end);

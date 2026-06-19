@@ -66,7 +66,7 @@ def _gen_super_values(length: int, frac_bits: int) -> Iterable[Tuple[int, int]]:
 
 
 def _write_table(lines: List[str], name: str, length: int, values: Iterable[Tuple[int, int]]) -> None:
-    lines.append(f"static const twiddles_t {name}[{length}] = {{")
+    lines.append(f"static const twiddles_t FLASH {name}[{length}] = {{")
     for c, s in values:
         lines.append(f"    {{ {c}, {s} }},")
     lines.append("};")
@@ -79,6 +79,7 @@ def _render_header(format_name: str, ctype: str, frac_bits: int) -> str:
     lines.append(f"#ifndef {guard}")
     lines.append(f"#define {guard}")
     lines.append("")
+    lines.append("#include <types.h>")
     lines.append("#include <stdint.h>")
     lines.append("")
     lines.append("/*")
@@ -144,4 +145,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

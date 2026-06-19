@@ -192,7 +192,6 @@ void power_to_dB(real_t *x, int16_t len, real_t *res){
     RA_LOG_ARRAY("AUDIO_MEL", "power_to_dB", "output", res, len);
 }
 
-
 /// @brief Computes the Direct Cosine Transform on a single dimentional array
 /// @param *x   pointer to the input signal
 /// @param len  lenght
@@ -206,10 +205,14 @@ void _dct_linear(real_t *x, int16_t len, real_t *y){
 
     real_t cos_v = 0.0;
 
+    real_t *dct_cos_buf = (real_t*)malloc(len * sizeof(real_t));
+
     for(int16_t k=0; k<len; k++){
+        read_flash(&dct_cos[(len * k)], dct_cos_buf, len * sizeof(real_t));
+
         sum = 0.0;
         for(int16_t n=0; n<len; n++){
-            cos_v = dct_cos[(len * k) + n];
+            cos_v = dct_cos_buf[n];
             sum += x[n] * cos_v;
         }
         y[k] = sum * 2;

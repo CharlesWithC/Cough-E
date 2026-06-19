@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <imu/imu_pipeline.h>
+#include <FxP/imu/imu_pipeline.h>
 
 #ifdef FXP_MODE
 
@@ -121,17 +121,17 @@ static q10_22_t _kurtosis(const q11_5_t *sig, int16_t len) {
     for (int16_t i = 0; i < len; i++) {
         q11_5_t dev = _kurtosis_dev(sig[i], mean);
 
-        q5_11_t dev_q5_11 = (q5_11_t)((int32_t)dev << 6);                      
+        q5_11_t dev_q5_11 = (q5_11_t)((int32_t)dev << 6);
         uq10_22_t dev_2 = (uq10_22_t)((int32_t)dev_q5_11 * (int32_t)dev_q5_11);
-        uq24_8_t dev_2_low = dev_2 >> 14U;                                     
-        sum_dev_4 += dev_2_low * dev_2_low;                                 
-        sum_var += (uq10_22_t)dev_2;                         
+        uq24_8_t dev_2_low = dev_2 >> 14U;
+        sum_dev_4 += dev_2_low * dev_2_low;
+        sum_var += (uq10_22_t)dev_2;
     }
     // all denominator related
     uq10_22_t variance = (uq10_22_t)(sum_var / (uint16_t)len);
     uq5_11_t stddev = (uq5_11_t)fxp_sqrt32(variance);
     uq10_22_t stddev_2 = (uq10_22_t)((uint32_t)stddev * (uint32_t)stddev);
-    uq10_6_t stddev_2_low = (uq10_6_t)(stddev_2 >> 16U);                           
+    uq10_6_t stddev_2_low = (uq10_6_t)(stddev_2 >> 16U);
     uq20_12_t stddev_4 = (uq20_12_t)((uint32_t)stddev_2_low * (uint32_t)stddev_2_low);
     uq20_12_t denom = (uq20_12_t)((uint32_t)len * stddev_4);
     uint32_t denom_shifted = denom >> 10U;
@@ -199,7 +199,7 @@ static inline int8_t _azc_slope_sign(const void *sig, int16_t a_idx, int16_t b_i
     if (b < a) return -1;
     return 0;
 }
- 
+
 static uint32_t _azc_max_vdist(const void *sig, int16_t first, int16_t last,
                                uint8_t is_signed, int16_t *idx)
 {

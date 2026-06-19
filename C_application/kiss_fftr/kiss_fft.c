@@ -23,6 +23,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 #include <types.h>
 #include <math.h>
+#include <helpers.h>
 #include "_kiss_fft_guts.h"
 /* The guts header contains all the multiplication and addition macros that are defined for
  fixed or floating point complex numbers.  It also delares the kf_ internal functions.
@@ -449,10 +450,9 @@ kiss_fft_cfg kiss_fft_alloc(int nfft,int inverse_fft,void * mem,size_t * lenmem 
     Function to read the precomputed twiddle factors inside the FFTR cfg structure
 */
 void init_twiddles(kiss_fft_cfg *st, const twiddles_t *twiddles, int16_t len){
-    for(int16_t i=0; i<len; i++){
-        (*st)->twiddles[i].r = twiddles[i].cosine;
-        (*st)->twiddles[i].i = twiddles[i].sine;
-    }
+    // we assume (*st)->twiddles[i] is defined with r-i order
+    // and twiddles[i] is defined as cosine-sine order
+    read_flash(twiddles, (*st)->twiddles, len*sizeof(twiddles_t));
 }
 
 

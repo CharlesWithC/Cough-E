@@ -16,3 +16,17 @@
     typedef float real_t;
 #endif
 #endif
+
+#ifdef HEEPATIA_MODE
+#define DINTL __attribute__((section(".xheep_data_interleaved")))
+#define FLASH __attribute__((section(".xheep_data_flash_only"))) __attribute__ ((aligned (16)))
+#define GCRAM __attribute__((section(".xheep_rodata_virtgcram"))) __attribute__ ((aligned (16)))
+#define CARUS0 __attribute__((section(".xheep_data_carus0"))) __attribute__ ((aligned (16)))
+#define CARUS1 __attribute__((section(".xheep_data_carus1"))) __attribute__ ((aligned (16)))
+#else
+#define DINTL
+#define FLASH
+#define GCRAM
+#define CARUS0
+#define CARUS1
+#endif

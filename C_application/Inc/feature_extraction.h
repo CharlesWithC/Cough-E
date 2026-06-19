@@ -2,7 +2,7 @@
 #define _FEATURE_EXTRACTION_H
 
 #include <imu_features.h>
-#include <core/fxp_core.h>
+#include <FxP/core/fxp_core.h>
 
 typedef cough_feat_t feat_t;
 typedef cough_audio_sample_t audio_sample_t;

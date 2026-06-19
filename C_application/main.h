@@ -2,7 +2,7 @@
 #define _MAIN_H_
 
 #include <inttypes.h>
-#include <core/fxp_core.h>
+#include <FxP/core/fxp_core.h>
 
 //////////////////////////////////////
 /* Model to be used                 */

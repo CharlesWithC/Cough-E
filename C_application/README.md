@@ -109,3 +109,15 @@ python3 transform_dataset.py \
 ```
 
 The full evaluation pipeline updates the `main.h` includes automatically for each recording, so manual edits are only needed for ad-hoc local runs.
+
+#### HEEPatia
+
+FLASH, CARUS and GCRAM are utilized due to limited main memory in HEEPatia. Note that we use a virtual GCRAM as FPGA does not support native GCRAM. The modified [memory layout](/config/mcu-gen-system.hjson) and [linker](/sw/linker/link_flash_load.ld.tpl) must be used.
+
+We override `_sbrk` to reroute heap data to virtual GCRAM because main `data` only has 32kB space - this requires modifying `CMakeLists.txt` by adding `-Wl,--wrap=_sbrk` linker flag. We keep stack data in main `data` section.
+
+Twiddles for `kiss-fftr`, COS LUT for `dct-linear`, and input data are stored in FLASH. Other constant data is mostly stored in CARUS and INTERLEAVED data, if not in main `data`, and the usage are as follows:
+
+- CARUS0: 54400 bytes / 65536 bytes (audio model)
+- CARUS1: 60400 bytes / 65536 bytes (imu model)
+- INTERLEAVED: 121680 bytes / 131072 bytes (other constant)

@@ -51,6 +51,8 @@ $(TWIDDLE_Q15) $(TWIDDLE_Q31): $(TWIDDLE_GENERATOR)
 
 submodule:
 	git submodule update --init
+	git submodule add -f https://github.com/stillwater-sc/universal universal
+	git submodule add -f https://github.com/CharlesWithC/libposit libposit
 	cd universal && git sparse-checkout init --no-cone && git sparse-checkout set sparse-checkout set /include/sw
 	cd libposit && git sparse-checkout init --no-cone && git sparse-checkout set sparse-checkout set /include
 

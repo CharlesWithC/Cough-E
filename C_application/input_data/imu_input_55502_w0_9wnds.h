@@ -28,7 +28,7 @@
 	}
 */
 
-static const real_t imu_in[IMU_LEN][6] = {
+static const real_t FLASH imu_in[IMU_LEN][6] = {
 
 	{
 		-0.57,

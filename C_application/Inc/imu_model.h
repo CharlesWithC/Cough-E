@@ -4,7 +4,7 @@
 #include <inttypes.h>
 #include <types.h>
 
-#include <core/fxp_core.h>
+#include <FxP/core/fxp_core.h>
 #include <imu_features.h>
 #include <bio_features.h>
 
@@ -89,7 +89,9 @@ typedef struct imu_node_children
     imu_NODE_T child_right;
 } imu_node_children_t;
 
-static const imu_node_children_t imu_children[IMU_N_TREES][IMU_MAX_NODES] = {
+
+// 6000 values * 8 bytes = 48000 bytes ~ 46.9kB
+static const imu_node_children_t DINTL imu_children[IMU_N_TREES][IMU_MAX_NODES] = {
 	{
 		{{IMU_NODE_T, 1}, {IMU_NODE_T, 2}},
 		{{IMU_NODE_T, 3}, {IMU_NODE_T, 4}},
@@ -4002,7 +4004,8 @@ static const imu_node_children_t imu_children[IMU_N_TREES][IMU_MAX_NODES] = {
 };
 
 #ifndef FXP_MODE
-static const real_t imu_scores[IMU_N_TREES][IMU_MAX_LEAVES] = {
+// 6100 values * 4 bytes = 24400 bytes ~ 23.9kB
+static const real_t CARUS1 imu_scores[IMU_N_TREES][IMU_MAX_LEAVES] = {
 	{
 		-0.5951458,
 		-0.120000005,
@@ -8014,7 +8017,8 @@ static const real_t imu_scores[IMU_N_TREES][IMU_MAX_LEAVES] = {
 
 };
 
-static const real_t imu_values_comp[IMU_N_TREES][IMU_MAX_NODES] = {
+// 6000 values * 4 bytes = 24000 bytes ~ 23.5kB
+static const real_t CARUS1 imu_values_comp[IMU_N_TREES][IMU_MAX_NODES] = {
 	{
 		0.31357142,
 		1.5,
@@ -11928,7 +11932,8 @@ static const real_t imu_values_comp[IMU_N_TREES][IMU_MAX_NODES] = {
 
 #endif /* !FXP_MODE */
 
-static const int16_t imu_feat_comp[IMU_N_TREES][IMU_MAX_NODES] = {
+// 6000 values * 2 bytes = 12000 bytes ~ 11.8kB
+static const int16_t CARUS1 imu_feat_comp[IMU_N_TREES][IMU_MAX_NODES] = {
 	{
 		16,
 		20,

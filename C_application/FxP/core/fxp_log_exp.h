@@ -3,7 +3,7 @@
 #include <inttypes.h>
 #include <limits.h>
 
-#include <core/fxp_core.h>
+#include <FxP/core/fxp_core.h>
 
 /* Fixed-point log/exp LUTs and helpers.
  * Tables are generated for N=256 samples over [0,1] with Q24 scaling.
