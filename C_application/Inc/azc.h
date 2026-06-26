@@ -15,6 +15,6 @@
  *
  * @return the number of times the differentaition of the approximated signal crosses the 0-axis
 */
-int16_t azc_computation(real_t *sig, int16_t len, real_t epsilon);
+int16_t azc_computation(bigreal_t *sig, int16_t len, bigreal_t epsilon);
 
 #endif

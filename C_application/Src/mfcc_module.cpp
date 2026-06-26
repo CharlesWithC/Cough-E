@@ -201,7 +201,7 @@ void _dct_linear(real_t *x, int16_t len, real_t *y){
     RA_LOG_ARRAY("AUDIO_MEL", "dct_linear", "input", x, len);
 
     real_t sum = 0.0f;
-    real_t scaling = sqrtreal(1.0f / (2 * len));
+    real_t scaling = sqrtreal((real_t)1.0f / (2 * len));
 
     real_t cos_v = 0.0f;
 
@@ -221,7 +221,7 @@ void _dct_linear(real_t *x, int16_t len, real_t *y){
             y[k] = y[k] * scaling;
         }
     }
-    y[0] = y[0] * sqrtreal(1.0f / (4 * len));
+    y[0] = y[0] * sqrtreal((real_t)1.0f / (4 * len));
 
     RA_LOG_ARRAY("AUDIO_MEL", "dct_linear", "output", y, len);
 }

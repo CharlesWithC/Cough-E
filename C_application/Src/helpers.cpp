@@ -14,7 +14,6 @@
 #define KURT_FISHER_CONST   3
 
 // Internal functions to support some computations
-void _find_max(real_t *x, int16_t len, real_t *max_value, int16_t *max_index);
 real_t _simpson_step(real_t *x, real_t spacing, int16_t start, int16_t end);
 
 
@@ -96,157 +95,6 @@ void order_by_idxs(void *arr_in, uint16_t len, uint16_t *idxs, type_sort_t type)
 
         free(tmp);
     }
-}
-
-
-
-void vect_div_const(real_t *x, int16_t len, real_t divisor, real_t *res){
-    for(uint16_t i=0; i<len; i++){
-        res[i] = x[i] / divisor;
-    }
-}
-
-
-
-real_t vect_sum(const real_t *x, int16_t len){
-    real_t sum = 0.0;
-    for(int16_t i=0; i<len; i++){
-        sum += x[i];
-    }
-    return sum;
-}
-
-
-real_t vect_mean(const real_t *x, int16_t len){
-    return vect_sum(x, len) / len;
-}
-
-
-void vect_mult(real_t *x, const real_t *y, int16_t len, real_t *r){
-    for(int16_t i=0; i<len; i++){
-        r[i] = x[i] * y[i];
-    }
-}
-
-
-
-real_t vect_std(real_t *x, int16_t len){
-    real_t mean = vect_mean(x, len);
-    real_t sum = 0.0;
-
-    for(int16_t i=0; i<len; i++){
-        real_t centered = x[i] - mean;
-        RA_IMU_LOG_SCALAR("vect_std", "x_minus_mean", centered);
-        real_t sq_dev = centered * centered;
-        RA_IMU_LOG_SCALAR("vect_std", "sq_dev", sq_dev);
-        sum += sq_dev;
-    }
-
-    RA_IMU_LOG_SCALAR("vect_std", "sum_sq_dev", sum);
-    real_t variance = sum / len;
-    RA_IMU_LOG_SCALAR("vect_std", "variance", variance);
-    real_t result = sqrtreal(variance);
-    RA_IMU_LOG_SCALAR("vect_std", "result", result);
-    return result;
-}
-
-
-
-void vect_copy(const real_t *in, int16_t start, int16_t len, real_t *out){
-    for(int16_t i=0; i<len; i++){
-        out[i] = in[i + start];
-    }
-}
-
-
-
-
-void vect_copy_uint16_t(uint16_t *in, int16_t start, int16_t len, uint16_t *out){
-    for(int16_t i=0; i<len; i++){
-        out[i] = in[i + start];
-    }
-}
-
-
-
-void sub_constant(const real_t *x, int16_t len, real_t constant, real_t *res){
-    for(int16_t i=0; i<len; i++){
-        res[i] = x[i] - constant;
-    }
-}
-
-
-
-int16_t vect_max_index(real_t *x, int16_t len){
-    int16_t max_i = 0.0;
-    real_t temp_v;
-    _find_max(x, len, &temp_v, &max_i);
-    return max_i;
-}
-
-
-
-real_t vect_max_value(real_t *x, int16_t len){
-    int16_t max_i = 0;
-    real_t max_v;
-    _find_max(x, len, &max_v, &max_i);
-    return max_v;
-}
-
-
-
-real_t vect_max_abs_value(real_t *x, int16_t len){
-    real_t max_abs = x[0];
-    real_t tmp = 0.0;
-    for(int16_t i=1; i<len; i++){
-        tmp = fabs(x[i]);
-        if(tmp >= max_abs){
-            max_abs = tmp;
-        }
-    }
-
-    return max_abs;
-}
-
-
-
-
-void normalize_max(real_t *x, int16_t len, real_t *res){
-    real_t max;
-    int16_t max_i;
-    _find_max(x, len, &max, &max_i);
-
-    for(int16_t i=0; i<len; i++){
-        res[i] = x[i] / max;
-    }
-}
-
-
-/*
-    Helper function for the maximum value and relative index computation
-    It stores to max_value and max_index the maximum value and relative index
-    found in the array x, respectively
-*/
-
-/// @brief Helper function for the maximum value and relative index computation
-/// It stores to max_value and max_index the maximum value and relative index
-/// found in the array x, respectively
-/// @param *x   pointer to the inpug array
-/// @param len  lenght of the array
-/// @param *max_value   max value
-/// @param *max_index   index of the max value
-void _find_max(real_t *x, int16_t len, real_t *max_value, int16_t *max_index){
-    real_t max_v = x[0];
-    int16_t max_i = 0;
-    for(int16_t i=0; i<len; i++){
-        if(x[i] > max_v){
-            max_v = x[i];
-            max_i = i;
-        }
-    }
-
-    *max_index = max_i;
-    *max_value = max_v;
 }
 
 
@@ -358,10 +206,9 @@ void reflect_padding(const real_t *x, uint16_t len, uint16_t side_pad_len, real_
 
 
 
+bigreal_t get_line_length(bigreal_t *x, int16_t len){
 
-real_t get_line_length(real_t *x, int16_t len){
-
-    real_t sum = 0.0;
+    bigreal_t sum = 0.0;
 
     for(int16_t i=0; i<len-1; i++){
         sum += fabs(x[i+1] - x[i]);
@@ -369,7 +216,7 @@ real_t get_line_length(real_t *x, int16_t len){
     }
 
     RA_IMU_LOG_SCALAR("get_line_length", "accum", sum);
-    real_t result = sum / (len-1);
+    bigreal_t result = sum / (len-1);
     RA_IMU_LOG_SCALAR("get_line_length", "result", result);
     return result;
 }
@@ -377,22 +224,22 @@ real_t get_line_length(real_t *x, int16_t len){
 
 
 
-real_t get_kurtosis(real_t *x, int16_t len){
+bigreal_t get_kurtosis(bigreal_t *x, int16_t len){
 
-    real_t std = vect_std(x, len);
-    real_t mean = vect_mean(x, len);
+    bigreal_t std = vect_std(x, len);
+    bigreal_t mean = vect_mean(x, len);
 
     RA_IMU_LOG_SCALAR("get_kurtosis", "mean", mean);
     RA_IMU_LOG_SCALAR("get_kurtosis", "std", std);
 
-    real_t sum = 0.0;
+    bigreal_t sum = 0.0;
 #ifdef RANGE_ANALYSIS
-    real_t moment_max = 0.0;
+    bigreal_t moment_max = 0.0;
 #endif
 
     for(int16_t i=0; i<len; i++){
-        real_t tmp = (x[i] - mean) * (x[i] - mean);
-        real_t x4 = tmp * tmp;
+        bigreal_t tmp = (x[i] - mean) * (x[i] - mean);
+        bigreal_t x4 = tmp * tmp;
 #ifdef RANGE_ANALYSIS
         if(x4 > moment_max)
             moment_max = x4;
@@ -405,25 +252,25 @@ real_t get_kurtosis(real_t *x, int16_t len){
 #endif
     RA_IMU_LOG_SCALAR("get_kurtosis", "sum_x4", sum);
 
-    real_t std4 = powreal(std, 4);
+    bigreal_t std4 = powreal(std, (bigreal_t)4);
     RA_IMU_LOG_SCALAR("get_kurtosis", "std4", std4);
 
-    real_t result = (sum / (len * std4)) - KURT_FISHER_CONST;
+    bigreal_t result = (sum / (len * std4)) - KURT_FISHER_CONST;
     RA_IMU_LOG_SCALAR("get_kurtosis", "result", result);
     return result;
 }
 
 
-real_t L2_norm(const real_t *x, int16_t len){
+bigreal_t L2_norm(const bigreal_t *x, int16_t len){
 
-    real_t sum = 0.0;
+    bigreal_t sum = 0.0;
 
     for(int16_t i=0; i<len; i++){
         sum += x[i] * x[i];
     }
 
     RA_IMU_LOG_SCALAR("L2_norm", "sum_sq", sum);
-    real_t result = sqrtreal(sum);
+    bigreal_t result = sqrtreal(sum);
     RA_IMU_LOG_SCALAR("L2_norm", "result", result);
     return result;
 }
@@ -454,7 +301,7 @@ void entropy_calc(real_t *x, int16_t len, uint8_t base){
     if(base != 1){
         for(int16_t i=0; i<len; i++){
             if(x[i] > MIN_FLOAT){
-                x[i] /= logreal(base);
+                x[i] /= logreal((real_t)base);
             }
         }
     }

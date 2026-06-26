@@ -3,6 +3,7 @@
 
 #include <inttypes.h>
 #include <types.h>
+#include <helpers.h>
 
 
 
@@ -10,7 +11,19 @@
 /// @param *sig     pointer to the input signal
 /// @param len      lenght of the input signal
 /// @return         the maximum value
-real_t get_max(real_t *sig, int16_t len);
+template <typename T>
+static inline T get_max(T *sig, int16_t len){
+
+    T max = sig[0];
+
+    for(int16_t i=1; i<len; i++){
+        if(sig[i] > max){
+            max = sig[i];
+        }
+    }
+    //RA_IMU_LOG_SCALAR("get_max", "get_max", max);
+    return max;
+}
 
 
 
@@ -26,14 +39,42 @@ void sub_mean(const real_t *sig, real_t *res, int16_t len);
 /// @param *sig     pointer to the input signal
 /// @param len      lenght of the input signal
 /// @return The root mean squared
-real_t get_rms(real_t *sig, int16_t len);
+template <typename T>
+static inline T get_rms(T *sig, int16_t len){
+    T sum = 0;
+    for(int16_t i=0; i<len; i++){
+        T sq = sig[i] * sig[i];
+        //RA_IMU_LOG_SCALAR("get_rms", "sig_sq", sq);
+        sum += sq;
+    }
+    //RA_IMU_LOG_SCALAR("get_rms", "sum_sq", sum);
+    T result = sqrtreal(sum / len);
+    //RA_IMU_LOG_SCALAR("get_rms", "result", result);
+    return result;
+}
 
 
 /// @brief Computes the Zero Crossing Rate
 /// @param *sig     pointer to the input signal
 /// @param len      lenght of the input signal
 /// @return the zero crossing rate of the signal
-real_t compute_zrc(real_t *sig, int16_t len);
+template <typename T>
+static inline T compute_zrc(T *sig, int16_t len){
+
+    int sum = 0;
+    T interm_product = 0;
+
+    for(int16_t i=0; i<len-1; i++){
+        interm_product = sig[i] * sig[i + 1];
+        //RA_IMU_LOG_SCALAR("compute_zrc", "multiplier", interm_product);
+        if(interm_product < 0){
+            sum++;
+        }
+    }
+    T result = (T) sum / (len - 1);
+    //RA_IMU_LOG_SCALAR("compute_zrc", "result", result);
+    return result;
+}
 
 
 

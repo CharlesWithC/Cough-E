@@ -32,8 +32,8 @@ void audio_features(const int8_t *features_selector,
     @param *feats               :   array to be filled with the extracted features
 */
 void imu_features(const int8_t *features_selector,
-                  const imu_sample_t sig[][Num_IMU_signals],
+                  const bigreal_t sig[][Num_IMU_signals],
                   int16_t len,
-                  feat_t *feats);
+                  bigreal_t *feats);
 
 #endif

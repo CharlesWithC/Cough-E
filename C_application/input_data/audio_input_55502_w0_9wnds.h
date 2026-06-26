@@ -21,7 +21,7 @@ typedef struct audio_input_55502
     real_t air[AUDIO_LEN];
 } audio_input_t;
 
-#if (defined(UPOS_MODE) || defined(LPOS_MODE)) && POSIT_SIZE == 32
+#if defined(LPOS_MODE) && POSIT_SIZE == 32
 static const audio_input_t FLASH2 audio_in = {{
     POS(3503473888U),
     POS(3502005136U),

@@ -19,19 +19,19 @@ int16_t _find_peaks(real_t *x, int16_t len);
 
 
 
+// template <typename T>
+// T get_max(T *sig, int16_t len){
 
-real_t get_max(real_t *sig, int16_t len){
+//     T max = sig[0];
 
-    real_t max = sig[0];
-
-    for(int16_t i=1; i<len; i++){
-        if(sig[i] > max){
-            max = sig[i];
-        }
-    }
-    RA_IMU_LOG_SCALAR("get_max", "get_max", max);
-    return max;
-}
+//     for(int16_t i=1; i<len; i++){
+//         if(sig[i] > max){
+//             max = sig[i];
+//         }
+//     }
+//     RA_IMU_LOG_SCALAR("get_max", "get_max", max);
+//     return max;
+// }
 
 
 
@@ -42,39 +42,39 @@ void sub_mean(const real_t *sig, real_t *res, int16_t len){
     sub_constant(sig, len, mean, res);
 }
 
-
-real_t get_rms(real_t *sig, int16_t len){
-    real_t sum = 0;
-    for(int16_t i=0; i<len; i++){
-        real_t sq = sig[i] * sig[i];
-        RA_IMU_LOG_SCALAR("get_rms", "sig_sq", sq);
-        sum += sq;
-    }
-    RA_IMU_LOG_SCALAR("get_rms", "sum_sq", sum);
-    real_t result = sqrtreal(sum / len);
-    RA_IMU_LOG_SCALAR("get_rms", "result", result);
-    return result;
-}
-
-
+// template <typename T>
+// T get_rms(T *sig, int16_t len){
+//     T sum = 0;
+//     for(int16_t i=0; i<len; i++){
+//         T sq = sig[i] * sig[i];
+//         RA_IMU_LOG_SCALAR("get_rms", "sig_sq", sq);
+//         sum += sq;
+//     }
+//     RA_IMU_LOG_SCALAR("get_rms", "sum_sq", sum);
+//     T result = sqrtreal(sum / len);
+//     RA_IMU_LOG_SCALAR("get_rms", "result", result);
+//     return result;
+// }
 
 
-real_t compute_zrc(real_t *sig, int16_t len){
 
-    int sum = 0;
-    real_t interm_product = 0;
+// template <typename T>
+// T compute_zrc(T *sig, int16_t len){
 
-    for(int16_t i=0; i<len-1; i++){
-        interm_product = sig[i] * sig[i + 1];
-        RA_IMU_LOG_SCALAR("compute_zrc", "multiplier", interm_product);
-        if(interm_product < 0){
-            sum++;
-        }
-    }
-    real_t result = (real_t) sum / (len - 1);
-    RA_IMU_LOG_SCALAR("compute_zrc", "result", result);
-    return result;
-}
+//     int sum = 0;
+//     T interm_product = 0;
+
+//     for(int16_t i=0; i<len-1; i++){
+//         interm_product = sig[i] * sig[i + 1];
+//         RA_IMU_LOG_SCALAR("compute_zrc", "multiplier", interm_product);
+//         if(interm_product < 0){
+//             sum++;
+//         }
+//     }
+//     T result = (T) sum / (len - 1);
+//     RA_IMU_LOG_SCALAR("compute_zrc", "result", result);
+//     return result;
+// }
 
 
 /*

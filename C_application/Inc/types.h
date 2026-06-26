@@ -4,7 +4,10 @@
     #endif
     #include <universal/number/posit/posit.hpp>
     using namespace sw::universal;
-    typedef posit<32, 2> real_t;
+    typedef posit<32, 2> real_t; // for anything not imu
+    typedef posit<16, 2> bigreal_t; // for imu
+    // yes bigreal has smaller size, thus 'mixed-posit-mess'
+    // this is a experimental branch and the code is very messy
 #else
 #ifdef LPOS_MODE // libposit
     #ifndef __cplusplus
@@ -14,8 +17,10 @@
     #include <posit.hpp>
     using namespace libposit;
     typedef Posit real_t;
+    typedef Posit bigreal_t;
 #else
     typedef float real_t;
+    typedef float bigreal_t;
 #endif
 #endif
 

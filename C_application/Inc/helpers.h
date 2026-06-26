@@ -6,7 +6,11 @@
 #include <math.h>
 #include <stdio.h>
 
-static inline real_t floorreal(real_t x){
+template <typename T>
+concept IsRealType = std::same_as<T, real_t> || std::same_as<T, bigreal_t>;
+
+template <IsRealType T>
+static inline T floorreal(T x){
     #ifdef UPOS_MODE
     return sw::universal::floor(x);
     #else
@@ -14,7 +18,8 @@ static inline real_t floorreal(real_t x){
     #endif
 }
 
-static inline real_t expreal(real_t x){
+template <IsRealType T>
+static inline T expreal(T x){
     #ifdef UPOS_MODE
     return sw::universal::exp(x);
     #else
@@ -22,7 +27,8 @@ static inline real_t expreal(real_t x){
     #endif
 }
 
-static inline real_t powreal(real_t base, real_t exp){
+template <IsRealType T>
+static inline T powreal(T base, T exp){
     #ifdef UPOS_MODE
     return sw::universal::pow(base, exp);
     #else
@@ -30,7 +36,8 @@ static inline real_t powreal(real_t base, real_t exp){
     #endif
 }
 
-static inline real_t sqrtreal(real_t x){
+template <IsRealType T>
+static inline T sqrtreal(T x){
     #ifdef UPOS_MODE
     return sw::universal::sqrt(x);
     #else
@@ -42,7 +49,8 @@ static inline real_t sqrtreal(real_t x){
     #endif
 }
 
-static inline real_t logreal(real_t x){
+template <IsRealType T>
+static inline T logreal(T x){
     #ifdef UPOS_MODE
     return sw::universal::log(x);
     #else
@@ -50,7 +58,8 @@ static inline real_t logreal(real_t x){
     #endif
 }
 
-static inline real_t log10real(real_t x){
+template <IsRealType T>
+static inline T log10real(T x){
     #ifdef UPOS_MODE
     return sw::universal::log10(x);
     #else
@@ -151,117 +160,159 @@ void argsort(uint16_t *arr, uint16_t len, uint16_t *sort_idxs);
 */
 void order_by_idxs(void *arr, uint16_t len, uint16_t *idxs, type_sort_t type);
 
-/**
- * Divides all the elements of the input array by the same divisor.
- *
- * @param *x        : pointer to the input array
- * @param len       : length of the input array
- * @param divisor   : number to be used as a diviros for the elements of the array
+
+
+
+/*
+    Helper function for the maximum value and relative index computation
+    It stores to max_value and max_index the maximum value and relative index
+    found in the array x, respectively
 */
-void vect_div_const(real_t *x, int16_t len, real_t divisor, real_t *res);
 
-
-/**
- * Returns the sum of all the values of the input array.
- *
- * @param *x    : pointer to the input array
- * @param len   : lenght of the input array
-*/
-real_t vect_sum(const real_t *x, int16_t len);
-
-
-
-/**
- * Returns the mean of a sequence of numbers
-
-* @param *x    : pointer to the input array
-* @param len   : lenght of the input array
- */
-real_t vect_mean(const real_t *x, int16_t len);
-
-
-/// @brief Computes the element-wise multiplication between x and y arrays,
-/// the multiplication is stored in r array.
-/// @param *x   pointer to the first vector
-/// @param *y   pointer to the second vector
-/// @param len  lenght of the vectors
-/// @param *r   pointer to the resulting vectors
-void vect_mult(real_t *x, const real_t *y, int16_t len, real_t *r);
-
-
-
-/// @brief Returns the standard deviation of the given input array
-/// @param *x       pointer to the signal
-/// @param len      lenght of the signal
-/// @return         the standard deviation
-real_t vect_std(real_t *x, int16_t len);
-
-
-
-/// @brief Copies "len" samples from "in" array of real_t starting at index "start"
-/// Destination is "out"
-/// Notice that the samples are taken from the input starting at
-/// index "start" but are placed in output from index 0!
-/// @param *in      pointer to the input signal
-/// @param start    start index
-/// @param len      lenght to copy
-/// @param *out     poitner to the output array
-void vect_copy(const real_t *in, int16_t start, int16_t len, real_t *out);
-
-
-
-/// @brief Copies "len" samples from "in" array of uint16_t starting at index "start"
-/// Destination is "out"
-/// Notice that the samples are taken from the input starting at
-/// index "start" but are placed in output from index 0!
-/// @param *in      pointer to the input signal
-/// @param start    start index
-/// @param len      lenght to copy
-/// @param *out     poitner to the output array
-void vect_copy_uint16_t(uint16_t *in, int16_t start, int16_t len, uint16_t *out);
-
-
-
-/// @brief Subtract a constant to each element of an input array and stores in into res array
-/// @param *x           pointer to the input signal
-/// @param len          lenght of the signal
-/// @param constant     constant value to subtract
-/// @param *res         pointer to the result
-void sub_constant(const real_t *x, int16_t len, real_t constant, real_t *res);
-
-
-
-/// @brief Returns the index at which the maximum value of array x is found
+/// @brief Helper function for the maximum value and relative index computation
+/// It stores to max_value and max_index the maximum value and relative index
+/// found in the array x, respectively
 /// @param *x   pointer to the inpug array
 /// @param len  lenght of the array
-/// @return     index of the maximum value
-int16_t vect_max_index(real_t *x, int16_t len);
+/// @param *max_value   max value
+/// @param *max_index   index of the max value
+template <typename T>
+static inline void _find_max(T *x, int16_t len, T *max_value, int16_t *max_index){
+    T max_v = x[0];
+    int16_t max_i = 0;
+    for(int16_t i=0; i<len; i++){
+        if(x[i] > max_v){
+            max_v = x[i];
+            max_i = i;
+        }
+    }
+
+    *max_index = max_i;
+    *max_value = max_v;
+}
+
+
+template <typename T>
+static inline void vect_div_const(T *x, int16_t len, T divisor, T *res){
+    for(uint16_t i=0; i<len; i++){
+        res[i] = x[i] / divisor;
+    }
+}
+
+
+template <typename T>
+static inline T vect_sum(const T *x, int16_t len){
+    T sum = 0.0;
+    for(int16_t i=0; i<len; i++){
+        sum += x[i];
+    }
+    return sum;
+}
+
+template <typename T>
+static inline T vect_mean(const T *x, int16_t len){
+    return vect_sum(x, len) / len;
+}
+
+template <typename T>
+static inline void vect_mult(T *x, const T *y, int16_t len, T *r){
+    for(int16_t i=0; i<len; i++){
+        r[i] = x[i] * y[i];
+    }
+}
+
+
+template <typename T>
+static inline T vect_std(T *x, int16_t len){
+    T mean = vect_mean(x, len);
+    T sum = 0.0;
+
+    for(int16_t i=0; i<len; i++){
+        T centered = x[i] - mean;
+        //RA_IMU_LOG_SCALAR("vect_std", "x_minus_mean", centered);
+        T sq_dev = centered * centered;
+        //RA_IMU_LOG_SCALAR("vect_std", "sq_dev", sq_dev);
+        sum += sq_dev;
+    }
+
+    //RA_IMU_LOG_SCALAR("vect_std", "sum_sq_dev", sum);
+    T variance = sum / len;
+    //RA_IMU_LOG_SCALAR("vect_std", "variance", variance);
+    T result = sqrtreal(variance);
+    //RA_IMU_LOG_SCALAR("vect_std", "result", result);
+    return result;
+}
+
+
+template <typename T>
+static inline void vect_copy(const T *in, int16_t start, int16_t len, T *out){
+    for(int16_t i=0; i<len; i++){
+        out[i] = in[i + start];
+    }
+}
 
 
 
-/// @brief Returns the maximum value within an array
-/// @param *x   pointer to the inpug array
-/// @param len  lenght of the array
-/// @return     max value
-real_t vect_max_value(real_t *x, int16_t len);
+
+static inline void vect_copy_uint16_t(uint16_t *in, int16_t start, int16_t len, uint16_t *out){
+    for(int16_t i=0; i<len; i++){
+        out[i] = in[i + start];
+    }
+}
 
 
-/**
- * Returns the maximum absoulate value of the given array
- *
- * @param *x    :   pointer to the input array
- * @param len   :   length of the input array
- * @return      :   maximum absolute value in the input array
-*/
-real_t vect_max_abs_value(real_t *x, int16_t len);
+template <typename T>
+static inline void sub_constant(const T *x, int16_t len, T constant, T *res){
+    for(int16_t i=0; i<len; i++){
+        res[i] = x[i] - constant;
+    }
+}
+
+
+template <typename T>
+static inline int16_t vect_max_index(T *x, int16_t len){
+    int16_t max_i = 0.0;
+    T temp_v;
+    _find_max(x, len, &temp_v, &max_i);
+    return max_i;
+}
+
+
+template <typename T>
+static inline T vect_max_value(T *x, int16_t len){
+    int16_t max_i = 0;
+    T max_v;
+    _find_max(x, len, &max_v, &max_i);
+    return max_v;
+}
+
+
+template <typename T>
+static inline T vect_max_abs_value(T *x, int16_t len){
+    T max_abs = x[0];
+    T tmp = 0.0;
+    for(int16_t i=1; i<len; i++){
+        tmp = fabs(x[i]);
+        if(tmp >= max_abs){
+            max_abs = tmp;
+        }
+    }
+
+    return max_abs;
+}
 
 
 
-/// @brief Divides every element in the specified "x" array by the maximum value.
-/// @param *x   pointer to the inpug array
-/// @param len  lenght of the array
-/// @param *res pointer to the resulting array
-void normalize_max(real_t *x, int16_t len, real_t *res);
+template <typename T>
+static inline void normalize_max(T *x, int16_t len, T *res){
+    T max;
+    int16_t max_i;
+    _find_max(x, len, &max, &max_i);
+
+    for(int16_t i=0; i<len; i++){
+        res[i] = x[i] / max;
+    }
+}
 
 
 
@@ -316,7 +367,7 @@ void reflect_padding(const real_t *x, uint16_t len, uint16_t side_pad_len, real_
 /// @param *x           pointer to the inpug array
 /// @param len          lenght of the array
 /// @return     the line lenght
-real_t get_line_length(real_t *x, int16_t len);
+bigreal_t get_line_length(bigreal_t *x, int16_t len);
 
 
 
@@ -324,7 +375,7 @@ real_t get_line_length(real_t *x, int16_t len);
 /// @param *x           pointer to the inpug array
 /// @param len          lenght of the array
 /// @return     the kurtosis
-real_t get_kurtosis(real_t *x, int16_t len);
+bigreal_t get_kurtosis(bigreal_t *x, int16_t len);
 
 
 
@@ -332,7 +383,7 @@ real_t get_kurtosis(real_t *x, int16_t len);
 /// @param *x           pointer to the inpug array
 /// @param len          lenght of the array
 /// @return     the L2 norm
-real_t L2_norm(const real_t *x, int16_t len);
+bigreal_t L2_norm(const bigreal_t *x, int16_t len);
 
 
 

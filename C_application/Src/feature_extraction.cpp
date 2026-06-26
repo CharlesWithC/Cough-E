@@ -126,7 +126,7 @@ void eepd_features(const int8_t *features_selector, const real_t *sig, int16_t l
     @param sig_feat_idx         :   starting index of the features for the IMU signal inside the features_selector vector
     @param *feats               :   array of extracted features
 */
-void compute_imu_family(const int8_t *features_selector, const real_t signal[][Num_IMU_signals], int16_t len, int8_t signal_idx, int8_t sig_feat_idx, real_t *feats);
+void compute_imu_family(const int8_t *features_selector, const bigreal_t signal[][Num_IMU_signals], int16_t len, int8_t signal_idx, int8_t sig_feat_idx, bigreal_t *feats);
 
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -145,10 +145,10 @@ int is_required(const int8_t *features_selector, uint16_t start_index, uint16_t 
     return 0;
 }
 
-static void imu_run_real_t_features(const int8_t *features_selector,
-                                   real_t *sig,
+static void imu_run_float_features(const int8_t *features_selector,
+                                   bigreal_t *sig,
                                    int16_t len,
-                                   real_t *feats)
+                                   bigreal_t *feats)
 {
     if (features_selector[LINE_LENGTH]) {
         feats[LINE_LENGTH] = get_line_length(sig, len);
@@ -163,14 +163,14 @@ static void imu_run_real_t_features(const int8_t *features_selector,
         feats[ROOT_MEANS_SQUARED_IMU] = get_rms(sig, len);
     }
     if (features_selector[CREST_FACTOR_IMU]) {
-        real_t rms = get_rms(sig, len);
+        bigreal_t rms = get_rms(sig, len);
         feats[CREST_FACTOR_IMU] = (rms > 0.0f) ? (get_max(sig, len) / rms) : 0.0f;
     }
     for (uint8_t i = 0; i < N_AZC; i++) {
         uint8_t idx = (uint8_t)(APPROXIMATE_ZERO_CROSSING + i);
         if (features_selector[idx]) {
-            real_t eps = EPSILON_START + (EPSILON_STEP * (real_t)i);
-            feats[idx] = (real_t)azc_computation(sig, len, eps);
+            bigreal_t eps = EPSILON_START + (EPSILON_STEP * (bigreal_t)i);
+            feats[idx] = (bigreal_t)azc_computation(sig, len, eps);
         }
     }
 }
@@ -452,11 +452,11 @@ static const char *_imu_signal_names[] = {
 };
 #endif
 
-void compute_imu_family(const int8_t *features_selector, const real_t signal[][Num_IMU_signals], int16_t len, int8_t signal_idx, int8_t sig_feat_idx, real_t *feats){
+void compute_imu_family(const int8_t *features_selector, const bigreal_t signal[][Num_IMU_signals], int16_t len, int8_t signal_idx, int8_t sig_feat_idx, bigreal_t *feats){
     if(is_required(features_selector, sig_feat_idx, sig_feat_idx+Num_imu_feat_families-1)){
 
         // Extract samples for the required signal axis
-        real_t *signal_samples = (real_t*)malloc(len * sizeof(real_t));
+        bigreal_t *signal_samples = (bigreal_t*)malloc(len * sizeof(bigreal_t));
 
         for(int16_t i=0; i<len; i++){
             signal_samples[i] = signal[i][signal_idx];
@@ -465,7 +465,7 @@ void compute_imu_family(const int8_t *features_selector, const real_t signal[][N
         RA_LOG_ARRAY("IMU_RAW", "imu_features", _imu_signal_names[signal_idx], signal_samples, len);
 
         RA_SET_IMU_CTX("IMU_RAW");
-        imu_run_real_t_features(&features_selector[sig_feat_idx], signal_samples, len, &feats[sig_feat_idx]);
+        imu_run_float_features(&features_selector[sig_feat_idx], signal_samples, len, &feats[sig_feat_idx]);
         RA_CLEAR_IMU_CTX();
         free(signal_samples);
     }
@@ -503,7 +503,7 @@ void audio_features(const int8_t *features_selector, const real_t *sig, int16_t 
 
 
 
-void imu_features(const int8_t *features_selector, const real_t sig[][Num_IMU_signals], int16_t len, real_t *feats){
+void imu_features(const int8_t *features_selector, const bigreal_t sig[][Num_IMU_signals], int16_t len, bigreal_t *feats){
 
     // Here len is the IMU_DIM_1 macro in the hardcoded samples
 
@@ -526,15 +526,15 @@ void imu_features(const int8_t *features_selector, const real_t sig[][Num_IMU_si
     // GYRO_R
     compute_imu_family(features_selector, sig, len, GYROSCOPE_R, GYRO_R_FEAT, feats);
 
-    // Combine signals via L2 norm (real_t mode)
-    real_t *combo_signal = (real_t*)malloc(len * sizeof(real_t));
+    // Combine signals via L2 norm (bigreal_t mode)
+    bigreal_t *combo_signal = (bigreal_t*)malloc(len * sizeof(bigreal_t));
 
     RA_SET_IMU_CTX("IMU_L2_ACCEL");
     for(int16_t i=0; i<len; i++){
         combo_signal[i] = L2_norm(&sig[i][0], 3);
     }
     RA_IMU_LOG_ARRAY("imu_features", "sig_input", combo_signal, len);
-    imu_run_real_t_features(&features_selector[ACCEL_COMBO], combo_signal, len, &feats[ACCEL_COMBO]);
+    imu_run_float_features(&features_selector[ACCEL_COMBO], combo_signal, len, &feats[ACCEL_COMBO]);
     RA_CLEAR_IMU_CTX();
 
     RA_SET_IMU_CTX("IMU_L2_GYRO");
@@ -542,7 +542,7 @@ void imu_features(const int8_t *features_selector, const real_t sig[][Num_IMU_si
         combo_signal[i] = L2_norm(&sig[i][3], 3);
     }
     RA_IMU_LOG_ARRAY("imu_features", "sig_input", combo_signal, len);
-    imu_run_real_t_features(&features_selector[GYRO_COMBO], combo_signal, len, &feats[GYRO_COMBO]);
+    imu_run_float_features(&features_selector[GYRO_COMBO], combo_signal, len, &feats[GYRO_COMBO]);
     RA_CLEAR_IMU_CTX();
 
     free(combo_signal);

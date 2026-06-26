@@ -23,8 +23,8 @@
 real_t CARUS01 audio_scores[AUD_N_TREES][MAX_LEAVES];
 real_t CARUS01 audio_values_comp[AUD_N_TREES][AUD_MAX_NODES];
 int16_t CARUS00 audio_feat_comp[AUD_N_TREES][AUD_MAX_NODES];
-real_t CARUS11 imu_scores[IMU_N_TREES][IMU_MAX_LEAVES];
-real_t CARUS11 imu_values_comp[IMU_N_TREES][IMU_MAX_NODES];
+bigreal_t CARUS11 imu_scores[IMU_N_TREES][IMU_MAX_LEAVES];
+bigreal_t CARUS11 imu_values_comp[IMU_N_TREES][IMU_MAX_NODES];
 int16_t CARUS10 imu_feat_comp[IMU_N_TREES][IMU_MAX_NODES];
 #endif
 
@@ -36,10 +36,11 @@ typedef fxp_q16_t score_t;
 #else
 typedef feat_t score_t;
 #define SCORE_THRESHOLD_AUDIO ((score_t)AUDIO_TH)
-#define SCORE_THRESHOLD_IMU ((score_t)IMU_TH)
+#define SCORE_THRESHOLD_IMU ((bigreal_t)IMU_TH)
 #endif
 
-static inline uint8_t is_cough(score_t score, score_t threshold)
+template<typename T>
+static inline uint8_t is_cough(T score, T threshold)
 {
     return (score >= threshold) ? 1U : 0U;
 }
@@ -141,14 +142,14 @@ int launch(void)
     feat_t *audio_feature_array = (feat_t *)malloc((size_t)Number_AUDIO_Features * sizeof(feat_t));
     for (int i = 0; i < Number_AUDIO_Features; i++) audio_feature_array[i] = 0;
 
-    feat_t *imu_feature_array = (feat_t *)malloc((size_t)Number_IMU_Features * sizeof(feat_t));
+    bigreal_t *imu_feature_array = (bigreal_t *)malloc((size_t)Number_IMU_Features * sizeof(bigreal_t));
     for (int i = 0; i < Number_IMU_Features; i++) imu_feature_array[i] = 0;
 
     feat_t *features_audio_model = (feat_t *)malloc((size_t)TOT_FEATURES_AUDIO_MODEL_AUDIO * sizeof(feat_t));
-    feat_t *features_imu_model = (feat_t *)malloc((size_t)TOT_FEATURES_IMU_MODEL_IMU * sizeof(feat_t));
+    bigreal_t *features_imu_model = (bigreal_t *)malloc((size_t)TOT_FEATURES_IMU_MODEL_IMU * sizeof(bigreal_t));
 
     score_t audio_score = 0;
-    score_t imu_score = 0;
+    bigreal_t imu_score = 0;
 
     uint16_t *starts = (uint16_t *)malloc((size_t)MAX_PEAKS_EXPECTED * sizeof(uint16_t));
     uint16_t *ends = (uint16_t *)malloc((size_t)MAX_PEAKS_EXPECTED * sizeof(uint16_t));
@@ -213,9 +214,9 @@ int launch(void)
 #else
     // for non-fxp, we route all data through `read_flash` for consistency
     audio_sample_t *audio_buf = (real_t *)malloc(WINDOW_SAMP_AUDIO * sizeof(real_t));
-    imu_sample_t (*imu_buf)[Num_IMU_signals] = (real_t (*)[Num_IMU_signals])malloc(WINDOW_SAMP_IMU * Num_IMU_signals * sizeof(real_t));
-    gender_feature = (feat_t)gender;
-    bmi_feature = (feat_t)bmi;
+    bigreal_t (*imu_buf)[Num_IMU_signals] = (bigreal_t (*)[Num_IMU_signals])malloc(WINDOW_SAMP_IMU * Num_IMU_signals * sizeof(bigreal_t));
+    gender_feature = (bigreal_t)gender;
+    bmi_feature = (bigreal_t)bmi;
 #endif
 
     init_state();
@@ -233,8 +234,8 @@ int launch(void)
 #ifdef FXP_MODE
             const imu_sample_t (*imu_signal)[Num_IMU_signals] = &imu_runtime_in[idx_start_window];
 #else
-            const imu_sample_t (*imu_signal)[Num_IMU_signals] = imu_buf;
-            read_flash(&imu_in[idx_start_window], imu_buf, WINDOW_SAMP_IMU * Num_IMU_signals * sizeof(real_t));
+            const bigreal_t (*imu_signal)[Num_IMU_signals] = imu_buf;
+            read_flash(&imu_in[idx_start_window], imu_buf, WINDOW_SAMP_IMU * Num_IMU_signals * sizeof(bigreal_t));
 #endif
 
             imu_features(imu_features_selector,
