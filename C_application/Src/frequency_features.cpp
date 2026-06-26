@@ -320,7 +320,7 @@ real_t compute_flatness(real_t *x, int16_t len){
     RA_LOG_SCALAR("AUDIO_PSD", "flatness", "sum_logs_raw", sum_logs);
     sum_logs = sum_logs / len;
 
-    gmean = exp(sum_logs);
+    gmean = expreal(sum_logs);
     amean = vect_mean(x, len);
 
     RA_LOG_SCALAR("AUDIO_PSD", "flatness", "sum_logs", sum_logs);

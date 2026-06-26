@@ -112,12 +112,22 @@ The full evaluation pipeline updates the `main.h` includes automatically for eac
 
 #### HEEPatia
 
-FLASH, CARUS and GCRAM are utilized due to limited main memory in HEEPatia. Note that we use a virtual GCRAM as FPGA does not support native GCRAM. The modified [memory layout](/config/mcu-gen-system.hjson) and [linker](/sw/linker/link_flash_load.ld.tpl) must be used.
+To compile cough-e with libposit on HEEPatia, use:
 
-We override `_sbrk` to reroute heap data to virtual GCRAM because main `data` only has 32kB space - this requires modifying `CMakeLists.txt` by adding `-Wl,--wrap=_sbrk` linker flag. We keep stack data in main `data` section.
+```
+make app PROJECT=cough-e TARGET=zcu104 LINKER=flash_load BOOT_MODE=flash COMPILER_FLAGS="-DTARGET_BYPASS_FLL -DHEEPATIA_MODE -DEVALUATION_MODE -DLPOS_MODE -mavoid-pmv" TOOLCHAIN=POS RISCV_POS=/path/to/modified/rv32imfcxposit
+```
 
-Twiddles for `kiss-fftr`, COS LUT for `dct-linear`, and input data are stored in FLASH. Other constant data is mostly stored in CARUS and INTERLEAVED data, if not in main `data`, and the usage are as follows:
+FLASH, CARUS and GCRAM are utilized due to limited main memory in HEEPatia. Note that we use virtual GCRAM as native support on FPGA is not assumed. Also, we explicitly configure linker to use `ALIGN(4)` for `carus`. The modified [memory layout](/config/mcu-gen-system.hjson) and [linker](/sw/linker/link_flash_load.ld.tpl) must be used.
+
+We override `_sbrk` to reroute heap data to virtual GCRAM because main `data` only has 32kB space - this requires modifying `CMakeLists.txt` by adding `-Wl,--wrap=_sbrk` linker flag. We do not use GCRAM for constant data and we keep stack data in main `data` section.
+
+CARUS are marked as NOLOAD in linker and so we store certain constant data in FLASH and manually load them into CARUS on startup. It is not possible to remove NOLOAD flag because CARUS has high address and linker would automatically pad unused addresses, creating a huge binary that cannot be loaded into FPGA.
+
+Twiddles for `kiss-fftr`, cosine LUT for `dct-linear`, and input data are stored in FLASH and loaded on demand. Other constant data is mostly stored in CARUS and INTERLEAVED data, if not in main `data`, and the usage are as follows:
 
 - CARUS0: 54400 bytes / 65536 bytes (audio model)
 - CARUS1: 60400 bytes / 65536 bytes (imu model)
 - INTERLEAVED: 121680 bytes / 131072 bytes (other constant)
+
+Note: FxP is not supported on HEEPatia.

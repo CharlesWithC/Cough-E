@@ -344,7 +344,7 @@ static void _run_raw_feature(const q11_5_t *sig, int16_t len, uint8_t local, fxp
             *out = (fxp_feat_t)azc;
             return;
         }
-        fprintf(stderr, "FXP IMU runtime: unsupported raw feature %u.\n", (unsigned)local);
+        printf("FXP IMU runtime: unsupported raw feature %u.\n", (unsigned)local);
         abort();
     }
 }
@@ -363,7 +363,7 @@ static void _run_l2a_feature(const uq10_6_t *sig, int16_t len, uint8_t local, fx
         return;
     }
 
-    fprintf(stderr, "FXP IMU runtime: unsupported accel-combo feature %u.\n", (unsigned)local);
+    printf("FXP IMU runtime: unsupported accel-combo feature %u.\n", (unsigned)local);
     abort();
 }
 
@@ -390,7 +390,7 @@ static void _run_l2g_feature(const uq5_11_t *sig, int16_t len, uint8_t local, fx
             *out = (fxp_feat_t)azc;
             return;
         }
-        fprintf(stderr, "FXP IMU runtime: unsupported gyro-combo feature %u.\n", (unsigned)local);
+        printf("FXP IMU runtime: unsupported gyro-combo feature %u.\n", (unsigned)local);
         abort();
     }
 }

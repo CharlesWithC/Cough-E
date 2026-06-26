@@ -10,23 +10,37 @@
     #ifndef __cplusplus
         #error "LPOS requires compiling with g++"
     #endif
-    #include <libposit/posit.hpp>
+    #define POSIT_SIZE 32
+    #include <posit.hpp>
+    using namespace libposit;
     typedef Posit real_t;
 #else
     typedef float real_t;
 #endif
 #endif
 
+#define POS Posit::from_bits
+
 #ifdef HEEPATIA_MODE
-#define DINTL __attribute__((section(".xheep_data_interleaved")))
-#define FLASH __attribute__((section(".xheep_data_flash_only"))) __attribute__ ((aligned (16)))
-#define GCRAM __attribute__((section(".xheep_rodata_virtgcram"))) __attribute__ ((aligned (16)))
-#define CARUS0 __attribute__((section(".xheep_data_carus0"))) __attribute__ ((aligned (16)))
-#define CARUS1 __attribute__((section(".xheep_data_carus1"))) __attribute__ ((aligned (16)))
+#define DINTL0 __attribute__((section(".xheep_data_interleaved_sec0"))) __attribute__ ((aligned (4)))
+#define DINTL1 __attribute__((section(".xheep_data_interleaved_sec1"))) __attribute__ ((aligned (4)))
+#define FLASH0 __attribute__((section(".xheep_data_flash_only_sec0"))) __attribute__ ((aligned (4)))
+#define FLASH1 __attribute__((section(".xheep_data_flash_only_sec1"))) __attribute__ ((aligned (4)))
+#define FLASH2 __attribute__((section(".xheep_data_flash_only_sec2"))) __attribute__ ((aligned (4)))
+#define FLASH3 __attribute__((section(".xheep_data_flash_only_sec3"))) __attribute__ ((aligned (4)))
+#define CARUS00 __attribute__((section(".xheep_data_carus0_sec0"))) __attribute__ ((aligned (4)))
+#define CARUS01 __attribute__((section(".xheep_data_carus0_sec1"))) __attribute__ ((aligned (4)))
+#define CARUS10 __attribute__((section(".xheep_data_carus1_sec0"))) __attribute__ ((aligned (4)))
+#define CARUS11 __attribute__((section(".xheep_data_carus1_sec1"))) __attribute__ ((aligned (4)))
 #else
-#define DINTL
-#define FLASH
-#define GCRAM
-#define CARUS0
-#define CARUS1
+#define DINTL0
+#define DINTL1
+#define FLASH0
+#define FLASH1
+#define FLASH2
+#define FLASH3
+#define CARUS00
+#define CARUS01
+#define CARUS10
+#define CARUS11
 #endif

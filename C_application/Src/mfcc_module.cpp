@@ -172,14 +172,14 @@ void mel_spectrogram(const real_t *x, int16_t len, int16_t n_frames, uint8_t *id
 void power_to_dB(real_t *x, int16_t len, real_t *res){
     RA_LOG_ARRAY("AUDIO_MEL", "power_to_dB", "input", x, len);
 
-    real_t sample = 0.0;
+    real_t sample = 0.0f;
     for(int16_t i=0; i<len; i++){
         if(x[i] == 0){
             sample = F_MIN;
         } else {
             sample = x[i];
         }
-        res[i] = 10.0 * log10real(sample);
+        res[i] = 10.0f * log10real(sample);
     }
     real_t max = vect_max_value(res, len);
     RA_LOG_SCALAR("AUDIO_MEL", "power_to_dB", "max_dB", max);
@@ -200,17 +200,17 @@ void _dct_linear(real_t *x, int16_t len, real_t *y){
 
     RA_LOG_ARRAY("AUDIO_MEL", "dct_linear", "input", x, len);
 
-    real_t sum = 0.0;
-    real_t scaling = sqrtreal(1.0 / (2 * len));
+    real_t sum = 0.0f;
+    real_t scaling = sqrtreal(1.0f / (2 * len));
 
-    real_t cos_v = 0.0;
+    real_t cos_v = 0.0f;
 
     real_t *dct_cos_buf = (real_t*)malloc(len * sizeof(real_t));
 
     for(int16_t k=0; k<len; k++){
         read_flash(&dct_cos[(len * k)], dct_cos_buf, len * sizeof(real_t));
 
-        sum = 0.0;
+        sum = 0.0f;
         for(int16_t n=0; n<len; n++){
             cos_v = dct_cos_buf[n];
             sum += x[n] * cos_v;
@@ -221,7 +221,7 @@ void _dct_linear(real_t *x, int16_t len, real_t *y){
             y[k] = y[k] * scaling;
         }
     }
-    y[0] = y[0] * sqrtreal(1.0 / (4 * len));
+    y[0] = y[0] * sqrtreal(1.0f / (4 * len));
 
     RA_LOG_ARRAY("AUDIO_MEL", "dct_linear", "output", y, len);
 }
@@ -258,7 +258,7 @@ void entropy(real_t *spectrogram, int16_t n_rows, int16_t n_columns, real_t *res
     RA_LOG_ARRAY("AUDIO_MEL", "entropy", "input", spectrogram, n_rows * n_columns);
 
     // Store the sum of each row of the spectrogram
-    real_t row_sum = 0.0;
+    real_t row_sum = 0.0f;
 
     for(int8_t i=0; i<n_rows; i++){
         // Sum each column of the spectrogram
