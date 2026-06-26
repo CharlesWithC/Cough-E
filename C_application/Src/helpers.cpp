@@ -405,7 +405,7 @@ real_t get_kurtosis(real_t *x, int16_t len){
 #endif
     RA_IMU_LOG_SCALAR("get_kurtosis", "sum_x4", sum);
 
-    real_t std4 = pow(std, 4);
+    real_t std4 = powreal(std, 4);
     RA_IMU_LOG_SCALAR("get_kurtosis", "std4", std4);
 
     real_t result = (sum / (len * std4)) - KURT_FISHER_CONST;

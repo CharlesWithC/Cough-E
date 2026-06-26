@@ -3,7 +3,9 @@
 #include <string.h>
 #include <inttypes.h>
 
+
 #include <main.h>
+#include <helpers.h>
 
 #include <fsm_control.h>
 #include <feature_extraction.h>
@@ -11,8 +13,19 @@
 #include <imu_features.h>
 #include <postprocessing.h>
 
-#ifdef HEEPATIA_MODE
-#include <w25q128jw.h>
+#ifndef FXP_MODE
+// define model data for extern purpose; init is done later with read_flash
+// these variables cannot be 'static' which causes duplication
+// because linker cannot optimize/deduplicate non-const static data in CARUS
+#include <audio_model.h>
+#include <imu_model.h>
+
+real_t CARUS01 audio_scores[AUD_N_TREES][MAX_LEAVES];
+real_t CARUS01 audio_values_comp[AUD_N_TREES][AUD_MAX_NODES];
+int16_t CARUS00 audio_feat_comp[AUD_N_TREES][AUD_MAX_NODES];
+real_t CARUS11 imu_scores[IMU_N_TREES][IMU_MAX_LEAVES];
+real_t CARUS11 imu_values_comp[IMU_N_TREES][IMU_MAX_NODES];
+int16_t CARUS10 imu_feat_comp[IMU_N_TREES][IMU_MAX_NODES];
 #endif
 
 #ifdef FXP_MODE
@@ -41,6 +54,11 @@ extern char __virtgcram_heap_end[];
 
 static char *current_heap_ptr = __virtgcram_heap_start;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+#include <coprosit_cpu.h>
+
 void *__wrap__sbrk(ptrdiff_t incr) {
     char *prev_heap_ptr = current_heap_ptr;
 
@@ -52,15 +70,54 @@ void *__wrap__sbrk(ptrdiff_t incr) {
     current_heap_ptr += incr;
     return (void *)prev_heap_ptr;
 }
+
+#ifndef LPOS_MODE
+// for some reason builtin errno is gone when not compiling for LPOS_MODE
+int *__errno(void) {
+    static int errno_val = 0;
+    return &errno_val;
+}
 #endif
 
-int main(void)
+// putchar is also gone ffs
+int putchar(int c) {
+    int (*volatile stdout_printf)(const char *, ...) = printf;
+    return stdout_printf("%c", (char)c) >= 0 ? c : EOF;
+}
+#ifdef __cplusplus
+}
+#endif
+#endif
+
+#if defined(FXP_MODE) && defined(HEEPATIA_MODE)
+#error "FXP_MODE and HEEPATIA_MODE are mutually exclusive: FxP is not supported on HEEPatia"
+#endif
+
+#if defined(LPOS_MODE) && !defined(HEEPATIA_MODE)
+#error "LPOS_MODE requires HEEPATIA_MODE: libposit is only available on HEEPatia"
+#endif
+
+volatile int posit_done;
+volatile int posit_ok;
+
+int launch(void)
 {
 #ifdef HEEPATIA_MODE
     if (w25q128jw_init(spi_flash) != FLASH_OK){
         printf("FLASH INIT ERROR\n");
         return EXIT_FAILURE;
     }
+#endif
+
+#ifndef FXP_MODE
+    // initialize audio/imu model data from FLASH because CARUS are NOLOAD
+    // for non-heepatia, this is equivalent to memcpy (which is not efficient but consistent)
+    read_flash(audio_scores_src, audio_scores, sizeof(audio_scores));
+    read_flash(audio_values_comp_src, audio_values_comp, sizeof(audio_values_comp));
+    read_flash(audio_feat_comp_src, audio_feat_comp, sizeof(audio_feat_comp));
+    read_flash(imu_scores_src, imu_scores, sizeof(imu_scores));
+    read_flash(imu_values_comp_src, imu_values_comp, sizeof(imu_values_comp));
+    read_flash(imu_feat_comp_src, imu_feat_comp, sizeof(imu_feat_comp));
 #endif
 
     int16_t *indexes_audio_f = (int16_t *)malloc((size_t)N_AUDIO_FEATURES * sizeof(int16_t));
@@ -130,6 +187,12 @@ int main(void)
         free(locs);
         free(peaks);
         free(audio_confidence);
+
+#ifdef LPOS_MODE
+        posit_done = 1;
+        posit_ok = 0;
+#endif
+
         return 1;
     }
 
@@ -159,6 +222,7 @@ int main(void)
 
     while (1) {
         idx_start_window = get_idx_window();
+        printf("PROCESS WINDOW %d WITH MODEL %d\n", idx_start_window, fsm_state.model);
 
         if (fsm_state.model == IMU_MODEL) {
             if (idx_start_window + WINDOW_SAMP_IMU >= IMU_LEN) {
@@ -188,7 +252,9 @@ int main(void)
                 features_imu_model[N_IMU_FEATURES + 1] = bmi_feature;
             }
 
+            printf("IMU PREDICT\n");
             imu_score = imu_predict(features_imu_model);
+            printf("IMU PROB:"); print_float((float)imu_score, 8); printf("\n");
             fsm_state.model_cls_out = is_cough(imu_score, SCORE_THRESHOLD_IMU) ? COUGH_OUT : NON_COUGH_OUT;
         } else {
             if (idx_start_window + WINDOW_SAMP_AUDIO >= AUDIO_LEN) {
@@ -218,7 +284,9 @@ int main(void)
                 features_audio_model[N_AUDIO_FEATURES + 1] = bmi_feature;
             }
 
+            printf("AUDIO PREDICT\n");
             audio_score = audio_predict(features_audio_model);
+            printf("AUDIO PROB:"); print_float((float)audio_score, 8); printf("\n");
             fsm_state.model_cls_out = is_cough(audio_score, SCORE_THRESHOLD_AUDIO) ? COUGH_OUT : NON_COUGH_OUT;
 
             _get_cough_peaks(audio_signal, WINDOW_SAMP_AUDIO, AUDIO_FS,
@@ -307,5 +375,24 @@ int main(void)
     free(imu);
 #endif
 
+#ifdef LPOS_MODE
+    posit_ok = 1;
+    posit_done = 1;
+#endif
+
     return 0;
+}
+
+int main(void){
+#ifdef LPOS_MODE
+    posit_ok = 0;
+
+    coprosit_launch_cpu((coprosit_start_function_ptr_t)&launch);
+    while (!posit_done);
+    coprosit_reset_cpu();
+
+    return 1 - posit_ok;
+#else
+    return launch();
+#endif
 }

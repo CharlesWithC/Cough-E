@@ -4,12 +4,29 @@
 #include <inttypes.h>
 #include <types.h>
 #include <math.h>
+#include <stdio.h>
+
+static inline real_t floorreal(real_t x){
+    #ifdef UPOS_MODE
+    return sw::universal::floor(x);
+    #else
+    return floorf((float)x);
+    #endif
+}
 
 static inline real_t expreal(real_t x){
     #ifdef UPOS_MODE
     return sw::universal::exp(x);
     #else
-    return expf(x);
+    return expf((float)x);
+    #endif
+}
+
+static inline real_t powreal(real_t base, real_t exp){
+    #ifdef UPOS_MODE
+    return sw::universal::pow(base, exp);
+    #else
+    return powf((float)base, (float)exp);
     #endif
 }
 
@@ -17,7 +34,11 @@ static inline real_t sqrtreal(real_t x){
     #ifdef UPOS_MODE
     return sw::universal::sqrt(x);
     #else
-    return sqrtf(x);
+    #ifdef LPOS_MODE
+    return libposit::sqrt(x);
+    #else
+    return sqrtf((float)x);
+    #endif
     #endif
 }
 
@@ -25,7 +46,7 @@ static inline real_t logreal(real_t x){
     #ifdef UPOS_MODE
     return sw::universal::log(x);
     #else
-    return logf(x);
+    return logf((float)x);
     #endif
 }
 
@@ -33,12 +54,24 @@ static inline real_t log10real(real_t x){
     #ifdef UPOS_MODE
     return sw::universal::log10(x);
     #else
-    return log10f(x);
+    return log10f((float)x);
     #endif
 }
 
 #ifdef HEEPATIA_MODE
-#include <w25q128jw.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wc++11-narrowing"
+    #include <w25q128jw.h>
+    #pragma GCC diagnostic pop
+    // need to manually declare this function when compiling with clang++/g++
+    uint32_t * heep_get_flash_address_offset(uint32_t* data_address_lma);
+#ifdef __cplusplus
+}
+#endif
+
 static inline void read_flash(const void *src, void *dest, uint32_t len) {
     uint32_t source_flash = (uint32_t)heep_get_flash_address_offset((uint32_t *)src);
     if(w25q128jw_read_standard(source_flash, dest, len) != FLASH_OK) printf("FLASH READ ERROR\n");
@@ -49,6 +82,40 @@ static inline void read_flash(const void *src, void *dest, uint32_t len) {
     memcpy(dest, src, len);
 }
 #endif
+
+static inline void print_float(float f, int precision) {
+    if (f < 0) {
+        printf("-");
+        f = -f;
+    }
+
+    int ipart = (int)f;
+    float fpart = f - (float)ipart;
+    int multiplier = 1;
+    for (int i = 0; i < precision; i++) {
+        multiplier *= 10;
+    }
+    int fpart_int = (int)(fpart * multiplier + 0.5f);
+    if (fpart_int >= multiplier) {
+        ipart += 1;
+        fpart_int = 0;
+    }
+    printf("%d.", ipart);
+    int temp = fpart_int;
+    int digits_printed = 0;
+    if (temp == 0) {
+        digits_printed = 1;
+    } else {
+        while (temp > 0) {
+            digits_printed++;
+            temp /= 10;
+        }
+    }
+    for (int i = 0; i < (precision - digits_printed); i++) {
+        printf("0");
+    }
+    printf("%d", fpart_int);
+}
 
 /**
  * Enums of the available types on which to call the `order_by_idxs()` function.

@@ -18,13 +18,13 @@
 
 // Constants related to cough physiology
 #ifndef FXP_MODE
-#define COUGH_END_TOLERANCE     0.01
-#define COUGH_BURST_MIN_DUR                 0.03
-#define COUGH_BURST_MAX_DUR                 0.05
-#define COUGH_EXP_MIN_DUR                   0.2
-#define COUGH_EXP_MAX_DUR                   0.5
-#define COMPRESSIVE_PHASE_DUR               0.2
-#define COUGH_LEN_IN_SERIES_DECREASE_FACTOR 0.8
+#define COUGH_END_TOLERANCE     0.01f
+#define COUGH_BURST_MIN_DUR                 0.03f
+#define COUGH_BURST_MAX_DUR                 0.05f
+#define COUGH_EXP_MIN_DUR                   0.2f
+#define COUGH_EXP_MAX_DUR                   0.5f
+#define COMPRESSIVE_PHASE_DUR               0.2f
+#define COUGH_LEN_IN_SERIES_DECREASE_FACTOR 0.8f
 #else
 /* Integer equivalents used by FxP postprocessing runtime. */
 #define COUGH_END_TOLERANCE_MS              10U

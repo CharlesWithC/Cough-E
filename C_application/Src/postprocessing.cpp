@@ -414,7 +414,7 @@ void _get_cough_peaks(const real_t *seg,
 {
     RA_LOG_ARRAY("POSTPROC", "_get_cough_peaks", "seg_input", seg, len);
 
-    int16_t downsample_len = 0.0;
+    int16_t downsample_len = 0.0f;
     real_t *downsample_seg = _downsample(seg, len, fs, &downsample_len);
 
     real_t *seg_squared = (real_t *)malloc(downsample_len * sizeof(real_t));
@@ -592,10 +592,10 @@ uint16_t _clean_cough_segments(uint16_t *starts_idxs,
 
     free(cough_burst_distances);
 
-    real_t time_start_peak = 0.0;
-    real_t time_to_next_peak = 0.0;
+    real_t time_start_peak = 0.0f;
+    real_t time_to_next_peak = 0.0f;
     uint16_t cough_series_count = 0;
-    real_t series_multiplier = 0.0;
+    real_t series_multiplier = 0.0f;
 
     for (uint16_t i = 0; i < n_peaks_final; i++) {
         time_start_peak = (locs_final[i] - starts_idxs[i]) / (real_t)fs;

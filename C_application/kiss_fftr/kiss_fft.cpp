@@ -327,7 +327,7 @@ void kf_factor(int n,int * facbuf)
     int p=4;
 #ifndef FIXED_POINT
     real_t floor_sqrt;
-    floor_sqrt = floor( sqrt((real_t)n) );
+    floor_sqrt = floorreal( sqrtreal((real_t)n) );
 #endif
 
     /*factor out powers of 4, powers of 2, then any remaining primes */

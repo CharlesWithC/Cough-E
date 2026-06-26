@@ -453,11 +453,11 @@ static const char *_imu_signal_names[] = {
 #endif
 
 void compute_imu_family(const int8_t *features_selector, const real_t signal[][Num_IMU_signals], int16_t len, int8_t signal_idx, int8_t sig_feat_idx, real_t *feats){
-
     if(is_required(features_selector, sig_feat_idx, sig_feat_idx+Num_imu_feat_families-1)){
 
         // Extract samples for the required signal axis
         real_t *signal_samples = (real_t*)malloc(len * sizeof(real_t));
+
         for(int16_t i=0; i<len; i++){
             signal_samples[i] = signal[i][signal_idx];
         }
@@ -515,7 +515,6 @@ void imu_features(const int8_t *features_selector, const real_t sig[][Num_IMU_si
 
     // ACCEL_Z
     compute_imu_family(features_selector, sig, len, ACCELEROMETER_Z, ACCEL_Z_FEAT, feats);
-
 
 
     // GYRO_Y

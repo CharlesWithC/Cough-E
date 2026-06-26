@@ -5,7 +5,7 @@ BUILD_DIR 	= 	build
 .DEFAULT_GOAL = all
 
 SRC_DIRS 	= 	Src kiss_fftr FxP/imu FxP/audio
-SRC 		= 	$(foreach c, $(SRC_DIRS), $(wildcard $c/*.c))
+SRC 		= 	$(foreach c, $(SRC_DIRS), $(wildcard $c/*.c*))
 
 INC_DIRS 	= 	Inc FxP universal/include/sw libposit/include ./ kiss_fftr range_analysis
 INC 		= 	$(foreach d, $(INC_DIRS), -I$d)
@@ -39,7 +39,7 @@ EXEC_STRING +=	"|++++++++++++++++++++++++++++++++|\n"
 
 all: $(TWIDDLE_Q15) $(TWIDDLE_Q31)
 	@mkdir -p $(BUILD_DIR)
-	$(CC) -Wall -o $(BUILD_DIR)/$(APP) main.c $(SRC) $(INC) $(MATH) -O3 -g $(CFLAGS)
+	$(CC) -Wall -o $(BUILD_DIR)/$(APP) main.cpp $(SRC) $(INC) $(MATH) -O3 -g $(CFLAGS)
 	@echo $(COMP_STRING)
 
 run: all
