@@ -22,38 +22,38 @@
 #ifndef FXP_MODE
 
 // internal use function to compute the dct on a linear array
-void _dct_linear(real_t *x, int16_t len, real_t *y);
+void _dct_linear(audio_sample_t *x, int16_t len, audio_sample_t *y);
 
 /*
  * Parked helper kept for the upcoming full FxP audio port.
- * It is intentionally disabled in the current mixed real_t/FxP bridge flow.
+ * It is intentionally disabled in the current mixed audio_sample_t/FxP bridge flow.
  */
 #if 0
-void _cmplx_mag(kiss_fft_cpx *x, int16_t len, real_t *res){
+void _cmplx_mag(kiss_fft_cpx *x, int16_t len, audio_sample_t *res){
     for(int16_t i=0; i<len; i++){
         res[i] = sqrtreal((x[i].r * x[i].r) + (x[i].i * x[i].i));
     }
 }
 #endif
 
-void stft(const real_t *x, int16_t len, int16_t n_frames, real_t *res){
+void stft(const audio_sample_t *x, int16_t len, int16_t n_frames, audio_sample_t *res){
 
     RA_LOG_ARRAY("AUDIO_MEL", "stft", "sig_input", x, len);
 
     // apply padding
     int16_t padded_len = (2 * PAD_LEN) + len;
-    real_t *padded = (real_t*)malloc(padded_len * sizeof(real_t));
+    audio_sample_t *padded = (audio_sample_t*)malloc(padded_len * sizeof(audio_sample_t));
     // zero_padding(x, len, PAD_LEN, padded);
     reflect_padding(x, len, PAD_LEN, padded);
 
-    real_t *column = (real_t*)malloc(N_FFT * sizeof(real_t));
+    audio_sample_t *column = (audio_sample_t*)malloc(N_FFT * sizeof(audio_sample_t));
 
     // initialize RFFT structures
     kiss_fftr_cfg cfg = kiss_fftr_alloc(N_FFT, 0, 0, 0);
     kiss_fft_cpx *cx_out = (kiss_fft_cpx*)malloc(FFT_RES_LEN * sizeof(kiss_fft_cpx));
-    real_t *fft_res = (real_t*)malloc(FFT_RES_LEN * sizeof(real_t));
-    real_t *fft_re = (real_t*)malloc(FFT_RES_LEN * sizeof(real_t));
-    real_t *fft_im = (real_t*)malloc(FFT_RES_LEN * sizeof(real_t));
+    audio_sample_t *fft_res = (audio_sample_t*)malloc(FFT_RES_LEN * sizeof(audio_sample_t));
+    audio_sample_t *fft_re = (audio_sample_t*)malloc(FFT_RES_LEN * sizeof(audio_sample_t));
+    audio_sample_t *fft_im = (audio_sample_t*)malloc(FFT_RES_LEN * sizeof(audio_sample_t));
 
     for(int16_t i=0; i<n_frames; i++){
 
@@ -110,10 +110,10 @@ void stft(const real_t *x, int16_t len, int16_t n_frames, real_t *res){
 
 
 
-void mel_spectrogram_full(const real_t *x, int16_t len, int16_t n_frames, real_t *res){
+void mel_spectrogram_full(const audio_sample_t *x, int16_t len, int16_t n_frames, audio_sample_t *res){
 
     // STFT
-    real_t *frames_power = (real_t*)malloc((FFT_RES_LEN * n_frames) * sizeof(real_t));
+    audio_sample_t *frames_power = (audio_sample_t*)malloc((FFT_RES_LEN * n_frames) * sizeof(audio_sample_t));
     stft(x, len, n_frames, frames_power);
 
     // MULT BY MEL BASIS (matrix multiplication)
@@ -122,7 +122,7 @@ void mel_spectrogram_full(const real_t *x, int16_t len, int16_t n_frames, real_t
     for(int16_t i=0; i<MEL_ROWS; i++){              // rows in the mel basis
         for(int16_t j=0; j<n_frames; j++){          // columns for frames_powers and raws for mel_basis
             for(int16_t k=mel_nz_indexes[i][0]; k<mel_nz_indexes[i][1]; k++){   // columns in the mel basis
-                    res[(i*n_frames) + j] += mel_basis[i][k - mel_nz_indexes[i][0]] * frames_power[(j*MEL_COLUMNS) + k];
+                    res[(i*n_frames) + j] += (audio_sample_t)mel_basis[i][k - mel_nz_indexes[i][0]] * frames_power[(j*MEL_COLUMNS) + k];
             }
         }
     }
@@ -133,10 +133,10 @@ void mel_spectrogram_full(const real_t *x, int16_t len, int16_t n_frames, real_t
 }
 
 
-void mel_spectrogram(const real_t *x, int16_t len, int16_t n_frames, uint8_t *idx_required, real_t *res){
+void mel_spectrogram(const audio_sample_t *x, int16_t len, int16_t n_frames, uint8_t *idx_required, audio_sample_t *res){
 
     // STFT
-    real_t *frames_power = (real_t*)malloc((FFT_RES_LEN * n_frames) * sizeof(real_t));
+    audio_sample_t *frames_power = (audio_sample_t*)malloc((FFT_RES_LEN * n_frames) * sizeof(audio_sample_t));
     stft(x, len, n_frames, frames_power);
 
 
@@ -152,7 +152,7 @@ void mel_spectrogram(const real_t *x, int16_t len, int16_t n_frames, uint8_t *id
 
             for(int16_t j=0; j<n_frames; j++){          // columns for frames_powers and raws for mel_basis
                 for(int16_t k=mel_nz_indexes[i][0]; k<mel_nz_indexes[i][1]; k++){   // columns in the mel basis
-                        res[(current_idx*n_frames) + j] += mel_basis[i][k - mel_nz_indexes[i][0]] * frames_power[(j*MEL_COLUMNS) + k];
+                        res[(current_idx*n_frames) + j] += (audio_sample_t)mel_basis[i][k - mel_nz_indexes[i][0]] * frames_power[(j*MEL_COLUMNS) + k];
                 }
             }
 
@@ -169,10 +169,10 @@ void mel_spectrogram(const real_t *x, int16_t len, int16_t n_frames, uint8_t *id
 
 
 
-void power_to_dB(real_t *x, int16_t len, real_t *res){
+void power_to_dB(audio_sample_t *x, int16_t len, audio_sample_t *res){
     RA_LOG_ARRAY("AUDIO_MEL", "power_to_dB", "input", x, len);
 
-    real_t sample = 0.0f;
+    audio_sample_t sample = 0.0f;
     for(int16_t i=0; i<len; i++){
         if(x[i] == 0){
             sample = F_MIN;
@@ -181,7 +181,7 @@ void power_to_dB(real_t *x, int16_t len, real_t *res){
         }
         res[i] = 10.0f * log10real(sample);
     }
-    real_t max = vect_max_value(res, len);
+    audio_sample_t max = vect_max_value(res, len);
     RA_LOG_SCALAR("AUDIO_MEL", "power_to_dB", "max_dB", max);
 
     for(int16_t i=0; i<len; i++){
@@ -196,19 +196,19 @@ void power_to_dB(real_t *x, int16_t len, real_t *res){
 /// @param *x   pointer to the input signal
 /// @param len  lenght
 /// @param *y   pointer to the result
-void _dct_linear(real_t *x, int16_t len, real_t *y){
+void _dct_linear(audio_sample_t *x, int16_t len, audio_sample_t *y){
 
     RA_LOG_ARRAY("AUDIO_MEL", "dct_linear", "input", x, len);
 
-    real_t sum = 0.0f;
-    real_t scaling = sqrtreal((real_t)1.0f / (2 * len));
+    audio_sample_t sum = 0.0f;
+    audio_sample_t scaling = sqrtreal((audio_sample_t)1.0f / (2 * len));
 
-    real_t cos_v = 0.0f;
+    audio_sample_t cos_v = 0.0f;
 
-    real_t *dct_cos_buf = (real_t*)malloc(len * sizeof(real_t));
+    audio_sample_t *dct_cos_buf = (audio_sample_t*)malloc(len * sizeof(audio_sample_t));
 
     for(int16_t k=0; k<len; k++){
-        read_flash(&dct_cos[(len * k)], dct_cos_buf, len * sizeof(real_t));
+        read_flash(&dct_cos[(len * k)], dct_cos_buf, len * sizeof(audio_sample_t));
 
         sum = 0.0f;
         for(int16_t n=0; n<len; n++){
@@ -221,17 +221,17 @@ void _dct_linear(real_t *x, int16_t len, real_t *y){
             y[k] = y[k] * scaling;
         }
     }
-    y[0] = y[0] * sqrtreal((real_t)1.0f / (4 * len));
+    y[0] = y[0] * sqrtreal((audio_sample_t)1.0f / (4 * len));
 
     RA_LOG_ARRAY("AUDIO_MEL", "dct_linear", "output", y, len);
 }
 
 
 
-void dct_matrix(real_t *x, int16_t rows, int16_t cols, real_t *y){
+void dct_matrix(audio_sample_t *x, int16_t rows, int16_t cols, audio_sample_t *y){
 
-    real_t *column = (real_t*)malloc(rows * sizeof(real_t));
-    real_t *c_res = (real_t*)malloc(rows * sizeof(real_t));
+    audio_sample_t *column = (audio_sample_t*)malloc(rows * sizeof(audio_sample_t));
+    audio_sample_t *c_res = (audio_sample_t*)malloc(rows * sizeof(audio_sample_t));
 
     for(int16_t c=0; c<cols; c++){
         // fill the column array with the current column
@@ -253,16 +253,16 @@ void dct_matrix(real_t *x, int16_t rows, int16_t cols, real_t *y){
 
 
 
-void entropy(real_t *spectrogram, int16_t n_rows, int16_t n_columns, real_t *res){
+void entropy(audio_sample_t *spectrogram, int16_t n_rows, int16_t n_columns, audio_feat_t *res){
 
     RA_LOG_ARRAY("AUDIO_MEL", "entropy", "input", spectrogram, n_rows * n_columns);
 
     // Store the sum of each row of the spectrogram
-    real_t row_sum = 0.0f;
+    audio_sample_t row_sum = 0.0f;
 
     for(int8_t i=0; i<n_rows; i++){
         // Sum each column of the spectrogram
-        row_sum = vect_sum(&spectrogram[i*n_columns], n_columns);
+        row_sum = vect_sum<audio_feat_t>(&spectrogram[i*n_columns], n_columns);
         RA_LOG_SCALAR("AUDIO_MEL", "entropy", "row_sum", row_sum);
 
         // Divide all the row's elements by the sum of the row.
@@ -277,7 +277,7 @@ void entropy(real_t *spectrogram, int16_t n_rows, int16_t n_columns, real_t *res
 
     // Sum each column of the spectrogram
     for(int8_t i=0; i<n_rows; i++){
-        res[i] = vect_sum(&spectrogram[i*n_columns], n_columns);
+        res[i] = vect_sum<audio_sample_t>(&spectrogram[i*n_columns], n_columns);
         RA_LOG_SCALAR("AUDIO_MEL", "entropy", "result", res[i]);
     }
 }

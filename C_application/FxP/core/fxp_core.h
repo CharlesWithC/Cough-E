@@ -182,66 +182,60 @@ typedef uint32_t fxp_feat_t;
 /*  Float/fixed conversion helpers                                            */
 /* -------------------------------------------------------------------------- */
 
-static inline int32_t fxp_from_real_signed(real_t x, uint8_t frac_bits) {
-    real_t scale = (real_t)(1ULL << frac_bits);
-    real_t scaled = x * scale;
+static inline int32_t fxp_from_real_signed(float x, uint8_t frac_bits) {
+    float scale = (float)(1ULL << frac_bits);
+    float scaled = x * scale;
     scaled += (scaled >= 0.0f) ? 0.5f : -0.5f;
 
-    if (scaled > (real_t)INT32_MAX) return INT32_MAX;
-    if (scaled < (real_t)INT32_MIN) return INT32_MIN;
+    if (scaled > (float)INT32_MAX) return INT32_MAX;
+    if (scaled < (float)INT32_MIN) return INT32_MIN;
     return (int32_t)scaled;
 }
 
-static inline real_t fxp_to_real(int64_t x, uint8_t frac_bits) {
-    real_t scale = (real_t)(1ULL << frac_bits);
-    return (real_t)x / scale;
+static inline float fxp_to_real(int64_t x, uint8_t frac_bits) {
+    float scale = (float)(1ULL << frac_bits);
+    return (float)x / scale;
 }
 
 /* Compatibility macros used across the existing codebase. */
-#define FXP_FROM_FLOAT(x, f) (fxp_from_real_signed((real_t)(x), (uint8_t)(f)))
+#define FXP_FROM_FLOAT(x, f) (fxp_from_real_signed((float)(x), (uint8_t)(f)))
 #define FXP_TO_FLOAT(x, f) (fxp_to_real((int64_t)(x), (uint8_t)(f)))
 
-static inline q11_5_t fxp_imu_raw_from_real(real_t x) {
+static inline q11_5_t fxp_imu_raw_from_real(float x) {
     return (q11_5_t)FXP_FROM_FLOAT(x, FXP_FRAC_IMU_RAW);
 }
 
-static inline int16_t fxp_audio_from_real(real_t x) {
+static inline int16_t fxp_audio_from_real(float x) {
     return (int16_t)FXP_FROM_FLOAT(x, FXP_FRAC_AUDIO_INPUT);
 }
 
-#define FXP_IMU_RAW_FROM_FLOAT(x) (fxp_imu_raw_from_real((real_t)(x)))
-#define FXP_AUDIO_FROM_FLOAT(x) (fxp_audio_from_real((real_t)(x)))
+#define FXP_IMU_RAW_FROM_FLOAT(x) (fxp_imu_raw_from_real((float)(x)))
+#define FXP_AUDIO_FROM_FLOAT(x) (fxp_audio_from_real((float)(x)))
 
 /* -------------------------------------------------------------------------- */
 /*  Backend scalar carriers                                                   */
 /* -------------------------------------------------------------------------- */
 
 #ifdef FXP_MODE
-
 typedef int16_t cough_audio_sample_t; /* Q14 */
 typedef q11_5_t cough_imu_sample_t;   /* Q11.5 raw IMU */
 typedef fxp_feat_t cough_feat_t;      /* Native per-feature fixed-point carrier */
+typedef cough_feat_t cough_audio_feat_t; // forward type to audio
+typedef cough_feat_t cough_imu_feat_t;   // forward type to imu
 
-static inline cough_audio_sample_t cough_source_audio_sample(real_t x) {
+typedef cough_feat_t feat_t;
+typedef cough_audio_feat_t audio_feat_t;
+typedef cough_imu_feat_t imu_feat_t;
+typedef cough_audio_sample_t audio_sample_t;
+typedef cough_imu_sample_t imu_sample_t;
+#endif
+
+static inline cough_audio_sample_t cough_source_audio_sample(float x) {
     return FXP_AUDIO_FROM_FLOAT(x);
 }
 
-static inline cough_imu_sample_t cough_source_imu_sample(real_t x) {
+static inline cough_imu_sample_t cough_source_imu_sample(float x) {
     return FXP_IMU_RAW_FROM_FLOAT(x);
 }
 
-static inline cough_feat_t cough_source_feat(real_t x) { return FXP_FROM_FLOAT(x, FXP_PIPE_FRAC); }
-
-#else
-
-typedef real_t cough_audio_sample_t;
-typedef real_t cough_imu_sample_t;
-typedef real_t cough_feat_t;
-
-static inline cough_audio_sample_t cough_source_audio_sample(real_t x) { return x; }
-
-static inline cough_imu_sample_t cough_source_imu_sample(real_t x) { return x; }
-
-static inline cough_feat_t cough_source_feat(real_t x) { return x; }
-
-#endif
+static inline cough_feat_t cough_source_feat(float x) { return FXP_FROM_FLOAT(x, FXP_PIPE_FRAC); }

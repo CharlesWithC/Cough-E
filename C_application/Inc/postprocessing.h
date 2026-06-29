@@ -3,7 +3,6 @@
 
 #include <inttypes.h>
 #include <types.h>
-#include <FxP/core/fxp_core.h>
 #include <helpers.h>
 
 // Maximum number of peaks expected between one output and the next one
@@ -40,8 +39,8 @@
 typedef int16_t postproc_sample_t;
 typedef int16_t postproc_peak_t;
 #else
-typedef real_t postproc_sample_t;
-typedef real_t postproc_peak_t;
+typedef audio_sample_t postproc_sample_t;
+typedef audio_feat_t postproc_peak_t;
 #endif
 
 

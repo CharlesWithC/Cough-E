@@ -21,7 +21,7 @@
 /// @param *mags        pointer of the array in which to store the magnitudes of the result
 /// @param *freqs       pointer of the array in which to store the frequencies of the result
 /// @param *sum_mags    pointer to the value that stores the sum of the resulting magnitudes
-void compute_rfft(const real_t *sig, int16_t len, int16_t fs, real_t *mags, real_t *freqs, real_t *sum_mags);
+void compute_rfft(const audio_sample_t *sig, int16_t len, int16_t fs, audio_sample_t *mags, audio_sample_t *freqs, audio_feat_t *sum_mags);
 
 
 
@@ -31,7 +31,7 @@ void compute_rfft(const real_t *sig, int16_t len, int16_t fs, real_t *mags, real
 /// @param fs       sampling frequency
 /// @param *psd     pointer to the array that stores the resulting power spectral densities
 /// @param *freqs   pointer to the array that stores the resulting frequencies
-void compute_periodogram(const real_t *sig, int16_t len, int16_t fs, real_t *psd, real_t *freqs);
+void compute_periodogram(const audio_sample_t *sig, int16_t len, int16_t fs, audio_sample_t *psd, audio_sample_t *freqs);
 
 
 
@@ -41,7 +41,7 @@ void compute_periodogram(const real_t *sig, int16_t len, int16_t fs, real_t *psd
 /// @param len          length
 /// @param sum_mags     sum of the magnitues
 /// @return spectral decrease
-real_t compute_spec_decrease(real_t* mags, real_t* freqs, int16_t len, real_t sum_mags);
+audio_feat_t compute_spec_decrease(audio_sample_t* mags, audio_sample_t* freqs, int16_t len, audio_feat_t sum_mags);
 
 
 
@@ -51,7 +51,7 @@ real_t compute_spec_decrease(real_t* mags, real_t* freqs, int16_t len, real_t su
 /// @param len          length
 /// @param sum_mags     sum of the magnitues
 /// @return spectral slope
-real_t compute_spectral_slope(real_t *mags, real_t *freqs, int16_t len, real_t sum_mags);
+audio_feat_t compute_spectral_slope(audio_sample_t *mags, audio_sample_t *freqs, int16_t len, audio_feat_t sum_mags);
 
 
 
@@ -61,7 +61,7 @@ real_t compute_spectral_slope(real_t *mags, real_t *freqs, int16_t len, real_t s
 /// @param len          length
 /// @param sum_mags     sum of the magnitues
 /// @return rolloff
-real_t compute_rolloff(real_t *mags, real_t *freqs, int16_t len, real_t sum_mags);
+audio_feat_t compute_rolloff(audio_sample_t *mags, audio_sample_t *freqs, int16_t len, audio_feat_t sum_mags);
 
 
 
@@ -71,7 +71,7 @@ real_t compute_rolloff(real_t *mags, real_t *freqs, int16_t len, real_t sum_mags
 /// @param len          length
 /// @param sum_mags     sum of the magnitues
 /// @return centroid
-real_t compute_centroid(real_t *mags, real_t *freqs, int16_t len, real_t sum_mags);
+audio_feat_t compute_centroid(audio_sample_t *mags, audio_sample_t *freqs, int16_t len, audio_feat_t sum_mags);
 
 
 
@@ -83,7 +83,7 @@ real_t compute_centroid(real_t *mags, real_t *freqs, int16_t len, real_t sum_mag
 /// @param sum_mags     sum of the magnitues
 /// @param centroid     centroid
 /// @return spread
-real_t compute_spread(real_t *mags, real_t *freqs, int16_t len, real_t sum_mags, real_t centroid);
+audio_feat_t compute_spread(audio_sample_t *mags, audio_sample_t *freqs, int16_t len, audio_feat_t sum_mags, audio_feat_t centroid);
 
 
 
@@ -96,7 +96,7 @@ real_t compute_spread(real_t *mags, real_t *freqs, int16_t len, real_t sum_mags,
 /// @param centroid     centroid
 /// @param spread       spread
 /// @return kurtosis
-real_t compute_kurt(real_t *mags, real_t *freqs, int16_t len, real_t sum_mags, real_t centroid, real_t spread);
+audio_feat_t compute_kurt(audio_sample_t *mags, audio_sample_t *freqs, int16_t len, audio_feat_t sum_mags, audio_feat_t centroid, audio_feat_t spread);
 
 
 
@@ -109,7 +109,7 @@ real_t compute_kurt(real_t *mags, real_t *freqs, int16_t len, real_t sum_mags, r
 /// @param centroid     centroid
 /// @param spread       spread
 /// @return skewness
-real_t compute_skew(real_t *mags, real_t *freqs, int16_t len, real_t sum_mags, real_t centroid, real_t spread);
+audio_feat_t compute_skew(audio_sample_t *mags, audio_sample_t *freqs, int16_t len, audio_feat_t sum_mags, audio_feat_t centroid, audio_feat_t spread);
 
 
 
@@ -117,7 +117,7 @@ real_t compute_skew(real_t *mags, real_t *freqs, int16_t len, real_t sum_mags, r
 /// @param *x   pointer to the signal
 /// @param len  lenght of the signal
 /// @return     the flatness of the signal
-real_t compute_flatness(real_t *x, int16_t len);
+audio_feat_t compute_flatness(audio_sample_t *x, int16_t len);
 
 
 
@@ -125,7 +125,7 @@ real_t compute_flatness(real_t *x, int16_t len);
 /// @param *x   pointer to the signal
 /// @param len  lenght of the signal
 /// @return     the standard deviation of the signal
-real_t compute_std(real_t *x, int16_t len);
+audio_feat_t compute_std(audio_sample_t *x, int16_t len);
 
 
 
@@ -133,7 +133,7 @@ real_t compute_std(real_t *x, int16_t len);
 /// @param *x   pointer to the signal
 /// @param len  lenght of the signal
 /// @return     the spectral entropy of the signal
-real_t compute_spectral_entropy(real_t *x, int16_t len);
+audio_feat_t compute_spectral_entropy(audio_sample_t *x, int16_t len);
 
 
 
@@ -142,7 +142,7 @@ real_t compute_spectral_entropy(real_t *x, int16_t len);
 /// @param *freqs   pointer to the frequencies
 /// @param len      lenght
 /// @return         the dominant frequency
-real_t get_domiant_freq(real_t *psd, real_t *freqs, int16_t len);
+audio_feat_t get_domiant_freq(audio_sample_t *psd, audio_sample_t *freqs, int16_t len);
 
 
 
@@ -155,7 +155,7 @@ real_t get_domiant_freq(real_t *psd, real_t *freqs, int16_t len);
 /// @param len              lenght
 /// @param *psd_selector    pointer to the selector for the psd
 /// @param *band_powers     poitner to the resulting band powers
-void normalized_bandpowers(real_t *psd, real_t *freqs, int16_t len, const int8_t *psd_selector, real_t *band_powers);
+void normalized_bandpowers(audio_sample_t *psd, audio_sample_t *freqs, int16_t len, const int8_t *psd_selector, audio_feat_t *band_powers);
 
 
 
@@ -170,7 +170,7 @@ void normalized_bandpowers(real_t *psd, real_t *freqs, int16_t len, const int8_t
 /// @param len      lenght of the signal
 /// @param n_frames number of frames
 /// @param *coeffs  pointer to the resulting coefficients
-void mfcc_computation(const real_t *x, int16_t len, int16_t n_frames, real_t *coeffs);
+void mfcc_computation(const audio_sample_t *x, int16_t len, int16_t n_frames, audio_sample_t *coeffs);
 
 
 
@@ -179,7 +179,7 @@ void mfcc_computation(const real_t *x, int16_t len, int16_t n_frames, real_t *co
 /// @param len          lenght of the signa;
 /// @param *mean_mfcc   pointer to the resulting mean of the MFCC
 /// @param *std_mfcc    pointer to the resulting standard deviation of the MFCC
-void get_mfcc_features(const real_t *x, int16_t len, real_t *mean_mfcc, real_t *std_mfcc);
+void get_mfcc_features(const audio_sample_t *x, int16_t len, audio_feat_t *mean_mfcc, audio_feat_t *std_mfcc);
 
 
 
@@ -192,6 +192,6 @@ void get_mfcc_features(const real_t *x, int16_t len, real_t *mean_mfcc, real_t *
 /// @param *std_mel_spectr      pointer to the resulting standard deviations of the mels
 /// @param *max_mel_spectr      pointer to the resulting max of the mels
 /// @param *entropy_mel_spectr  pointer to the resulting entropies of the mels
-void get_mel_spectrogram_features(const real_t *x, int16_t len, uint8_t *idx_needed, uint8_t n_mels_needed, real_t *mean_mel_spectr, real_t *std_mel_spectr, real_t *max_mel_spectr, real_t *entropy_mel_spectr);
+void get_mel_spectrogram_features(const audio_sample_t *x, int16_t len, uint8_t *idx_needed, uint8_t n_mels_needed, audio_feat_t *mean_mel_spectr, audio_feat_t *std_mel_spectr, audio_feat_t *max_mel_spectr, audio_feat_t *entropy_mel_spectr);
 
 #endif

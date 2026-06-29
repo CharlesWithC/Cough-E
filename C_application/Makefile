@@ -1,10 +1,10 @@
 
-CC 			=	gcc
+CC 			=	g++
 APP 		= 	cough-e
 BUILD_DIR 	= 	build
 .DEFAULT_GOAL = all
 
-SRC_DIRS 	= 	Src kiss_fftr FxP/imu FxP/audio
+SRC_DIRS 	= 	Src kiss_fftr input_data FxP/imu FxP/audio
 SRC 		= 	$(foreach c, $(SRC_DIRS), $(wildcard $c/*.c*))
 
 INC_DIRS 	= 	Inc FxP universal/include/sw libposit/include ./ kiss_fftr range_analysis

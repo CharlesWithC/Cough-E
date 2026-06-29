@@ -130,4 +130,4 @@ Twiddles for `kiss-fftr`, cosine LUT for `dct-linear`, and input data are stored
 - CARUS1: 60400 bytes / 65536 bytes (imu model)
 - INTERLEAVED: 121680 bytes / 131072 bytes (other constant)
 
-Note: FxP is not supported on HEEPatia.
+Note: FxP is not tested on HEEPatia.

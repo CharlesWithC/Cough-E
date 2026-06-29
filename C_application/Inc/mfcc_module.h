@@ -37,7 +37,7 @@
 /// @param len          lenght of the array
 /// @param n_frames     number of frames
 /// @param *res         pointer to the result
-void stft(const real_t *x, int16_t len, int16_t n_frames, real_t *res);
+void stft(const audio_sample_t *x, int16_t len, int16_t n_frames, audio_sample_t *res);
 
 
 
@@ -47,7 +47,7 @@ void stft(const real_t *x, int16_t len, int16_t n_frames, real_t *res);
 /// @param len          lenght of the array
 /// @param n_frames     number of frames
 /// @param *res         pointer to the result
-void mel_spectrogram_full(const real_t *x, int16_t len, int16_t n_frames, real_t *res);
+void mel_spectrogram_full(const audio_sample_t *x, int16_t len, int16_t n_frames, audio_sample_t *res);
 
 
 
@@ -59,7 +59,7 @@ void mel_spectrogram_full(const real_t *x, int16_t len, int16_t n_frames, real_t
 /// @param n_frames         number of frames
 /// @param *idx_required    pointer to the indexes that specify the required frames
 /// @param *res             pointer to the result
-void mel_spectrogram(const real_t *x, int16_t len, int16_t n_frames, uint8_t *idx_required, real_t *res);
+void mel_spectrogram(const audio_sample_t *x, int16_t len, int16_t n_frames, uint8_t *idx_required, audio_sample_t *res);
 
 
 
@@ -68,7 +68,7 @@ void mel_spectrogram(const real_t *x, int16_t len, int16_t n_frames, uint8_t *id
 /// @param *x               pointer to the input signal
 /// @param len              lenght of the array
 /// @param *res             pointer to the result
-void power_to_dB(real_t *x, int16_t len, real_t *res);
+void power_to_dB(audio_sample_t *x, int16_t len, audio_sample_t *res);
 
 
 
@@ -86,7 +86,7 @@ void power_to_dB(real_t *x, int16_t len, real_t *res);
 * @param cols   number of columns
 * @param *y     pointer to the result
 */
-void dct_matrix(real_t *x, int16_t rows, int16_t cols, real_t *y);
+void dct_matrix(audio_sample_t *x, int16_t rows, int16_t cols, audio_sample_t *y);
 
 
 
@@ -100,6 +100,6 @@ void dct_matrix(real_t *x, int16_t rows, int16_t cols, real_t *y);
  * @param *res          :   array where to store the resulting entropy. It should
  *                          be an array of `n_rows` elements
 */
-void entropy(real_t *spectrogram, int16_t n_rows, int16_t n_columns, real_t *res);
+void entropy(audio_sample_t *spectrogram, int16_t n_rows, int16_t n_columns, audio_feat_t *res);
 
 #endif

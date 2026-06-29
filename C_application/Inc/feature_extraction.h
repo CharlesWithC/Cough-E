@@ -1,12 +1,12 @@
 #ifndef _FEATURE_EXTRACTION_H
 #define _FEATURE_EXTRACTION_H
 
+#include <types.h>
 #include <imu_features.h>
-#include <FxP/core/fxp_core.h>
 
-typedef cough_feat_t feat_t;
-typedef cough_audio_sample_t audio_sample_t;
-typedef cough_imu_sample_t imu_sample_t;
+#ifdef FXP_MODE
+#include <FxP/core/fxp_core.h>
+#endif
 
 /**
     Computes features from the AUDIO signal, passed as parameter.
@@ -21,7 +21,7 @@ void audio_features(const int8_t *features_selector,
                     const audio_sample_t *sig,
                     int16_t len,
                     int16_t fs,
-                    feat_t *feats);
+                    audio_feat_t *feats);
 
 /**
     Computes features from the IMU signal, passed as parameter.
@@ -32,8 +32,8 @@ void audio_features(const int8_t *features_selector,
     @param *feats               :   array to be filled with the extracted features
 */
 void imu_features(const int8_t *features_selector,
-                  const bigreal_t sig[][Num_IMU_signals],
+                  const imu_sample_t sig[][Num_IMU_signals],
                   int16_t len,
-                  bigreal_t *feats);
+                  imu_feat_t *feats);
 
 #endif

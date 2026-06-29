@@ -66,7 +66,7 @@ def _gen_super_values(length: int, frac_bits: int) -> Iterable[Tuple[int, int]]:
 
 
 def _write_table(lines: List[str], name: str, length: int, values: Iterable[Tuple[int, int]]) -> None:
-    lines.append(f"static const twiddles_t FLASH {name}[{length}] = {{")
+    lines.append(f"static const twiddles_t FLASH1 {name}[{length}] = {{")
     for c, s in values:
         lines.append(f"    {{ {c}, {s} }},")
     lines.append("};")

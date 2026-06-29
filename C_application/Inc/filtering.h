@@ -13,7 +13,7 @@
  * @param *zi   : pointer to the zi coefficients of the filter
  * @param *res  : pointer to the array where to store the resulting filtered signal
  */
-void linear_filer(real_t *sig, int len, const real_t *b, const real_t *a, real_t *zi, real_t *res);
+void linear_filer(audio_sample_t *sig, int len, const audio_sample_t *b, const audio_sample_t *a, audio_sample_t *zi, audio_sample_t *res);
 
 
 /**
@@ -30,6 +30,6 @@ void linear_filer(real_t *sig, int len, const real_t *b, const real_t *a, real_t
     - forward filtering
     - backward filtering
  */
-void filtfilt(const real_t *sig, int len, const real_t *b, const real_t* a, const real_t *zi, real_t *res);
+void filtfilt(const audio_sample_t *sig, int len, const audio_sample_t *b, const audio_sample_t* a, const audio_sample_t *zi, audio_sample_t *res);
 
 #endif

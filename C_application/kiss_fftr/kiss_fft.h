@@ -43,8 +43,8 @@ extern "C" {
 # endif
 #else
 # ifndef kiss_fft_scalar
-/*  default is real_t */
-#   define kiss_fft_scalar real_t
+/*  default is audio_sample_t */
+#   define kiss_fft_scalar audio_sample_t
 # endif
 #endif
 

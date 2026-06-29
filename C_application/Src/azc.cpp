@@ -45,14 +45,13 @@ int _qsort_cmp(const void *e1, const void *e2){
  * @param *res: pointer to the array used to store the result. Notice that the result
  * will be made only of y coordinates
 */
-void _interp(int16_t len, int16_t xf, bigreal_t yf, int16_t xl, bigreal_t yl, bigreal_t *res){
-
+void _interp(int16_t len, int16_t xf, imu_sample_t yf, int16_t xl, imu_sample_t yl, imu_sample_t *res){
     res[0] = yf;
     res[len-1] = yl;
 
     // Compute the segment parameters
-    bigreal_t m = (yl - yf) / (xl - xf);    // slope
-    bigreal_t q = yf - (m * xf);            // y-axis intercept
+    imu_sample_t m = (yl - yf) / (xl - xf);    // slope
+    imu_sample_t q = yf - (m * xf);            // y-axis intercept
 
     for(int i=1; i<len-1; i++){
         res[i] = (m * (xf + i)) + q;
@@ -67,12 +66,11 @@ void _interp(int16_t len, int16_t xf, bigreal_t yf, int16_t xl, bigreal_t yl, bi
  * the timestamps might be non equally spaced
  * @param len: length of the input signal array
  *
- * @return a bigreal_t pointer containing the resulting differentiation
+ * @return a imu_sample_t pointer containing the resulting differentiation
 */
-bigreal_t *_discrete_diff(bigreal_t *sig, int16_t *timestamps, int16_t len){
-
+imu_sample_t *_discrete_diff(imu_sample_t *sig, int16_t *timestamps, int16_t len){
     int16_t res_len = len-1;
-    bigreal_t *res = (bigreal_t*)malloc((res_len) * sizeof(bigreal_t));
+    imu_sample_t *res = (imu_sample_t*)malloc((res_len) * sizeof(imu_sample_t));
 
     for(int16_t i=0; i<(res_len); i++){
         res[i] = (sig[i+1] - sig[i]) / (timestamps[i+1] - timestamps[i]);
@@ -92,8 +90,7 @@ bigreal_t *_discrete_diff(bigreal_t *sig, int16_t *timestamps, int16_t len){
  * @return The max vertical distance found. Also the index of the signal sample having this max
  * distance from the linear segment will be stored in the idx parameter
 */
-bigreal_t _max_vdist(bigreal_t *sig, int16_t first, int16_t last, int16_t *idx){
-
+imu_sample_t _max_vdist(imu_sample_t *sig, int16_t first, int16_t last, int16_t *idx){
     // Check if the first and last indexes are the same
     if(first == last){
         *idx = first;
@@ -104,11 +101,11 @@ bigreal_t _max_vdist(bigreal_t *sig, int16_t first, int16_t last, int16_t *idx){
     int16_t len = last - first + 1;
 
     // Interpolated segment
-    bigreal_t *intrp = (bigreal_t*)malloc(len * sizeof(bigreal_t));
+    imu_sample_t *intrp = (imu_sample_t*)malloc(len * sizeof(imu_sample_t));
     _interp(len, first, sig[first], last, sig[last], intrp);
 
     // To store the distances
-    bigreal_t *dist = (bigreal_t*)malloc(len * sizeof(bigreal_t));
+    imu_sample_t *dist = (imu_sample_t*)malloc(len * sizeof(imu_sample_t));
     for(int16_t i=0; i<len; i++){
         dist[i] = fabs(sig[first+i] - intrp[i]);
     }
@@ -117,7 +114,7 @@ bigreal_t _max_vdist(bigreal_t *sig, int16_t first, int16_t last, int16_t *idx){
     *idx = vect_max_index(dist, len);
 
     // Have to take the result before adjusting the index
-    bigreal_t result  = dist[*idx];
+    imu_sample_t result  = dist[*idx];
     RA_IMU_LOG_SCALAR("azc", "max_dist", result);
 
     // Adjust the index to have the global one with respect to sig
@@ -142,8 +139,7 @@ bigreal_t _max_vdist(bigreal_t *sig, int16_t first, int16_t last, int16_t *idx){
  * @return pointer to the array storing the indexes of the point in the original signal
  * that form the result.
 */
-int16_t *polygonal_approx(bigreal_t *sig, int16_t len, bigreal_t eps, int16_t *res_len){
-
+int16_t *polygonal_approx(imu_sample_t *sig, int16_t len, real_t eps, int16_t *res_len){
     // Array of the resulting indexes. For safety reasons it is allocated
     // at his maximum possible size (i.e. len)
     int16_t *res = (int16_t*)malloc(len * sizeof(int16_t));
@@ -166,7 +162,7 @@ int16_t *polygonal_approx(bigreal_t *sig, int16_t len, bigreal_t eps, int16_t *r
     // Always keeps track of the tail of the array, next element to process
     int16_t next_to_process = 0;
 
-    bigreal_t max_dist = 0.0;
+    imu_sample_t max_dist = 0.0;
     int16_t max_idx = 0;
 
     // Indexes of first and last element to consider at each iteration
@@ -182,7 +178,7 @@ int16_t *polygonal_approx(bigreal_t *sig, int16_t len, bigreal_t eps, int16_t *r
         max_dist = _max_vdist(sig, first, last, &max_idx);
 
         // Only keep the sample if it's max distance is greater then the tolerance eps
-        if(max_dist > eps){
+        if((real_t)max_dist > eps){
             stack[next_to_process+1].first = first;
             stack[next_to_process+1].last = max_idx;
 
@@ -191,7 +187,6 @@ int16_t *polygonal_approx(bigreal_t *sig, int16_t len, bigreal_t eps, int16_t *r
 
             next_to_process += 2;
         } else {
-
             // To avoid adding duplicated indexes in the result
             add_first = 1;
             add_last = 1;
@@ -223,8 +218,7 @@ int16_t *polygonal_approx(bigreal_t *sig, int16_t len, bigreal_t eps, int16_t *r
 
 
 
-int16_t azc_computation(bigreal_t *sig, int16_t len, bigreal_t epsilon){
-
+int16_t azc_computation(imu_sample_t *sig, int16_t len, real_t epsilon){
     int16_t approx_len = 0;
 
     // Compute the approximation
@@ -234,7 +228,7 @@ int16_t azc_computation(bigreal_t *sig, int16_t len, bigreal_t epsilon){
     qsort(approx_idxs, approx_len, sizeof(int16_t), _qsort_cmp);
 
     // Extract the approximated signal
-    bigreal_t *approx_sig = (bigreal_t*)malloc(approx_len * sizeof(bigreal_t));
+    imu_sample_t *approx_sig = (imu_sample_t*)malloc(approx_len * sizeof(imu_sample_t));
     int16_t *timestamps = (int16_t*)malloc(approx_len * sizeof(int16_t));
     for(int16_t i=0; i<approx_len; i++){
         approx_sig[i] = sig[approx_idxs[i]];
@@ -245,7 +239,7 @@ int16_t azc_computation(bigreal_t *sig, int16_t len, bigreal_t epsilon){
         RA_IMU_LOG_ARRAY("azc", "approx_sig", approx_sig, approx_len);
     }
 
-    bigreal_t *diff = _discrete_diff(approx_sig, timestamps, approx_len);
+    imu_sample_t *diff = _discrete_diff(approx_sig, timestamps, approx_len);
 
     if(approx_len > 1){
         RA_IMU_LOG_ARRAY("azc", "diff", diff, approx_len - 1);
@@ -261,6 +255,8 @@ int16_t azc_computation(bigreal_t *sig, int16_t len, bigreal_t epsilon){
             }
         }
     }
+
+    // Q: why do we copy `approx_idxs` to `timestamps`?
 
     free(approx_idxs);
     free(approx_sig);

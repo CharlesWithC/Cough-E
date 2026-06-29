@@ -374,15 +374,15 @@ uint16_t _clean_cough_segments(uint16_t *starts_idxs,
  * The resulting signal is first downsampled and normalized by subtracting the mean
  * and dividing by the maximum absolute value.
  */
-static real_t *_downsample(const real_t *sig, int16_t len, int16_t fs, int16_t *new_len)
+static audio_sample_t *_downsample(const audio_sample_t *sig, int16_t len, int16_t fs, int16_t *new_len)
 {
     RA_LOG_ARRAY("POSTPROC", "_downsample", "sig_input", sig, len);
 
     int8_t scale_factor = fs / FS_DOWNSAMPLE;
     *new_len = len / scale_factor;
 
-    real_t *res = (real_t *)malloc(*new_len * sizeof(real_t));
-    real_t mean = 0.0f;
+    audio_sample_t *res = (audio_sample_t *)malloc(*new_len * sizeof(audio_sample_t));
+    audio_sample_t mean = 0.0f;
 
     for (int16_t i = 0; i < *new_len; i++) {
         res[i] = sig[i * scale_factor];
@@ -395,7 +395,7 @@ static real_t *_downsample(const real_t *sig, int16_t len, int16_t fs, int16_t *
     sub_constant(res, *new_len, mean, res);
     RA_LOG_ARRAY("POSTPROC", "_downsample", "zero_mean", res, *new_len);
 
-    real_t max_abs = vect_max_abs_value(res, *new_len);
+    audio_sample_t max_abs = vect_max_abs_value(res, *new_len);
     RA_LOG_SCALAR("POSTPROC", "_downsample", "max_abs", max_abs);
     vect_div_const(res, *new_len, max_abs, res);
     RA_LOG_ARRAY("POSTPROC", "_downsample", "result", res, *new_len);
@@ -403,29 +403,29 @@ static real_t *_downsample(const real_t *sig, int16_t len, int16_t fs, int16_t *
     return res;
 }
 
-void _get_cough_peaks(const real_t *seg,
+void _get_cough_peaks(const audio_sample_t *seg,
                       int16_t len,
                       int16_t fs,
                       uint16_t *starts,
                       uint16_t *ends,
                       uint16_t *peaks_locs,
-                      real_t *peaks_amps,
+                      audio_feat_t *peaks_amps,
                       uint16_t *new_added)
 {
     RA_LOG_ARRAY("POSTPROC", "_get_cough_peaks", "seg_input", seg, len);
 
     int16_t downsample_len = 0.0f;
-    real_t *downsample_seg = _downsample(seg, len, fs, &downsample_len);
+    audio_sample_t *downsample_seg = _downsample(seg, len, fs, &downsample_len);
 
-    real_t *seg_squared = (real_t *)malloc(downsample_len * sizeof(real_t));
+    audio_sample_t *seg_squared = (audio_sample_t *)malloc(downsample_len * sizeof(audio_sample_t));
     vect_mult(downsample_seg, downsample_seg, downsample_len, seg_squared);
     RA_LOG_ARRAY("POSTPROC", "_get_cough_peaks", "seg_squared", seg_squared, downsample_len);
 
-    real_t peak = vect_max_value(seg_squared, downsample_len);
+    audio_sample_t peak = vect_max_value(seg_squared, downsample_len);
     RA_LOG_SCALAR("POSTPROC", "_get_cough_peaks", "peak", peak);
 
-    real_t th_low = sqrtreal(vect_mean(seg_squared, downsample_len));
-    real_t th_high = 0.25f * peak + 0.75f * th_low;
+    audio_sample_t th_low = sqrtreal(vect_mean<audio_sample_t>(seg_squared, downsample_len));
+    audio_sample_t th_high = 0.25f * peak + 0.75f * th_low;
     RA_LOG_SCALAR("POSTPROC", "_get_cough_peaks", "th_low", th_low);
     RA_LOG_SCALAR("POSTPROC", "_get_cough_peaks", "th_high", th_high);
 
@@ -587,7 +587,7 @@ uint16_t _clean_cough_segments(uint16_t *starts_idxs,
     real_t avg_cough_end_times = min_time_after_peak;
 
     if (n_busts_dists > 0) {
-        avg_cough_end_times = vect_mean(cough_burst_distances, n_busts_dists) - COUGH_BURST_MAX_DUR;
+        avg_cough_end_times = vect_mean<real_t>(cough_burst_distances, n_busts_dists) - COUGH_BURST_MAX_DUR;
     }
 
     free(cough_burst_distances);

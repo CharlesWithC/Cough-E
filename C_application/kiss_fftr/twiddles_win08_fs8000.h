@@ -5,8 +5,8 @@
 
 typedef struct twiddles_entry
 {
-	real_t cosine;
-	real_t sine;
+	audio_sample_t cosine;
+	audio_sample_t sine;
 } twiddles_t;
 
 #if (defined(UPOS_MODE) || defined(LPOS_MODE)) && POSIT_SIZE == 32

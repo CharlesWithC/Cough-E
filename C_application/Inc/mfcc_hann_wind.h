@@ -7,7 +7,7 @@
 
 // 2048 values * 4 bytes = 8192 bytes
 #if (defined(UPOS_MODE) || defined(LPOS_MODE)) && POSIT_SIZE == 32
-static const real_t DINTL1 hann_mfcc_wind[HANN_SIZE] = {
+static const audio_sample_t DINTL1 hann_mfcc_wind[HANN_SIZE] = {
     POS(0U),
     POS(43903454U),
     POS(60680646U),
@@ -2058,7 +2058,7 @@ static const real_t DINTL1 hann_mfcc_wind[HANN_SIZE] = {
     POS(43903454U),
 };
 #else
-static const real_t DINTL1 hann_mfcc_wind[HANN_SIZE] = {
+static const audio_sample_t DINTL1 hann_mfcc_wind[HANN_SIZE] = {
     0.0,
     2.35309521190441e-06,
     9.412358699445456e-06,

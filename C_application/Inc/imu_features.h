@@ -4,8 +4,6 @@
 #include <inttypes.h>
 #include <types.h>
 
-#include <FxP/core/fxp_core.h>
-
 /* Defines all the parameters of IMU features extraction */
 
 #define WIND_LEN_IMU_NUM 1U
@@ -86,6 +84,10 @@ enum imu_signal_features {
     Number_IMU_Features = GYRO_COMBO + Num_imu_feat_families
 };
 
+#ifdef FXP_MODE
+
+#include <FxP/core/fxp_core.h>
+
 static inline uint8_t imu_feature_frac_bits(uint16_t feature_idx)
 {
     uint16_t base;
@@ -124,5 +126,6 @@ static inline uint8_t imu_feature_is_signed(uint16_t feature_idx)
     return (local == KURTOSIS) ? 1U : 0U;
 }
 
+#endif
 
 #endif

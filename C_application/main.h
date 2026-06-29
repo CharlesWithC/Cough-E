@@ -2,7 +2,11 @@
 #define _MAIN_H_
 
 #include <inttypes.h>
+#include <types.h>
+
+#ifdef FXP_MODE
 #include <FxP/core/fxp_core.h>
+#endif
 
 //////////////////////////////////////
 /* Model to be used                 */

@@ -4,8 +4,6 @@
 #include <inttypes.h>
 #include <types.h>
 
-#include <FxP/core/fxp_core.h>
-
 /* Defines of the hyperparameters of audio features extraction */
 
 
@@ -94,6 +92,10 @@ enum audio_features_families{
     Number_AUDIO_Features = ENERGY_ENVELOPE_PEAK_DETECT + N_EEPD// Hardcoded just to get the final length
 };
 
+#ifdef FXP_MODE
+
+#include <FxP/core/fxp_core.h>
+
 static inline uint8_t audio_feature_frac_bits(uint16_t feature_idx)
 {
     if (feature_idx == SPECTRAL_ROLLOFF || feature_idx == DOMINANT_FREQUENCY) {
@@ -130,5 +132,7 @@ static inline uint8_t audio_feature_is_signed(uint16_t feature_idx)
 
     return 0U;
 }
+
+#endif
 
 #endif
