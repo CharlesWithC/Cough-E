@@ -12,14 +12,6 @@
 
 #define TOT_FEATURES_IMU_MODEL_IMU (N_IMU_FEATURES + N_BIO_FEATURES_IMU)
 
-#ifndef FXP_MODE
-#define IMU_MODEL_TYPE imu_score_t
-#define IMU_MODEL_TYPE_U imu_score_t
-#else
-#define IMU_MODEL_TYPE int32_t
-#define IMU_MODEL_TYPE_U uint32_t
-#endif
-
 /*
     Features selector vectors.
     Each array is a one-hot econding of the features to be extracted.
@@ -93,11 +85,11 @@ typedef struct imu_node_children {
 extern const imu_node_children_t DINTL0
     imu_children[IMU_N_TREES][IMU_MAX_NODES];
 // 6100 values * 4 bytes = 24400 bytes ~ 23.9kB
-extern IMU_MODEL_TYPE CARUS11 imu_scores[IMU_N_TREES][IMU_MAX_LEAVES];
-extern const IMU_MODEL_TYPE FLASH1 imu_scores_src[IMU_N_TREES][IMU_MAX_LEAVES];
+extern imu_score_t CARUS11 imu_scores[IMU_N_TREES][IMU_MAX_LEAVES];
+extern const imu_score_t FLASH1 imu_scores_src[IMU_N_TREES][IMU_MAX_LEAVES];
 // 6000 values * 4 bytes = 24000 bytes ~ 23.5kB
-extern IMU_MODEL_TYPE_U CARUS11 imu_values_comp[IMU_N_TREES][IMU_MAX_NODES];
-extern const IMU_MODEL_TYPE_U FLASH1 imu_values_comp_src[IMU_N_TREES][IMU_MAX_NODES];
+extern imu_feat_t CARUS11 imu_values_comp[IMU_N_TREES][IMU_MAX_NODES];
+extern const imu_feat_t FLASH1 imu_values_comp_src[IMU_N_TREES][IMU_MAX_NODES];
 // 6000 values * 2 bytes = 12000 bytes ~ 11.8kB
 extern int16_t CARUS10 imu_feat_comp[IMU_N_TREES][IMU_MAX_NODES];
 extern const int16_t FLASH0 imu_feat_comp_src[IMU_N_TREES][IMU_MAX_NODES];

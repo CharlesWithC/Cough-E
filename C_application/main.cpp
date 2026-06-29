@@ -19,18 +19,15 @@
 #include <audio_model.h>
 #include <imu_model.h>
 
-AUDIO_MODEL_TYPE CARUS01 audio_scores[AUD_N_TREES][MAX_LEAVES];
-AUDIO_MODEL_TYPE_U CARUS01 audio_values_comp[AUD_N_TREES][AUD_MAX_NODES];
+audio_score_t CARUS01 audio_scores[AUD_N_TREES][MAX_LEAVES];
+audio_feat_t CARUS01 audio_values_comp[AUD_N_TREES][AUD_MAX_NODES];
 int16_t CARUS00 audio_feat_comp[AUD_N_TREES][AUD_MAX_NODES];
-IMU_MODEL_TYPE CARUS11 imu_scores[IMU_N_TREES][IMU_MAX_LEAVES];
-IMU_MODEL_TYPE_U CARUS11 imu_values_comp[IMU_N_TREES][IMU_MAX_NODES];
+imu_score_t CARUS11 imu_scores[IMU_N_TREES][IMU_MAX_LEAVES];
+imu_feat_t CARUS11 imu_values_comp[IMU_N_TREES][IMU_MAX_NODES];
 int16_t CARUS10 imu_feat_comp[IMU_N_TREES][IMU_MAX_NODES];
 
 #ifdef FXP_MODE
 #include <FxP/core/fxp_core.h>
-typedef fxp_q16_t score_t;
-typedef score_t audio_score_t;
-typedef score_t imu_score_t;
 #define SCORE_THRESHOLD_AUDIO ((audio_score_t)FXP_AUDIO_SCORE_TH_Q16)
 #define SCORE_THRESHOLD_IMU ((imu_score_t)FXP_IMU_SCORE_TH_Q16)
 #else

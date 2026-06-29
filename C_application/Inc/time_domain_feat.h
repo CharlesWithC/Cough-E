@@ -67,9 +67,9 @@ template <RealType T> static inline T get_max(T *sig, int16_t len) {
 /// @param *sig     pointer to the input array
 /// @param *res     pointer to the resulting array
 /// @param len      lenght of the input array
-template <RealType S, RealType T>
-static inline void sub_mean(const T *sig, S *res, int16_t len) {
-    S mean = vect_mean<S>(sig, len);
+template <RealType T>
+static inline void sub_mean(const T *sig, T *res, int16_t len) {
+    T mean = vect_mean(sig, len);
 
     sub_constant(sig, len, mean, res);
 }
@@ -78,15 +78,15 @@ static inline void sub_mean(const T *sig, S *res, int16_t len) {
 /// @param *sig     pointer to the input signal
 /// @param len      lenght of the input signal
 /// @return The root mean squared
-template <RealType S, RealType T> static inline S get_rms(T *sig, int16_t len) {
-    S sum = 0;
+template <RealType T> static inline T get_rms(T *sig, int16_t len) {
+    T sum = 0;
     for (int16_t i = 0; i < len; i++) {
-        S sq = sig[i] * sig[i];
+        T sq = sig[i] * sig[i];
         RA_IMU_LOG_SCALAR("get_rms", "sig_sq", sq);
         sum += sq;
     }
     RA_IMU_LOG_SCALAR("get_rms", "sum_sq", sum);
-    S result = sqrtreal(sum / len);
+    T result = sqrtreal(sum / len);
     RA_IMU_LOG_SCALAR("get_rms", "result", result);
     return result;
 }
@@ -95,9 +95,9 @@ template <RealType S, RealType T> static inline S get_rms(T *sig, int16_t len) {
 /// @param *sig     pointer to the input signal
 /// @param len      lenght of the input signal
 /// @return the zero crossing rate of the signal
-template <RealType S, RealType T> static inline S compute_zrc(T *sig, int16_t len) {
+template <RealType T> static inline T compute_zrc(T *sig, int16_t len) {
     int sum = 0;
-    S interm_product = 0;
+    T interm_product = 0;
 
     for (int16_t i = 0; i < len - 1; i++) {
         interm_product = sig[i] * sig[i + 1];
@@ -106,7 +106,7 @@ template <RealType S, RealType T> static inline S compute_zrc(T *sig, int16_t le
             sum++;
         }
     }
-    S result = (T)sum / (len - 1);
+    T result = (T)sum / (len - 1);
     RA_IMU_LOG_SCALAR("compute_zrc", "result", result);
     return result;
 }
@@ -117,15 +117,16 @@ template <RealType S, RealType T> static inline S compute_zrc(T *sig, int16_t le
 /// @param fs       the sampling frequency
 /// @param *select  pointer to the selector specifying the required eepd values
 /// @param *res     pointer to the resulting array
-static inline void eepd(const audio_sample_t *sig, int16_t len, int16_t fs,
+template <RealType T>
+static inline void eepd(const T *sig, int16_t len, int16_t fs,
                         const int8_t *select, int16_t *res) {
-    audio_sample_t *interm =
-        (audio_sample_t *)malloc(len * sizeof(audio_sample_t)); // to store the intermediate result
+    T *interm =
+        (T *)malloc(len * sizeof(T)); // to store the intermediate result
                                       // between the first and the second filter
-    audio_sample_t *filtered = (audio_sample_t *)malloc(
-        len * sizeof(audio_sample_t)); // temporary to store the result of each filter
+    T *filtered = (T *)malloc(
+        len * sizeof(T)); // temporary to store the result of each filter
 
-    const audio_sample_t *b, *a, *zi;
+    const T *b, *a, *zi;
 
     for (int16_t i = 0; i < N_EEPD; i++) {
         if (select[i] == 1) {

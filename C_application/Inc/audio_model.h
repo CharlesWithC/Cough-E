@@ -12,14 +12,6 @@
 
 #define TOT_FEATURES_AUDIO_MODEL_AUDIO (N_AUDIO_FEATURES + N_BIO_FEATURES_AUDIO)
 
-#ifndef FXP_MODE
-#define AUDIO_MODEL_TYPE audio_score_t
-#define AUDIO_MODEL_TYPE_U audio_score_t
-#else
-#define AUDIO_MODEL_TYPE int32_t
-#define AUDIO_MODEL_TYPE_U uint32_t
-#endif
-
 /*
     Features selector vectors.
     Each array is a one-hot econding of the features to be extracted.
@@ -109,11 +101,11 @@ typedef struct node_children {
 extern const audio_node_children_t DINTL0
     audio_children[AUD_N_TREES][AUD_MAX_NODES];
 // 5500 values * 4 bytes = 22000 bytes ~ 21.5kB
-extern AUDIO_MODEL_TYPE CARUS01 audio_scores[AUD_N_TREES][MAX_LEAVES];
-extern const AUDIO_MODEL_TYPE FLASH1 audio_scores_src[AUD_N_TREES][MAX_LEAVES];
+extern audio_score_t CARUS01 audio_scores[AUD_N_TREES][MAX_LEAVES];
+extern const audio_score_t FLASH1 audio_scores_src[AUD_N_TREES][MAX_LEAVES];
 // 5400 values * 4 bytes = 21600 bytes ~ 21.1kB
-extern AUDIO_MODEL_TYPE_U CARUS01 audio_values_comp[AUD_N_TREES][AUD_MAX_NODES];
-extern const AUDIO_MODEL_TYPE_U FLASH1 audio_values_comp_src[AUD_N_TREES][AUD_MAX_NODES];
+extern audio_feat_t CARUS01 audio_values_comp[AUD_N_TREES][AUD_MAX_NODES];
+extern const audio_feat_t FLASH1 audio_values_comp_src[AUD_N_TREES][AUD_MAX_NODES];
 // 5400 values * 2 bytes = 10800 bytes ~ 10.6kB
 extern int16_t CARUS00 audio_feat_comp[AUD_N_TREES][AUD_MAX_NODES];
 extern const int16_t FLASH0 audio_feat_comp_src[AUD_N_TREES][AUD_MAX_NODES];

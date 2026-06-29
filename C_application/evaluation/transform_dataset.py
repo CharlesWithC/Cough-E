@@ -75,7 +75,7 @@ def generate_audio_header(audio, audio_len, suffix, output_dir):
         f.write("*/\n")
         f.write(f"typedef struct audio_input_{suffix}\n")
         f.write("{\n")
-        f.write("    real_t air[AUDIO_LEN];\n")
+        f.write("    audio_sample_t air[AUDIO_LEN];\n")
         f.write("} audio_input_t;\n\n")
         f.write("static const audio_input_t audio_in = {\n\n")
         f.write("\t{\n")
@@ -120,7 +120,7 @@ def generate_imu_header(imu_data, imu_len, suffix, output_dir):
         f.write("\t\tGyroscope_r\n")
         f.write("\t}\n")
         f.write("*/\n\n")
-        f.write(f"static const real_t imu_in[IMU_LEN][6] = {{\n\n")
+        f.write(f"static const imu_sample_t imu_in[IMU_LEN][6] = {{\n\n")
 
         for i in range(imu_len):
             row = imu_data[i]

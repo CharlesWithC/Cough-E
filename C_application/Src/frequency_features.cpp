@@ -113,7 +113,7 @@ void compute_periodogram(const audio_sample_t *sig, int16_t len, int16_t fs, aud
         vect_copy(sig, start, NPERSEG, win);    // copies the current window from the signal
 
         // subtract the mean
-        mean = vect_mean<audio_sample_t>(win, NPERSEG);
+        mean = vect_mean(win, NPERSEG);
         sub_constant(win, NPERSEG, mean, win);
 
         // Apply the window function
@@ -186,7 +186,7 @@ audio_feat_t compute_spectral_slope(audio_sample_t *mags, audio_sample_t *freqs,
     audio_feat_t mean_mag = sum_mags / len;
     audio_feat_t mean_freq = 0.0;
 
-    mean_freq = vect_mean<audio_feat_t>(freqs, len);
+    mean_freq = vect_mean(freqs, len);
 
     RA_LOG_SCALAR("AUDIO_FFT", "spec_slope", "mean_mag", mean_mag);
     RA_LOG_SCALAR("AUDIO_FFT", "spec_slope", "mean_freq", mean_freq);
@@ -321,7 +321,7 @@ audio_feat_t compute_flatness(audio_sample_t *x, int16_t len){
     sum_logs = sum_logs / len;
 
     gmean = expreal(sum_logs);
-    amean = vect_mean<audio_feat_t>(x, len);
+    amean = vect_mean(x, len);
 
     RA_LOG_SCALAR("AUDIO_PSD", "flatness", "sum_logs", sum_logs);
     RA_LOG_SCALAR("AUDIO_PSD", "flatness", "gmean", gmean);
@@ -335,7 +335,7 @@ audio_feat_t compute_flatness(audio_sample_t *x, int16_t len){
 audio_feat_t compute_std(audio_sample_t *x, int16_t len){
 
     RA_LOG_ARRAY("AUDIO_PSD", "spec_std", "input", x, len);
-    audio_feat_t result = vect_std<audio_feat_t>(x, len);
+    audio_feat_t result = vect_std(x, len);
     RA_LOG_SCALAR("AUDIO_PSD", "spec_std", "result", result);
     return result;
 
@@ -346,11 +346,11 @@ audio_feat_t compute_spectral_entropy(audio_sample_t *x, int16_t len){
     RA_LOG_ARRAY("AUDIO_PSD", "spec_entropy", "input", x, len);
 
     audio_feat_t *tmp = (audio_feat_t*)malloc(len * sizeof(audio_feat_t));
-    audio_feat_t sum = vect_sum<audio_feat_t>(x, len);
+    audio_feat_t sum = vect_sum(x, len);
     vect_div_const(x, len, sum, tmp);
     entropy_calc(tmp, len, 2);
 
-    audio_feat_t result = vect_sum<audio_feat_t>(tmp, len);
+    audio_feat_t result = vect_sum(tmp, len);
     RA_LOG_SCALAR("AUDIO_PSD", "spec_entropy", "sum", sum);
     RA_LOG_SCALAR("AUDIO_PSD", "spec_entropy", "result", result);
 
@@ -445,8 +445,8 @@ void get_mfcc_features(const audio_sample_t *x, int16_t len, audio_feat_t *mean_
 
 
     for(int16_t i=0; i<N_MFCC; i++){
-        mean_mfcc[i] = vect_mean<audio_feat_t>(&coeffs[i*n_frames], n_frames);
-        std_mfcc[i] = vect_std<audio_feat_t>(&coeffs[i*n_frames], n_frames);
+        mean_mfcc[i] = vect_mean(&coeffs[i*n_frames], n_frames);
+        std_mfcc[i] = vect_std(&coeffs[i*n_frames], n_frames);
     }
 
     free(coeffs);
@@ -476,8 +476,8 @@ void get_mel_spectrogram_features(const audio_sample_t *x, int16_t len, uint8_t 
 
     // Computes the mean, std and maximum value of each MEL bin
     for(int8_t i=0; i<n_mels_needed; i++){
-        mean_mel_spectr[i] = vect_mean<audio_feat_t>(&mel_dB[i*n_frames], n_frames);
-        std_mel_spectr[i] = vect_std<audio_feat_t>(&mel_dB[i*n_frames], n_frames);
+        mean_mel_spectr[i] = vect_mean(&mel_dB[i*n_frames], n_frames);
+        std_mel_spectr[i] = vect_std(&mel_dB[i*n_frames], n_frames);
         max_mel_spectr[i] = vect_max_value(&mel_dB[i*n_frames], n_frames);
     }
 

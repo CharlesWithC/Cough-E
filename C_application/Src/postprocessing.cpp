@@ -424,7 +424,7 @@ void _get_cough_peaks(const audio_sample_t *seg,
     audio_sample_t peak = vect_max_value(seg_squared, downsample_len);
     RA_LOG_SCALAR("POSTPROC", "_get_cough_peaks", "peak", peak);
 
-    audio_sample_t th_low = sqrtreal(vect_mean<audio_sample_t>(seg_squared, downsample_len));
+    audio_sample_t th_low = sqrtreal(vect_mean(seg_squared, downsample_len));
     audio_sample_t th_high = 0.25f * peak + 0.75f * th_low;
     RA_LOG_SCALAR("POSTPROC", "_get_cough_peaks", "th_low", th_low);
     RA_LOG_SCALAR("POSTPROC", "_get_cough_peaks", "th_high", th_high);
@@ -587,7 +587,7 @@ uint16_t _clean_cough_segments(uint16_t *starts_idxs,
     real_t avg_cough_end_times = min_time_after_peak;
 
     if (n_busts_dists > 0) {
-        avg_cough_end_times = vect_mean<real_t>(cough_burst_distances, n_busts_dists) - COUGH_BURST_MAX_DUR;
+        avg_cough_end_times = vect_mean(cough_burst_distances, n_busts_dists) - COUGH_BURST_MAX_DUR;
     }
 
     free(cough_burst_distances);

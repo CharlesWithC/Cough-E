@@ -1,11 +1,14 @@
 
-CC 			=	g++
+CC 			=	ccache g++
 APP 		= 	cough-e
 BUILD_DIR 	= 	build
 .DEFAULT_GOAL = all
 
 SRC_DIRS 	= 	Src kiss_fftr input_data FxP/imu FxP/audio
-SRC 		= 	$(foreach c, $(SRC_DIRS), $(wildcard $c/*.c*))
+SRC 		= 	main.cpp $(foreach c, $(SRC_DIRS), $(wildcard $c/*.c*))
+
+OBJS          = $(patsubst %.cpp, $(BUILD_DIR)/%.o, $(filter %.cpp, $(SRC)))
+OBJS         += $(patsubst %.c, $(BUILD_DIR)/%.o, $(filter %.c, $(SRC)))
 
 INC_DIRS 	= 	Inc FxP universal/include/sw libposit/include ./ kiss_fftr range_analysis
 INC 		= 	$(foreach d, $(INC_DIRS), -I$d)
@@ -14,7 +17,8 @@ TWIDDLE_GENERATOR = kiss_fftr/gen_twiddles_fixed.py
 TWIDDLE_Q15 = kiss_fftr/twiddles_win08_fs8000_q15.h
 TWIDDLE_Q31 = kiss_fftr/twiddles_win08_fs8000_q31.h
 
-MATH 		= 	-lm
+MATH        =    -lm
+CFLAGS      +=   -Wall -O3 -g
 
 COMP_STRING = 	" |++++++++++++++++++++++++++++++++|\n"
 COMP_STRING +=  "|            Cough-E             |\n"
@@ -31,16 +35,19 @@ COMP_STRING += 	"|++++++++++++++++++++++++++++++++|\n"
 # @echo "Compilation terminated successfully! ☕\n"
 # @echo "Running with command:"
 
+all: $(TWIDDLE_Q15) $(TWIDDLE_Q31) $(BUILD_DIR)/$(APP)
 
-EXEC_STRING =	" |++++++++++++++++++++++++++++++++|\n"
-EXEC_STRING +=	"|     Start of execution...      |\n"
-EXEC_STRING +=	"|++++++++++++++++++++++++++++++++|\n"
-
-
-all: $(TWIDDLE_Q15) $(TWIDDLE_Q31)
-	@mkdir -p $(BUILD_DIR)
-	$(CC) -Wall -o $(BUILD_DIR)/$(APP) main.cpp $(SRC) $(INC) $(MATH) -O3 -g $(CFLAGS)
+$(BUILD_DIR)/$(APP): $(OBJS)
+	$(CC) -o $@ $(OBJS) $(MATH) $(CFLAGS)
 	@echo $(COMP_STRING)
+
+$(BUILD_DIR)/%.o: %.cpp
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) $(INC) -c $< -o $@
+
+$(BUILD_DIR)/%.o: %.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) $(INC) -c $< -o $@
 
 run: all
 	@echo $(EXEC_STRING)

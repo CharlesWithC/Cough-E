@@ -262,7 +262,7 @@ void entropy(audio_sample_t *spectrogram, int16_t n_rows, int16_t n_columns, aud
 
     for(int8_t i=0; i<n_rows; i++){
         // Sum each column of the spectrogram
-        row_sum = vect_sum<audio_feat_t>(&spectrogram[i*n_columns], n_columns);
+        row_sum = vect_sum(&spectrogram[i*n_columns], n_columns);
         RA_LOG_SCALAR("AUDIO_MEL", "entropy", "row_sum", row_sum);
 
         // Divide all the row's elements by the sum of the row.
@@ -277,7 +277,7 @@ void entropy(audio_sample_t *spectrogram, int16_t n_rows, int16_t n_columns, aud
 
     // Sum each column of the spectrogram
     for(int8_t i=0; i<n_rows; i++){
-        res[i] = vect_sum<audio_sample_t>(&spectrogram[i*n_columns], n_columns);
+        res[i] = vect_sum(&spectrogram[i*n_columns], n_columns);
         RA_LOG_SCALAR("AUDIO_MEL", "entropy", "result", res[i]);
     }
 }

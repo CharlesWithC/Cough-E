@@ -16,57 +16,45 @@
 // Fisher definition
 #define KURT_FISHER_CONST 3
 
-template <RealType T> static inline T floorreal(T x) {
-#ifdef UPOS_MODE
-    return sw::universal::floor(x);
-#else
+template <typename T> static inline T floorreal(T x) {
     return floorf((float)x);
-#endif
 }
-
-template <RealType T> static inline T expreal(T x) {
-#ifdef UPOS_MODE
-    return sw::universal::exp(x);
-#else
-    return expf((float)x);
-#endif
-}
-
-template <RealType T> static inline T powreal(T base, T exp) {
-#ifdef UPOS_MODE
-    return sw::universal::pow(base, exp);
-#else
+template <typename T> static inline T expreal(T x) { return expf((float)x); }
+template <typename T, typename S> static inline T powreal(T base, S exp) {
     return powf((float)base, (float)exp);
-#endif
 }
-
-template <RealType T> static inline T sqrtreal(T x) {
-#ifdef UPOS_MODE
-    return sw::universal::sqrt(x);
-#else
-#ifdef LPOS_MODE
-    return libposit::sqrt(x);
-#else
-    return sqrtf((float)x);
-#endif
-#endif
-}
-
-template <RealType T> static inline T logreal(T x) {
-#ifdef UPOS_MODE
-    return sw::universal::log(x);
-#else
-    return logf((float)x);
-#endif
-}
-
-template <RealType T> static inline T log10real(T x) {
-#ifdef UPOS_MODE
-    return sw::universal::log10(x);
-#else
+template <typename T> static inline T sqrtreal(T x) { return sqrtf((float)x); }
+template <typename T> static inline T logreal(T x) { return logf((float)x); }
+template <typename T> static inline T log10real(T x) {
     return log10f((float)x);
-#endif
 }
+
+#ifdef UPOS_MODE
+template <typename T>
+concept Universal = requires(T x) { T::nbits; };
+template <Universal T> static inline T floorreal(T x) {
+    return sw::universal::floor(x);
+}
+template <Universal T> static inline T expreal(T x) {
+    return sw::universal::exp(x);
+}
+template <Universal T, typename S> static inline T powreal(T base, S exp) {
+    return sw::universal::pow(base, static_cast<S>(exp));
+}
+template <Universal T> static inline T sqrtreal(T x) {
+    return sw::universal::sqrt(x);
+}
+template <Universal T> static inline T logreal(T x) {
+    return sw::universal::log(x);
+}
+template <Universal T> static inline T log10real(T x) {
+    return sw::universal::log10(x);
+}
+#endif
+
+#ifdef LPOS_MODE
+static inline Posit sqrtreal(Posit x) { return libposit::sqrt(x); }
+#endif
 
 static inline void print_float(float f, int precision) {
     if (f < 0) {
@@ -177,10 +165,10 @@ static inline void _find_max(T *x, int16_t len, T *max_value,
  * @param divisor   : number to be used as a diviros for the elements of the
  * array
  */
-template <RealType S, RealType T>
-static inline void vect_div_const(T *x, int16_t len, S divisor, S *res) {
+template <RealType T>
+static inline void vect_div_const(T *x, int16_t len, T divisor, T *res) {
     for (uint16_t i = 0; i < len; i++) {
-        res[i] = (S)x[i] / divisor;
+        res[i] = x[i] / divisor;
     }
 }
 
@@ -190,8 +178,9 @@ static inline void vect_div_const(T *x, int16_t len, S divisor, S *res) {
  * @param *x    : pointer to the input array
  * @param len   : lenght of the input array
  */
-template <RealType S, RealType T> static inline S vect_sum(const T *x, int16_t len) {
-    S sum = 0.0f;
+template <RealType T>
+static inline T vect_sum(const T *x, int16_t len) {
+    T sum = 0.0f;
     for (int16_t i = 0; i < len; i++) {
         sum += x[i];
     }
@@ -204,8 +193,9 @@ template <RealType S, RealType T> static inline S vect_sum(const T *x, int16_t l
 * @param *x    : pointer to the input array
 * @param len   : lenght of the input array
  */
-template <RealType S, RealType T> static inline S vect_mean(const T *x, int16_t len) {
-    return vect_sum<S>(x, len) / len;
+template <RealType T>
+static inline T vect_mean(const T *x, int16_t len) {
+    return vect_sum(x, len) / len;
 }
 
 /// @brief Computes the element-wise multiplication between x and y arrays,
@@ -214,8 +204,8 @@ template <RealType S, RealType T> static inline S vect_mean(const T *x, int16_t 
 /// @param *y   pointer to the second vector
 /// @param len  lenght of the vectors
 /// @param *r   pointer to the resulting vectors
-template <RealType T1, RealType T2, RealType S>
-static inline void vect_mult(T1 *x, const T2 *y, int16_t len, S *r) {
+template <RealType T>
+static inline void vect_mult(T *x, const T *y, int16_t len, T *r) {
     for (int16_t i = 0; i < len; i++) {
         r[i] = x[i] * y[i];
     }
@@ -225,22 +215,23 @@ static inline void vect_mult(T1 *x, const T2 *y, int16_t len, S *r) {
 /// @param *x       pointer to the signal
 /// @param len      lenght of the signal
 /// @return         the standard deviation
-template <RealType S, RealType T> static inline S vect_std(T *x, int16_t len) {
-    S mean = vect_mean<S>(x, len);
-    S sum = 0.0;
+template <RealType T>
+static inline T vect_std(T *x, int16_t len) {
+    T mean = vect_mean(x, len);
+    T sum = 0.0;
 
     for (int16_t i = 0; i < len; i++) {
-        S centered = (S)x[i] - mean;
+        T centered = x[i] - mean;
         RA_IMU_LOG_SCALAR("vect_std", "x_minus_mean", centered);
-        S sq_dev = centered * centered;
+        T sq_dev = centered * centered;
         RA_IMU_LOG_SCALAR("vect_std", "sq_dev", sq_dev);
         sum += sq_dev;
     }
 
     RA_IMU_LOG_SCALAR("vect_std", "sum_sq_dev", sum);
-    S variance = sum / len;
+    T variance = sum / len;
     RA_IMU_LOG_SCALAR("vect_std", "variance", variance);
-    S result = sqrtreal(variance);
+    T result = sqrtreal(variance);
     RA_IMU_LOG_SCALAR("vect_std", "result", result);
     return result;
 }
@@ -252,7 +243,7 @@ template <RealType S, RealType T> static inline S vect_std(T *x, int16_t len) {
 /// @param start    start index
 /// @param len      lenght to copy
 /// @param *out     poitner to the output array
-template <RealType S, RealType T>
+template <RealType T, RealType S>
 static inline void vect_copy(const T *in, int16_t start, int16_t len, S *out) {
     for (int16_t i = 0; i < len; i++) {
         out[i] = in[i + start];
@@ -279,10 +270,10 @@ static inline void vect_copy_uint16_t(uint16_t *in, int16_t start, int16_t len,
 /// @param len          lenght of the signal
 /// @param constant     constant value to subtract
 /// @param *res         pointer to the result
-template <RealType S, RealType T>
-static inline void sub_constant(const T *x, int16_t len, S constant, S *res) {
+template <RealType T>
+static inline void sub_constant(const T *x, int16_t len, T constant, T *res) {
     for (int16_t i = 0; i < len; i++) {
-        res[i] = (S)x[i] - constant;
+        res[i] = x[i] - constant;
     }
 }
 
@@ -333,14 +324,14 @@ template <RealType T> static inline T vect_max_abs_value(T *x, int16_t len) {
 /// @param *x   pointer to the inpug array
 /// @param len  lenght of the array
 /// @param *res pointer to the resulting array
-template <RealType S, RealType T>
-static inline void normalize_max(T *x, int16_t len, S *res) {
-    S max;
+template <RealType T>
+static inline void normalize_max(T *x, int16_t len, T *res) {
+    T max;
     int16_t max_i;
     _find_max(x, len, &max, &max_i);
 
     for (int16_t i = 0; i < len; i++) {
-        res[i] = (S)x[i] / max;
+        res[i] = x[i] / max;
     }
 }
 
@@ -439,18 +430,19 @@ static inline void order_by_idxs(void *arr_in, uint16_t len, uint16_t *idxs,
 /// @param start    start index
 /// @param end      end index
 /// @return
-template <RealType S, RealType T>
-static inline S _simpson_step(T *x, S spacing, int16_t start, int16_t end) {
+template <RealType T>
+static inline T _simpson_step(T *x, T spacing, int16_t start, int16_t end) {
     int n_intervals =
         (end - start) / 2; // realber of intervals (h in the formula)
 
-    S sum = 0.0f;
+    T sum = 0.0f;
     int interval_start = start;
 
     // computes the indexes
     for (int i = 0; i < n_intervals; i++) {
-        sum += x[interval_start] + 4 * x[interval_start + 1] +
-               x[interval_start + 2];
+        sum += x[interval_start];
+        sum += 4 * x[interval_start + 1];
+        sum += x[interval_start + 2];
         interval_start = interval_start + 2;
     }
     return (sum * (spacing / 3));
@@ -464,15 +456,16 @@ static inline S _simpson_step(T *x, S spacing, int16_t start, int16_t end) {
 /// @param len  lenght of the array
 /// @param spacing  spacing for the integral
 /// @return integral of the signal
-template <RealType S, RealType T> static inline S simpson(T *x, int16_t len, S spacing) {
-    S result = 0.0f;
+template <RealType T>
+static inline T simpson(T *x, int16_t len, T spacing) {
+    T result = 0.0f;
 
     if (len % 2 == 0) {
-        S val = 0.0f;
-        val += spacing * ((S)x[len - 1] + (S)x[len - 2]) / 2;
+        T val = 0.0f;
+        val += spacing * (x[len - 1] + x[len - 2]) / 2;
         result += _simpson_step(x, spacing, 0, len - 1);
 
-        val += spacing * ((S)x[0] + (S)x[1]) / 2;
+        val += spacing * (x[0] + x[1]) / 2;
         result += _simpson_step(x, spacing, 1, len);
 
         val /= 2;
@@ -567,8 +560,10 @@ static inline void reflect_padding(const T *x, uint16_t len,
 /// @param *x           pointer to the inpug array
 /// @param len          lenght of the array
 /// @return     the line lenght
-template <RealType S, RealType T> static inline S get_line_length(T *x, int16_t len) {
-    S sum = 0.0f;
+template <RealType T>
+// T for input, optional S for output, optional Z for intermediate arithmetic
+static inline T get_line_length(T *x, int16_t len) {
+    T sum = 0.0f;
 
     for (int16_t i = 0; i < len - 1; i++) {
         sum += fabs(x[i + 1] - x[i]);
@@ -576,7 +571,7 @@ template <RealType S, RealType T> static inline S get_line_length(T *x, int16_t 
     }
 
     RA_IMU_LOG_SCALAR("get_line_length", "accum", sum);
-    S result = sum / (len - 1);
+    T result = sum / (len - 1);
     RA_IMU_LOG_SCALAR("get_line_length", "result", result);
     return result;
 }
@@ -585,21 +580,22 @@ template <RealType S, RealType T> static inline S get_line_length(T *x, int16_t 
 /// @param *x           pointer to the inpug array
 /// @param len          lenght of the array
 /// @return     the kurtosis
-template <RealType S, RealType T> static inline S get_kurtosis(T *x, int16_t len) {
-    S std = vect_std<S>(x, len);
-    S mean = vect_mean<S>(x, len);
+template <RealType T>
+static inline T get_kurtosis(T *x, int16_t len) {
+    T std = vect_std(x, len);
+    T mean = vect_mean(x, len);
 
     RA_IMU_LOG_SCALAR("get_kurtosis", "mean", mean);
     RA_IMU_LOG_SCALAR("get_kurtosis", "std", std);
 
-    S sum = 0.0f;
+    T sum = 0.0f;
 #ifdef RANGE_ANALYSIS
     T moment_max = 0.0f;
 #endif
 
     for (int16_t i = 0; i < len; i++) {
-        S tmp = ((S)x[i] - mean) * ((S)x[i] - mean);
-        S x4 = tmp * tmp;
+        T tmp = (x[i] - mean) * (x[i] - mean);
+        T x4 = tmp * tmp;
 #ifdef RANGE_ANALYSIS
         if (x4 > moment_max)
             moment_max = x4;
@@ -612,10 +608,10 @@ template <RealType S, RealType T> static inline S get_kurtosis(T *x, int16_t len
 #endif
     RA_IMU_LOG_SCALAR("get_kurtosis", "sum_x4", sum);
 
-    S std4 = powreal(std, (S)4);
+    T std4 = powreal(std, 4);
     RA_IMU_LOG_SCALAR("get_kurtosis", "std4", std4);
 
-    S result = (sum / (len * std4)) - KURT_FISHER_CONST;
+    T result = (sum / (len * std4)) - KURT_FISHER_CONST;
     RA_IMU_LOG_SCALAR("get_kurtosis", "result", result);
     return result;
 }
@@ -624,15 +620,16 @@ template <RealType S, RealType T> static inline S get_kurtosis(T *x, int16_t len
 /// @param *x           pointer to the inpug array
 /// @param len          lenght of the array
 /// @return     the L2 norm
-template <RealType S, RealType T> static inline S L2_norm(const T *x, int16_t len) {
-    S sum = 0.0f;
+template <RealType T>
+static inline T L2_norm(const T *x, int16_t len) {
+    T sum = 0.0f;
 
     for (int16_t i = 0; i < len; i++) {
         sum += x[i] * x[i];
     }
 
     RA_IMU_LOG_SCALAR("L2_norm", "sum_sq", sum);
-    S result = sqrtreal(sum);
+    T result = sqrtreal(sum);
     RA_IMU_LOG_SCALAR("L2_norm", "result", result);
     return result;
 }
