@@ -4,7 +4,6 @@
 #include <inttypes.h>
 #include <types.h>
 
-
 /**
  * Computes the AZC (Approximate Zero Crossing) feature of the given signal
  * using the approximation of it with tolerance epsilon.
@@ -14,7 +13,9 @@
  * @param epsilon: epsiln tolerance values used to approximate the signal with the Douglas-Peucker algorithm
  *
  * @return the number of times the differentaition of the approximated signal crosses the 0-axis
-*/
-int16_t azc_computation(imu_sample_t *sig, int16_t len, real_t epsilon);
+ */
+template <RealType T> int16_t azc_computation(T *sig, int16_t len, real_t epsilon);
+
+#include <azc.hpp>
 
 #endif

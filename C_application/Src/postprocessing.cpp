@@ -520,10 +520,10 @@ uint16_t _clean_cough_segments(uint16_t *starts_idxs,
     uint16_t *sorted_idxs = (uint16_t *)malloc(n_peaks * sizeof(uint16_t));
     argsort(peaks_locs, n_peaks, sorted_idxs);
 
-    order_by_idxs(starts_idxs, n_peaks, sorted_idxs, UINT16_T_SORT);
-    order_by_idxs(ends_idxs, n_peaks, sorted_idxs, UINT16_T_SORT);
-    order_by_idxs(peaks_locs, n_peaks, sorted_idxs, UINT16_T_SORT);
-    order_by_idxs(peaks, n_peaks, sorted_idxs, FLOAT_SORT);
+    order_by_idxs(starts_idxs, n_peaks, sorted_idxs);
+    order_by_idxs(ends_idxs, n_peaks, sorted_idxs);
+    order_by_idxs(peaks_locs, n_peaks, sorted_idxs);
+    order_by_idxs(peaks, n_peaks, sorted_idxs);
 
     free(sorted_idxs);
 

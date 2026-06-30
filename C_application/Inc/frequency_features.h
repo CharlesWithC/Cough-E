@@ -1,14 +1,13 @@
 #ifndef _FREQ_FEAT_H_
 #define _FREQ_FEAT_H_
 
+#include <constants.h>
 #include <inttypes.h>
 #include <types.h>
-#include <constants.h>
 
 /*
     Set of functions to compute the RFFT (Real FFT) and spectral features of a signal
 */
-
 
 /// @brief Computes the Real FFT of a time signal sig.
 /// It stores the magnitudes, the frequencies and the sum of all the magnitudes inside
@@ -21,9 +20,7 @@
 /// @param *mags        pointer of the array in which to store the magnitudes of the result
 /// @param *freqs       pointer of the array in which to store the frequencies of the result
 /// @param *sum_mags    pointer to the value that stores the sum of the resulting magnitudes
-void compute_rfft(const audio_sample_t *sig, int16_t len, int16_t fs, audio_sample_t *mags, audio_sample_t *freqs, audio_feat_t *sum_mags);
-
-
+template <RealType T> void compute_rfft(const T *sig, int16_t len, int16_t fs, T *mags, T *freqs, T *sum_mags);
 
 /// @brief Computes the periodogram of a signal using the Welch's method
 /// @param *sig     pointer to the signal
@@ -31,9 +28,7 @@ void compute_rfft(const audio_sample_t *sig, int16_t len, int16_t fs, audio_samp
 /// @param fs       sampling frequency
 /// @param *psd     pointer to the array that stores the resulting power spectral densities
 /// @param *freqs   pointer to the array that stores the resulting frequencies
-void compute_periodogram(const audio_sample_t *sig, int16_t len, int16_t fs, audio_sample_t *psd, audio_sample_t *freqs);
-
-
+template <RealType T> void compute_periodogram(const T *sig, int16_t len, int16_t fs, T *psd, T *freqs);
 
 /// @brief Returns the spectral decrease computed from the magnitudes and the frequencies of the spectrum of a signal
 /// @param *mags        pointer to the magnitudes
@@ -41,9 +36,7 @@ void compute_periodogram(const audio_sample_t *sig, int16_t len, int16_t fs, aud
 /// @param len          length
 /// @param sum_mags     sum of the magnitues
 /// @return spectral decrease
-audio_feat_t compute_spec_decrease(audio_sample_t* mags, audio_sample_t* freqs, int16_t len, audio_feat_t sum_mags);
-
-
+template <RealType T> T compute_spec_decrease(T *mags, T *freqs, int16_t len, T sum_mags);
 
 /// @brief Returns the spectral slope computed from the magnitudes and the frequencies of the spectrum of a signal
 /// @param *mags        pointer to the magnitudes
@@ -51,9 +44,7 @@ audio_feat_t compute_spec_decrease(audio_sample_t* mags, audio_sample_t* freqs, 
 /// @param len          length
 /// @param sum_mags     sum of the magnitues
 /// @return spectral slope
-audio_feat_t compute_spectral_slope(audio_sample_t *mags, audio_sample_t *freqs, int16_t len, audio_feat_t sum_mags);
-
-
+template <RealType T> T compute_spectral_slope(T *mags, T *freqs, int16_t len, T sum_mags);
 
 /// @brief Returns the spectral roll off computed from the magnitudes and the frequencies of the spectrum of a signal
 /// @param *mags        pointer to the magnitudes
@@ -61,9 +52,7 @@ audio_feat_t compute_spectral_slope(audio_sample_t *mags, audio_sample_t *freqs,
 /// @param len          length
 /// @param sum_mags     sum of the magnitues
 /// @return rolloff
-audio_feat_t compute_rolloff(audio_sample_t *mags, audio_sample_t *freqs, int16_t len, audio_feat_t sum_mags);
-
-
+template <RealType T> T compute_rolloff(T *mags, T *freqs, int16_t len, T sum_mags);
 
 /// @brief Returns the spectral centroid computed from the magnitudes and the frequencies of the spectrum of a signal
 /// @param *mags        pointer to the magnitudes
@@ -71,9 +60,7 @@ audio_feat_t compute_rolloff(audio_sample_t *mags, audio_sample_t *freqs, int16_
 /// @param len          length
 /// @param sum_mags     sum of the magnitues
 /// @return centroid
-audio_feat_t compute_centroid(audio_sample_t *mags, audio_sample_t *freqs, int16_t len, audio_feat_t sum_mags);
-
-
+template <RealType T> T compute_centroid(T *mags, T *freqs, int16_t len, T sum_mags);
 
 /// @brief Returns the spectral spread computed from the magnitudes and the frequencies of
 /// the spectrum of a signal. Note that this also requires the spectral centroid as an input
@@ -83,9 +70,7 @@ audio_feat_t compute_centroid(audio_sample_t *mags, audio_sample_t *freqs, int16
 /// @param sum_mags     sum of the magnitues
 /// @param centroid     centroid
 /// @return spread
-audio_feat_t compute_spread(audio_sample_t *mags, audio_sample_t *freqs, int16_t len, audio_feat_t sum_mags, audio_feat_t centroid);
-
-
+template <RealType T> T compute_spread(T *mags, T *freqs, int16_t len, T sum_mags, T centroid);
 
 /// @brief Returns the spectral kurtosis computed from the magnitudes and the frequencies of
 /// the spectrum of a signal. Note that this also requires the spectral centroid and the spectral spread as inputs
@@ -96,9 +81,7 @@ audio_feat_t compute_spread(audio_sample_t *mags, audio_sample_t *freqs, int16_t
 /// @param centroid     centroid
 /// @param spread       spread
 /// @return kurtosis
-audio_feat_t compute_kurt(audio_sample_t *mags, audio_sample_t *freqs, int16_t len, audio_feat_t sum_mags, audio_feat_t centroid, audio_feat_t spread);
-
-
+template <RealType T> T compute_kurt(T *mags, T *freqs, int16_t len, T sum_mags, T centroid, T spread);
 
 /// @brief Returns the spectral skewness computed from the magnitudes and the frequencies of
 /// the spectrum of a signal. Note that this also requires the spectral centroid and the spectral spread as inputs
@@ -109,42 +92,32 @@ audio_feat_t compute_kurt(audio_sample_t *mags, audio_sample_t *freqs, int16_t l
 /// @param centroid     centroid
 /// @param spread       spread
 /// @return skewness
-audio_feat_t compute_skew(audio_sample_t *mags, audio_sample_t *freqs, int16_t len, audio_feat_t sum_mags, audio_feat_t centroid, audio_feat_t spread);
-
-
+template <RealType T> T compute_skew(T *mags, T *freqs, int16_t len, T sum_mags, T centroid, T spread);
 
 /// @brief Returns the spectral flatness of the given signal
 /// @param *x   pointer to the signal
 /// @param len  lenght of the signal
 /// @return     the flatness of the signal
-audio_feat_t compute_flatness(audio_sample_t *x, int16_t len);
-
-
+template <RealType T> T compute_flatness(T *x, int16_t len);
 
 /// @brief Returns the standard deviation of the given signal
 /// @param *x   pointer to the signal
 /// @param len  lenght of the signal
 /// @return     the standard deviation of the signal
-audio_feat_t compute_std(audio_sample_t *x, int16_t len);
-
-
+template <RealType T> T compute_std(T *x, int16_t len);
 
 /// @brief Returns the spectral entropy of the given signal
 /// @param *x   pointer to the signal
 /// @param len  lenght of the signal
 /// @return     the spectral entropy of the signal
-audio_feat_t compute_spectral_entropy(audio_sample_t *x, int16_t len);
-
-
+template <RealType T> T compute_spectral_entropy(T *x, int16_t len);
 
 /// @brief  Returns the frequency at which the maximum psd is found
 /// @param *psd     pointer power spectral density of the signal
 /// @param *freqs   pointer to the frequencies
 /// @param len      lenght
 /// @return         the dominant frequency
-audio_feat_t get_domiant_freq(audio_sample_t *psd, audio_sample_t *freqs, int16_t len);
-
-
+template <RealType T> T get_domiant_freq(T *psd, T *freqs, int16_t len);
 
 /// @brief Computes the normalized power of each band.
 /// It requires the psd, the frequencies and also the psd_selector, which is an array
@@ -155,9 +128,8 @@ audio_feat_t get_domiant_freq(audio_sample_t *psd, audio_sample_t *freqs, int16_
 /// @param len              lenght
 /// @param *psd_selector    pointer to the selector for the psd
 /// @param *band_powers     poitner to the resulting band powers
-void normalized_bandpowers(audio_sample_t *psd, audio_sample_t *freqs, int16_t len, const int8_t *psd_selector, audio_feat_t *band_powers);
-
-
+template <RealType T>
+void normalized_bandpowers(T *psd, T *freqs, int16_t len, const int8_t *psd_selector, T *band_powers);
 
 /// @brief Computes the MFCC coefficients of the given signal x
 /// This function uses the STFT technique, therefore the MFCC are computed
@@ -170,18 +142,14 @@ void normalized_bandpowers(audio_sample_t *psd, audio_sample_t *freqs, int16_t l
 /// @param len      lenght of the signal
 /// @param n_frames number of frames
 /// @param *coeffs  pointer to the resulting coefficients
-void mfcc_computation(const audio_sample_t *x, int16_t len, int16_t n_frames, audio_sample_t *coeffs);
-
-
+template <RealType T> void mfcc_computation(const T *x, int16_t len, int16_t n_frames, T *coeffs);
 
 /// @brief Computes the MFCC reletad features
 /// @param *x           pointer to the signal
 /// @param len          lenght of the signa;
 /// @param *mean_mfcc   pointer to the resulting mean of the MFCC
 /// @param *std_mfcc    pointer to the resulting standard deviation of the MFCC
-void get_mfcc_features(const audio_sample_t *x, int16_t len, audio_feat_t *mean_mfcc, audio_feat_t *std_mfcc);
-
-
+template <RealType T> void get_mfcc_features(const T *x, int16_t len, T *mean_mfcc, T *std_mfcc);
 
 /// @brief Computes the features related to the mel spectrogram
 /// @param *x                   pointer to the signal
@@ -192,6 +160,10 @@ void get_mfcc_features(const audio_sample_t *x, int16_t len, audio_feat_t *mean_
 /// @param *std_mel_spectr      pointer to the resulting standard deviations of the mels
 /// @param *max_mel_spectr      pointer to the resulting max of the mels
 /// @param *entropy_mel_spectr  pointer to the resulting entropies of the mels
-void get_mel_spectrogram_features(const audio_sample_t *x, int16_t len, uint8_t *idx_needed, uint8_t n_mels_needed, audio_feat_t *mean_mel_spectr, audio_feat_t *std_mel_spectr, audio_feat_t *max_mel_spectr, audio_feat_t *entropy_mel_spectr);
+template <RealType T>
+void get_mel_spectrogram_features(const T *x, int16_t len, uint8_t *idx_needed, uint8_t n_mels_needed,
+                                  T *mean_mel_spectr, T *std_mel_spectr, T *max_mel_spectr, T *entropy_mel_spectr);
+
+#include <frequency_features.hpp>
 
 #endif
