@@ -3,12 +3,11 @@
 #include <math.h>
 #include <types.h>
 #include <strings.h>
+#include <constants.h>
 
 #include <feature_extraction.h>
 #include <frequency_features.h>
-#include <welch_psd.h>
 #include <mfcc_module.h>
-#include <mel_basis.h>
 #include <helpers.h>
 
 #include <audio_features.h>

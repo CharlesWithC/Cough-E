@@ -4,6 +4,11 @@ APP 		= 	cough-e
 BUILD_DIR 	= 	build
 .DEFAULT_GOAL = all
 
+CFLAGS_MARKER = $(BUILD_DIR)/.last_cflags
+ifneq ($(shell cat $(CFLAGS_MARKER) 2>/dev/null),$(CFLAGS))
+.PHONY: $(CFLAGS_MARKER)
+endif
+
 SRC_DIRS 	= 	Src kiss_fftr input_data FxP/imu FxP/audio
 SRC 		= 	main.cpp $(foreach c, $(SRC_DIRS), $(wildcard $c/*.c*))
 
@@ -37,15 +42,19 @@ COMP_STRING += 	"|++++++++++++++++++++++++++++++++|\n"
 
 all: $(TWIDDLE_Q15) $(TWIDDLE_Q31) $(BUILD_DIR)/$(APP)
 
+$(CFLAGS_MARKER):
+	@mkdir -p $(dir $@)
+	@echo "$(CFLAGS)" > $@
+
 $(BUILD_DIR)/$(APP): $(OBJS)
 	$(CC) -o $@ $(OBJS) $(MATH) $(CFLAGS)
 	@echo $(COMP_STRING)
 
-$(BUILD_DIR)/%.o: %.cpp
+$(BUILD_DIR)/%.o: %.cpp $(CFLAGS_MARKER)
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) $(INC) -c $< -o $@
 
-$(BUILD_DIR)/%.o: %.c
+$(BUILD_DIR)/%.o: %.c $(CFLAGS_MARKER)
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) $(INC) -c $< -o $@
 

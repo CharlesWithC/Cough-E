@@ -217,7 +217,7 @@ int launch(void)
 
     while (1) {
         idx_start_window = get_idx_window();
-        printf("PROCESS WINDOW %d WITH MODEL %d\n", idx_start_window, fsm_state.model);
+        DEBUG_PRINTF("PROCESS WINDOW %d WITH MODEL %d\n", idx_start_window, fsm_state.model);
 
         if (fsm_state.model == IMU_MODEL) {
             if (idx_start_window + WINDOW_SAMP_IMU >= IMU_LEN) {
@@ -247,9 +247,9 @@ int launch(void)
                 features_imu_model[N_IMU_FEATURES + 1] = bmi_feature;
             }
 
-            printf("IMU PREDICT\n");
+            DEBUG_PRINTF("IMU PREDICT\n");
             imu_score = imu_predict(features_imu_model);
-            printf("IMU PROB:"); print_float((float)imu_score, 8); printf("\n");
+            DEBUG_PRINTF("IMU PROB:"); DEBUG_PRINT_FLOAT((float)imu_score, 8); DEBUG_PRINTF("\n");
             fsm_state.model_cls_out = is_cough(imu_score, SCORE_THRESHOLD_IMU) ? COUGH_OUT : NON_COUGH_OUT;
         } else {
             if (idx_start_window + WINDOW_SAMP_AUDIO >= AUDIO_LEN) {
@@ -279,9 +279,9 @@ int launch(void)
                 features_audio_model[N_AUDIO_FEATURES + 1] = bmi_feature;
             }
 
-            printf("AUDIO PREDICT\n");
+            DEBUG_PRINTF("AUDIO PREDICT\n");
             audio_score = audio_predict(features_audio_model);
-            printf("AUDIO PROB:"); print_float((float)audio_score, 8); printf("\n");
+            DEBUG_PRINTF("AUDIO PROB:"); DEBUG_PRINT_FLOAT((float)audio_score, 8); DEBUG_PRINTF("\n");
             fsm_state.model_cls_out = is_cough(audio_score, SCORE_THRESHOLD_AUDIO) ? COUGH_OUT : NON_COUGH_OUT;
 
             _get_cough_peaks(audio_signal, WINDOW_SAMP_AUDIO, AUDIO_FS,

@@ -1,14 +1,9 @@
 #include <stdlib.h>
 #include <inttypes.h>
 #include <types.h>
+#include <constants.h>
 
 #include <mfcc_module.h>
-
-// To convert the STFT output into MEL domain
-#include <mel_basis.h>
-
-// Hanning window to be used in the STFT method before the RFFT
-#include <mfcc_hann_wind.h>
 
 #include <helpers.h>
 
@@ -16,7 +11,6 @@
 
 #include <kiss_fftr.h>
 
-#include <dct_lin.h>
 #include <range_analysis.h>
 
 #ifndef FXP_MODE

@@ -56,6 +56,13 @@ template <Universal T> static inline T log10real(T x) {
 static inline Posit sqrtreal(Posit x) { return libposit::sqrt(x); }
 #endif
 
+#ifdef DEBUG
+#define DEBUG_PRINTF(...) printf(__VA_ARGS__)
+#define DEBUG_PRINT_FLOAT(...) print_float(__VA_ARGS__)
+#else
+#define DEBUG_PRINTF(...) ((void)0)
+#define DEBUG_PRINT_FLOAT(...) ((void)0)
+#endif
 static inline void print_float(float f, int precision) {
     if (f < 0) {
         printf("-");

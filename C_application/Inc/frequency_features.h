@@ -3,7 +3,7 @@
 
 #include <inttypes.h>
 #include <types.h>
-#include <welch_psd.h>
+#include <constants.h>
 
 /*
     Set of functions to compute the RFFT (Real FFT) and spectral features of a signal

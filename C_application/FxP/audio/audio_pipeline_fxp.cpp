@@ -4,7 +4,7 @@
 
 #include <kiss_fftr.h>
 #include <mfcc_module.h>
-#include <welch_psd.h>
+#include <constants.h>
 
 #ifdef FXP_MODE
 #include <FxP/audio/audio_pipeline_fxp.h>
