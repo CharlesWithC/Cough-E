@@ -1,8 +1,8 @@
 #ifndef _FEATURE_EXTRACTION_H
 #define _FEATURE_EXTRACTION_H
 
-#include <types.h>
 #include <imu_features.h>
+#include <types.h>
 
 #ifdef FXP_MODE
 #include <FxP/core/fxp_core.h>
@@ -17,10 +17,7 @@
     @param fs                   :   the sampling frequency
     @param *feats               :   array to be filled with the extracted features
 */
-void audio_features(const int8_t *features_selector,
-                    const audio_sample_t *sig,
-                    int16_t len,
-                    int16_t fs,
+void audio_features(const int8_t *features_selector, const audio_sample_t *sig, int16_t len, int16_t fs,
                     audio_feat_t *feats);
 
 /**
@@ -31,9 +28,7 @@ void audio_features(const int8_t *features_selector,
     @param len                  :   the length of the signal
     @param *feats               :   array to be filled with the extracted features
 */
-void imu_features(const int8_t *features_selector,
-                  const imu_sample_t sig[][Num_IMU_signals],
-                  int16_t len,
+void imu_features(const int8_t *features_selector, const imu_sample_t sig[][Num_IMU_signals], int16_t len,
                   imu_feat_t *feats);
 
 #endif

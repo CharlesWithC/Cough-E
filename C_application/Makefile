@@ -15,7 +15,7 @@ SRC 		= 	main.cpp $(foreach c, $(SRC_DIRS), $(wildcard $c/*.c*))
 OBJS          = $(patsubst %.cpp, $(BUILD_DIR)/%.o, $(filter %.cpp, $(SRC)))
 OBJS         += $(patsubst %.c, $(BUILD_DIR)/%.o, $(filter %.c, $(SRC)))
 
-INC_DIRS 	= 	Inc FxP universal/include/sw libposit/include ./ kiss_fftr range_analysis
+INC_DIRS 	= 	Inc FxP universal/include/sw libposit/include ./ kiss_fftr precision_analysis range_analysis
 INC 		= 	$(foreach d, $(INC_DIRS), -I$d)
 
 TWIDDLE_GENERATOR = kiss_fftr/gen_twiddles_fixed.py

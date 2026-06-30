@@ -13,6 +13,7 @@
 #include <imu_features.h>
 
 #include <range_analysis.h>
+#include <precision_analysis.h>
 
 #if defined(FXP_MODE) && defined(FIXED_POINT)
 #include <FxP/audio/audio_pipeline_fxp.h>
@@ -146,37 +147,37 @@ int is_required(const int8_t *features_selector, uint16_t start_index, uint16_t 
 }
 
 static void imu_run_float_features(const int8_t *features_selector,
-                                   imu_sample_t *sig,
+                                   real_t *sig,
                                    int16_t len,
-                                   imu_feat_t *feats)
+                                   real_t *feats)
 {
     if (features_selector[LINE_LENGTH]) {
-        feats[LINE_LENGTH] = get_line_length<imu_feat_t>(sig, len);
+        feats[LINE_LENGTH] = get_line_length<real_t>(sig, len);
     }
     if (features_selector[ZERO_CROSSING_RATE_IMU]) {
-        feats[ZERO_CROSSING_RATE_IMU] = compute_zrc<imu_feat_t>(sig, len);
+        feats[ZERO_CROSSING_RATE_IMU] = compute_zrc<real_t>(sig, len);
     }
     if (features_selector[KURTOSIS]) {
-        feats[KURTOSIS] = get_kurtosis<imu_feat_t>(sig, len);
+        feats[KURTOSIS] = get_kurtosis<real_t>(sig, len);
     }
     if (features_selector[ROOT_MEANS_SQUARED_IMU]) {
-        feats[ROOT_MEANS_SQUARED_IMU] = get_rms<imu_feat_t>(sig, len);
+        feats[ROOT_MEANS_SQUARED_IMU] = get_rms<real_t>(sig, len);
     }
     if (features_selector[CREST_FACTOR_IMU]) {
-        imu_feat_t rms = get_rms<imu_feat_t>(sig, len);
-        feats[CREST_FACTOR_IMU] = (rms > 0.0f) ? ((imu_feat_t)get_max(sig, len) / rms) : 0.0f;
+        real_t rms = get_rms<real_t>(sig, len);
+        feats[CREST_FACTOR_IMU] = (rms > 0.0f) ? ((real_t)get_max(sig, len) / rms) : 0.0f;
     }
     for (uint8_t i = 0; i < N_AZC; i++) {
         uint8_t idx = (uint8_t)(APPROXIMATE_ZERO_CROSSING + i);
         if (features_selector[idx]) {
             real_t eps = EPSILON_START + (EPSILON_STEP * (real_t)i);
-            feats[idx] = (imu_feat_t)azc_computation(sig, len, eps);
+            feats[idx] = (real_t)azc_computation(sig, len, eps);
         }
     }
 }
 
 
-void fft_based_features(const int8_t *features_selector, const audio_sample_t *sig, int16_t len, int16_t fs, audio_feat_t *feats){
+void fft_based_features(const int8_t *features_selector, const real_t *sig, int16_t len, int16_t fs, real_t *feats){
 
     // FFT-dependent features' indexes
     // 0  : 6  the singular ones
@@ -188,9 +189,9 @@ void fft_based_features(const int8_t *features_selector, const audio_sample_t *s
     RA_LOG_ARRAY("AUDIO_FFT", "fft_based_features", "sig_input", sig, len);
 
     int16_t fft_size = (len / 2) + 1;
-    audio_sample_t *magnitudes = (audio_sample_t*) malloc(fft_size * sizeof(audio_sample_t));
-    audio_sample_t *frequencies = (audio_sample_t*) malloc(fft_size *sizeof(audio_sample_t));
-    audio_feat_t sum_mags = 0.0f;
+    real_t *magnitudes = (real_t*) malloc(fft_size * sizeof(real_t));
+    real_t *frequencies = (real_t*) malloc(fft_size *sizeof(real_t));
+    real_t sum_mags = 0.0f;
 
     if(!magnitudes || !frequencies){
         free(magnitudes);
@@ -198,44 +199,51 @@ void fft_based_features(const int8_t *features_selector, const audio_sample_t *s
         return;
     }
 
-    compute_rfft(sig, len, fs, magnitudes, frequencies, &sum_mags);
+    wrapper_compute_rfft(sig, len, fs, magnitudes, frequencies, &sum_mags);
 
     if(features_selector[SPECTRAL_DECREASE]){
-        audio_feat_t spectral_decrease = compute_spec_decrease(magnitudes, frequencies, (len/2)+1, sum_mags);
+        real_t spectral_decrease = wrapper_compute_spec_decrease(magnitudes, frequencies, (len/2)+1, sum_mags);
+        PA_LOG("audio", "spectral_decrease", spectral_decrease);
         feats[SPECTRAL_DECREASE] = spectral_decrease;
     }
 
     if(features_selector[SPECTRAL_SLOPE]){
-        audio_feat_t spectral_slope = compute_spectral_slope(magnitudes, frequencies, (len/2)+1, sum_mags);
+        real_t spectral_slope = wrapper_compute_spectral_slope(magnitudes, frequencies, (len/2)+1, sum_mags);
+        PA_LOG("audio", "spectral_slope", spectral_slope);
         feats[SPECTRAL_SLOPE] = spectral_slope;
     }
 
     if(features_selector[SPECTRAL_ROLLOFF]){
-        audio_feat_t spectral_rolloff = compute_rolloff(magnitudes, frequencies, (len/2)+1, sum_mags);
+        real_t spectral_rolloff = wrapper_compute_rolloff(magnitudes, frequencies, (len/2)+1, sum_mags);
+        PA_LOG("audio", "spectral_rolloff", spectral_rolloff);
         feats[SPECTRAL_ROLLOFF] = spectral_rolloff;
     }
 
     if(is_required(features_selector, SPECTRAL_CENTROID, SPECTRAL_SKEW)){
-        audio_feat_t spectral_cetroid = compute_centroid(magnitudes, frequencies, (len/2)+1, sum_mags);
+        real_t spectral_cetroid = wrapper_compute_centroid(magnitudes, frequencies, (len/2)+1, sum_mags);
+        PA_LOG("audio", "spectral_cetroid", spectral_cetroid);
 
         if(features_selector[SPECTRAL_CENTROID]){
             feats[SPECTRAL_CENTROID] = spectral_cetroid;
         }
 
         if(is_required(features_selector, SPECTRAL_SPREAD, SPECTRAL_SKEW)){
-            audio_feat_t spectral_spread = compute_spread(magnitudes, frequencies, (len/2)+1, sum_mags, spectral_cetroid);
+            real_t spectral_spread = wrapper_compute_spread(magnitudes, frequencies, (len/2)+1, sum_mags, spectral_cetroid);
+            PA_LOG("audio", "spectral_spread", spectral_spread);
 
             if(features_selector[SPECTRAL_SPREAD]){
                 feats[SPECTRAL_SPREAD] = spectral_spread;
             }
 
             if(features_selector[SPECTRAL_KURTOSIS]){
-                audio_feat_t kurt = compute_kurt(magnitudes, frequencies, (len/2)+1, sum_mags, spectral_cetroid, spectral_spread);
+                real_t kurt = wrapper_compute_kurt(magnitudes, frequencies, (len/2)+1, sum_mags, spectral_cetroid, spectral_spread);
+                PA_LOG("audio", "spectral_kurt", kurt);
                 feats[SPECTRAL_KURTOSIS] = kurt;
             }
 
             if(features_selector[SPECTRAL_SKEW]){
-                audio_feat_t skew = compute_skew(magnitudes, frequencies, (len/2)+1, sum_mags, spectral_cetroid, spectral_spread);
+                real_t skew = wrapper_compute_skew(magnitudes, frequencies, (len/2)+1, sum_mags, spectral_cetroid, spectral_spread);
+                PA_LOG("audio", "spectral_skew", skew);
                 feats[SPECTRAL_SKEW] = skew;
             }
         }
@@ -246,7 +254,7 @@ void fft_based_features(const int8_t *features_selector, const audio_sample_t *s
 }
 
 
-void periodogram_based_features(const int8_t *features_selector, const audio_sample_t *sig, int16_t len, int16_t fs, audio_feat_t *feats){
+void periodogram_based_features(const int8_t *features_selector, const real_t *sig, int16_t len, int16_t fs, real_t *feats){
 
     // Periodogram dependent features' indexes
     // 7  : 9 for the singular ones
@@ -258,8 +266,8 @@ void periodogram_based_features(const int8_t *features_selector, const audio_sam
     RA_LOG_ARRAY("AUDIO_PSD", "periodogram_based_features", "sig_input", sig, len);
 
     int16_t psd_size = (NPERSEG / 2) + 1;
-    audio_sample_t *psd = (audio_sample_t*)malloc(psd_size * sizeof(audio_sample_t));
-    audio_sample_t *freqs = (audio_sample_t*)malloc(psd_size * sizeof(audio_sample_t));
+    real_t *psd = (real_t*)malloc(psd_size * sizeof(real_t));
+    real_t *freqs = (real_t*)malloc(psd_size * sizeof(real_t));
     if(!psd || !freqs){
         free(psd);
         free(freqs);
@@ -269,29 +277,29 @@ void periodogram_based_features(const int8_t *features_selector, const audio_sam
     compute_periodogram(sig, len, fs, psd, freqs);
 
     if(features_selector[SPECTRAL_FLATNESS]){
-       audio_feat_t spectral_flatness = compute_flatness(psd, psd_size);
+       real_t spectral_flatness = compute_flatness(psd, psd_size);
        feats[SPECTRAL_FLATNESS] = spectral_flatness;
     }
 
     if(features_selector[SPECTRAL_STD]){
-        audio_feat_t spectral_std = compute_std(psd, psd_size);
+        real_t spectral_std = compute_std(psd, psd_size);
         feats[SPECTRAL_STD] = spectral_std;
     }
 
 
     if(features_selector[SPECTRAL_ENTROPY]){
-        audio_feat_t spectral_entr = compute_spectral_entropy(psd, psd_size);
+        real_t spectral_entr = compute_spectral_entropy(psd, psd_size);
         feats[SPECTRAL_ENTROPY] = spectral_entr;
     }
 
 
     if(features_selector[DOMINANT_FREQUENCY]){
-        audio_feat_t dominant_freq = get_domiant_freq(psd, freqs, psd_size);
+        real_t dominant_freq = get_domiant_freq(psd, freqs, psd_size);
         feats[DOMINANT_FREQUENCY] = dominant_freq;
     }
 
     if(is_required(features_selector, POWER_SPECTRAL_DENSITY, POWER_SPECTRAL_DENSITY + N_PSD - 1)){
-        audio_feat_t *band_powers = (audio_feat_t*)malloc(N_PSD * sizeof(audio_feat_t));
+        real_t *band_powers = (real_t*)malloc(N_PSD * sizeof(real_t));
         normalized_bandpowers(psd, freqs, psd_size, &features_selector[POWER_SPECTRAL_DENSITY], band_powers);
         for(int8_t i=0; i<N_PSD; i++){
             feats[POWER_SPECTRAL_DENSITY + i] = band_powers[i];
@@ -305,14 +313,14 @@ void periodogram_based_features(const int8_t *features_selector, const audio_sam
 }
 
 
-void mfcc_features(const int8_t *features_selector, const audio_sample_t *sig, int16_t len, audio_feat_t *feats){
+void mfcc_features(const int8_t *features_selector, const real_t *sig, int16_t len, real_t *feats){
 
     // 13 : 38 for the MFCCs features
     if(is_required(features_selector, MEL_FREQUENCY_CEPSTRAL_COEFFICIENT, ZERO_CROSSING_RATE - 1)){
         // compute MFCCs
 
-        audio_feat_t *mean_mfcc = (audio_feat_t*)malloc(N_MFCC * sizeof(audio_feat_t));
-        audio_feat_t *std_mfcc = (audio_feat_t*)malloc(N_MFCC * sizeof(audio_feat_t));
+        real_t *mean_mfcc = (real_t*)malloc(N_MFCC * sizeof(real_t));
+        real_t *std_mfcc = (real_t*)malloc(N_MFCC * sizeof(real_t));
         get_mfcc_features(sig, len, mean_mfcc, std_mfcc);
 
         // stores first the mean and then the std, one after the other
@@ -328,7 +336,7 @@ void mfcc_features(const int8_t *features_selector, const audio_sample_t *sig, i
 }
 
 
-void mel_spectrogram_features(const int8_t *features_selector, const audio_sample_t *sig, int16_t len, audio_feat_t *feats){
+void mel_spectrogram_features(const int8_t *features_selector, const real_t *sig, int16_t len, real_t *feats){
 
     if(is_required(features_selector, MEL_FREQUENCY_CEPSTRAL_COEFFICIENT, ZERO_CROSSING_RATE - 1)){
 
@@ -355,10 +363,10 @@ void mel_spectrogram_features(const int8_t *features_selector, const audio_sampl
         }
 
         // Arrays to temporary store the features
-        audio_feat_t *mean_mel_spectr = (audio_feat_t*)malloc(n_mels_needed * sizeof(audio_feat_t));
-        audio_feat_t *std_mel_spectr = (audio_feat_t*)malloc(n_mels_needed * sizeof(audio_feat_t));
-        audio_feat_t *max_mel_spectr = (audio_feat_t*)malloc(n_mels_needed * sizeof(audio_feat_t));
-        audio_feat_t *entropy_mel_spectr = (audio_feat_t*)malloc(n_mels_needed * sizeof(audio_feat_t));
+        real_t *mean_mel_spectr = (real_t*)malloc(n_mels_needed * sizeof(real_t));
+        real_t *std_mel_spectr = (real_t*)malloc(n_mels_needed * sizeof(real_t));
+        real_t *max_mel_spectr = (real_t*)malloc(n_mels_needed * sizeof(real_t));
+        real_t *entropy_mel_spectr = (real_t*)malloc(n_mels_needed * sizeof(real_t));
 
         get_mel_spectrogram_features(sig, len, idxs_needed, n_mels_needed, mean_mel_spectr, std_mel_spectr, max_mel_spectr, entropy_mel_spectr);
 
@@ -383,7 +391,7 @@ void mel_spectrogram_features(const int8_t *features_selector, const audio_sampl
 }
 
 
-void mean_based_features(const int8_t *features_selector, const audio_sample_t *sig, int16_t len, audio_feat_t *feats){
+void mean_based_features(const int8_t *features_selector, const real_t *sig, int16_t len, real_t *feats){
 
     // 39 : 41 for the singular ones
     if(is_required(features_selector, ROOT_MEANS_SQUARED, CREST_FACTOR)){
@@ -391,20 +399,20 @@ void mean_based_features(const int8_t *features_selector, const audio_sample_t *
         RA_LOG_ARRAY("AUDIO_FFT", "mean_based_features", "sig_input", sig, len);
 
         // compute mean
-        audio_feat_t *zero_mean = (audio_feat_t *) malloc(len * sizeof(audio_feat_t));  // to store the signal after subtracting the mean
+        real_t *zero_mean = (real_t *) malloc(len * sizeof(real_t));  // to store the signal after subtracting the mean
         sub_mean(sig, zero_mean, len);
         RA_LOG_ARRAY("AUDIO_FFT", "mean_based_features", "zero_mean", zero_mean, len);
 
 
         if(features_selector[ZERO_CROSSING_RATE]){
             // compute ZCR
-            audio_feat_t zcr = compute_zrc<audio_feat_t>(zero_mean, len);
+            real_t zcr = compute_zrc<real_t>(zero_mean, len);
             feats[ZERO_CROSSING_RATE] = zcr;
         }
 
         if(features_selector[ROOT_MEANS_SQUARED] || features_selector[CREST_FACTOR]){
             // compute RMS
-            audio_feat_t rms = get_rms<audio_feat_t>(zero_mean, len);
+            real_t rms = get_rms<real_t>(zero_mean, len);
             RA_LOG_SCALAR("AUDIO_FFT", "audio_rms", "result", rms);
 
             if(features_selector[ROOT_MEANS_SQUARED]){
@@ -414,8 +422,8 @@ void mean_based_features(const int8_t *features_selector, const audio_sample_t *
 
             if(features_selector[CREST_FACTOR]){
                 // compute CREST
-                audio_sample_t peak = get_max(zero_mean, len);
-                audio_feat_t crest_factor = (audio_feat_t)peak / rms;
+                real_t peak = get_max(zero_mean, len);
+                real_t crest_factor = (real_t)peak / rms;
                 RA_LOG_SCALAR("AUDIO_FFT", "audio_crest", "peak", peak);
                 RA_LOG_SCALAR("AUDIO_FFT", "audio_crest", "result", crest_factor);
                 feats[CREST_FACTOR] = crest_factor;
@@ -427,7 +435,7 @@ void mean_based_features(const int8_t *features_selector, const audio_sample_t *
 }
 
 
-void eepd_features(const int8_t *features_selector, const audio_sample_t *sig, int16_t len, int16_t fs, audio_feat_t *feats){
+void eepd_features(const int8_t *features_selector, const real_t *sig, int16_t len, int16_t fs, real_t *feats){
 
     // 42 : 61 for the singular ones
     if(is_required(features_selector, ENERGY_ENVELOPE_PEAK_DETECT, (ENERGY_ENVELOPE_PEAK_DETECT+N_EEPD-1))){    // -1 since it's the last one, otherwise it will check one index more
@@ -452,11 +460,11 @@ static const char *_imu_signal_names[] = {
 };
 #endif
 
-void compute_imu_family(const int8_t *features_selector, const imu_sample_t signal[][Num_IMU_signals], int16_t len, int8_t signal_idx, int8_t sig_feat_idx, imu_feat_t *feats){
+void compute_imu_family(const int8_t *features_selector, const real_t signal[][Num_IMU_signals], int16_t len, int8_t signal_idx, int8_t sig_feat_idx, real_t *feats){
     if(is_required(features_selector, sig_feat_idx, sig_feat_idx+Num_imu_feat_families-1)){
 
         // Extract samples for the required signal axis
-        imu_sample_t *signal_samples = (imu_sample_t*)malloc(len * sizeof(imu_sample_t));
+        real_t *signal_samples = (real_t*)malloc(len * sizeof(real_t));
 
         for(int16_t i=0; i<len; i++){
             signal_samples[i] = signal[i][signal_idx];
@@ -479,7 +487,7 @@ void compute_imu_family(const int8_t *features_selector, const imu_sample_t sign
 /*                      Global functions definitions                            */
 //////////////////////////////////////////////////////////////////////////////////
 
-void audio_features(const int8_t *features_selector, const audio_sample_t *sig, int16_t len, int16_t fs, audio_feat_t *feats){
+void audio_features(const int8_t *features_selector, const real_t *sig, int16_t len, int16_t fs, real_t *feats){
 
     /* FFT based features */
     fft_based_features(features_selector, sig, len, fs, feats);
@@ -503,7 +511,7 @@ void audio_features(const int8_t *features_selector, const audio_sample_t *sig, 
 
 
 
-void imu_features(const int8_t *features_selector, const imu_sample_t sig[][Num_IMU_signals], int16_t len, imu_feat_t *feats){
+void imu_features(const int8_t *features_selector, const real_t sig[][Num_IMU_signals], int16_t len, real_t *feats){
 
     // Here len is the IMU_DIM_1 macro in the hardcoded samples
 
@@ -526,12 +534,12 @@ void imu_features(const int8_t *features_selector, const imu_sample_t sig[][Num_
     // GYRO_R
     compute_imu_family(features_selector, sig, len, GYROSCOPE_R, GYRO_R_FEAT, feats);
 
-    // Combine signals via L2 norm (imu_sample_t mode)
-    imu_sample_t *combo_signal = (imu_sample_t*)malloc(len * sizeof(imu_sample_t));
+    // Combine signals via L2 norm (real_t mode)
+    real_t *combo_signal = (real_t*)malloc(len * sizeof(real_t));
 
     RA_SET_IMU_CTX("IMU_L2_ACCEL");
     for(int16_t i=0; i<len; i++){
-        combo_signal[i] = L2_norm<imu_sample_t>(&sig[i][0], 3);
+        combo_signal[i] = L2_norm<real_t>(&sig[i][0], 3);
     }
     RA_IMU_LOG_ARRAY("imu_features", "sig_input", combo_signal, len);
     imu_run_float_features(&features_selector[ACCEL_COMBO], combo_signal, len, &feats[ACCEL_COMBO]);
@@ -539,7 +547,7 @@ void imu_features(const int8_t *features_selector, const imu_sample_t sig[][Num_
 
     RA_SET_IMU_CTX("IMU_L2_GYRO");
     for(int16_t i=0; i<len; i++){
-        combo_signal[i] = L2_norm<imu_sample_t>(&sig[i][3], 3);
+        combo_signal[i] = L2_norm<real_t>(&sig[i][3], 3);
     }
     RA_IMU_LOG_ARRAY("imu_features", "sig_input", combo_signal, len);
     imu_run_float_features(&features_selector[GYRO_COMBO], combo_signal, len, &feats[GYRO_COMBO]);

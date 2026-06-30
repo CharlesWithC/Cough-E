@@ -1,5 +1,5 @@
-#ifndef CONSTANTS_H
-#define CONSTANTS_H
+#ifndef _CONSTANTS_H_
+#define _CONSTANTS_H_
 
 #include <types.h>
 #include <stdint.h>
