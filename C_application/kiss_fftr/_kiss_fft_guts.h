@@ -25,11 +25,12 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
  4*4*4*2
  */
 
-struct kiss_fft_state{
+template<typename T>
+struct kiss_fft_state {
     int nfft;
     int inverse;
-    int factors[2*MAXFACTORS];
-    kiss_fft_cpx twiddles[1];
+    int factors[2 * MAXFACTORS];
+    kiss_fft_cpx<T> twiddles[1];
 };
 
 /*

@@ -53,9 +53,9 @@ template <RealType T> void compute_rfft(const T *sig, int16_t len, int16_t fs, T
 }
 
 template <RealType T> void _rfft(const T *sig, int16_t len, T *real, T *imag) {
-    kiss_fftr_cfg cfg = kiss_fftr_alloc(len, 0, 0, 0);
+    kiss_fftr_cfg<T> cfg = kiss_fftr_alloc<T>(len, 0, 0, 0);
     int16_t fft_size = (len / 2) + 1;
-    kiss_fft_cpx *cx_out = (kiss_fft_cpx *)malloc((size_t)fft_size * sizeof(kiss_fft_cpx));
+    kiss_fft_cpx<T> *cx_out = (kiss_fft_cpx<T> *)malloc((size_t)fft_size * sizeof(kiss_fft_cpx<T>));
 
     kiss_fftr(cfg, sig, cx_out);
     for (int16_t i = 0; i < fft_size; i++) {

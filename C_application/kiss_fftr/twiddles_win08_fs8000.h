@@ -3,15 +3,15 @@
 
 #include <types.h>
 
-typedef struct twiddles_entry
+template<typename T>
+struct twiddles_t
 {
-	audio_sample_t cosine;
-	audio_sample_t sine;
-} twiddles_t;
+	T cosine;
+	T sine;
+};
 
 #if (defined(UPOS_MODE) || defined(LPOS_MODE)) && POSIT_SIZE == 32
-
-static const twiddles_t FLASH1 twiddles_3200[3200] = {
+static const twiddles_t<Posit> FLASH1 twiddles_3200[3200] = {
     { POS(1073741824U), POS(0U) },
     { POS(1073741280U), POS(4059916620U) },
     { POS(1073739680U), POS(4026175360U) },
@@ -3213,8 +3213,7 @@ static const twiddles_t FLASH1 twiddles_3200[3200] = {
     { POS(1073739680U), POS(268791936U) },
     { POS(1073741280U), POS(235050676U) },
 };
-
-static const twiddles_t FLASH1 twiddles_450[450] = {
+static const twiddles_t<Posit> FLASH1 twiddles_450[450] = {
     { POS(1073741824U), POS(0U) },
     { POS(1073715792U), POS(3906599176U) },
     { POS(1073637136U), POS(3839498896U) },
@@ -3666,8 +3665,7 @@ static const twiddles_t FLASH1 twiddles_450[450] = {
     { POS(1073637136U), POS(455468400U) },
     { POS(1073715792U), POS(388368120U) },
 };
-
-static const twiddles_t FLASH1 twiddles_1024[1024] = {
+static const twiddles_t<Posit> FLASH1 twiddles_1024[1024] = {
     { POS(1073741824U), POS(0U) },
     { POS(1073736720U), POS(3988225024U) },
     { POS(1073721696U), POS(3921116160U) },
@@ -4693,8 +4691,7 @@ static const twiddles_t FLASH1 twiddles_1024[1024] = {
     { POS(1073721696U), POS(373851136U) },
     { POS(1073736720U), POS(306742272U) },
 };
-
-static const twiddles_t FLASH1 twiddles_1600[1600] = {
+static const twiddles_t<Posit> FLASH1 twiddles_1600[1600] = {
     { POS(4093453872U), POS(3221225472U) },
     { POS(4059916620U), POS(3221226016U) },
     { POS(4043045988U), POS(3221226544U) },
@@ -6296,8 +6293,7 @@ static const twiddles_t FLASH1 twiddles_1600[1600] = {
     { POS(3221225472U), POS(4093453872U) },
     { POS(3221225472U), POS(0U) },
 };
-
-static const twiddles_t FLASH1 twiddles_225[225] = {
+static const twiddles_t<Posit> FLASH1 twiddles_225[225] = {
     { POS(3973708040U), POS(3221231920U) },
     { POS(3906599176U), POS(3221251504U) },
     { POS(3869477768U), POS(3221284256U) },
@@ -6524,8 +6520,7 @@ static const twiddles_t FLASH1 twiddles_225[225] = {
     { POS(3221231920U), POS(3973708040U) },
     { POS(3221225472U), POS(0U) },
 };
-
-static const twiddles_t FLASH1 twiddles_512[512] = {
+static const twiddles_t<Posit> FLASH1 twiddles_512[512] = {
     { POS(4040932864U), POS(3221226816U) },
     { POS(3988225024U), POS(3221230576U) },
     { POS(3947470080U), POS(3221236752U) },
@@ -7039,10 +7034,9 @@ static const twiddles_t FLASH1 twiddles_512[512] = {
     { POS(3221226816U), POS(4040932864U) },
     { POS(3221225472U), POS(0U) },
 };
-
 #else
-
-static const twiddles_t FLASH1 twiddles_3200[3200] = {
+template<RealType T>
+static const twiddles_t<T> FLASH1 twiddles_3200[3200] = {
 	{ 1.000000, -0.000000 },
 	{ 0.999998, -0.001963 },
 	{ 0.999992, -0.003927 },
@@ -10244,8 +10238,8 @@ static const twiddles_t FLASH1 twiddles_3200[3200] = {
 	{ 0.999992, 0.003927 },
 	{ 0.999998, 0.001963 }
 };
-
-static const twiddles_t FLASH1 twiddles_450[450] = {
+template<RealType T>
+static const twiddles_t<T> FLASH1 twiddles_450[450] = {
 	{ 1.000000, -0.000000 },
 	{ 0.999903, -0.013962 },
 	{ 0.999610, -0.027922 },
@@ -10697,8 +10691,8 @@ static const twiddles_t FLASH1 twiddles_450[450] = {
 	{ 0.999610, 0.027922 },
 	{ 0.999903, 0.013962 }
 };
-
-static const twiddles_t FLASH1 twiddles_1024[1024] = {
+template<RealType T>
+static const twiddles_t<T> FLASH1 twiddles_1024[1024] = {
 	{ 1.000000, -0.000000 },
 	{ 0.999981, -0.006136 },
 	{ 0.999925, -0.012272 },
@@ -11724,8 +11718,8 @@ static const twiddles_t FLASH1 twiddles_1024[1024] = {
 	{ 0.999925, 0.012272 },
 	{ 0.999981, 0.006136 }
 };
-
-static const twiddles_t FLASH1 twiddles_1600[1600] = {
+template<RealType T>
+static const twiddles_t<T> FLASH1 twiddles_1600[1600] = {
 	{ -0.000982, -1.000000 },
 	{ -0.001963, -0.999998 },
 	{ -0.002945, -0.999996 },
@@ -13327,8 +13321,8 @@ static const twiddles_t FLASH1 twiddles_1600[1600] = {
 	{ -1.000000, -0.000982 },
 	{ -1.000000, -0.000000 }
 };
-
-static const twiddles_t FLASH1 twiddles_225[225] = {
+template<RealType T>
+static const twiddles_t<T> FLASH1 twiddles_225[225] = {
 	{ -0.006981, -0.999976 },
 	{ -0.013962, -0.999903 },
 	{ -0.020942, -0.999781 },
@@ -13555,8 +13549,8 @@ static const twiddles_t FLASH1 twiddles_225[225] = {
 	{ -0.999976, -0.006981 },
 	{ -1.000000, -0.000000 }
 };
-
-static const twiddles_t FLASH1 twiddles_512[512] = {
+template<RealType T>
+static const twiddles_t<T> FLASH1 twiddles_512[512] = {
 	{ -0.003068, -0.999995 },
 	{ -0.006136, -0.999981 },
 	{ -0.009204, -0.999958 },
@@ -14070,6 +14064,27 @@ static const twiddles_t FLASH1 twiddles_512[512] = {
 	{ -0.999995, -0.003068 },
 	{ -1.000000, -0.000000 }
 };
+
+template const twiddles_t<real_t>  twiddles_3200<real_t>[3200];
+template const twiddles_t<real_t>  twiddles_450<real_t>[450];
+template const twiddles_t<real_t>  twiddles_1024<real_t>[1024];
+template const twiddles_t<real_t>  twiddles_1600<real_t>[1600];
+template const twiddles_t<real_t>  twiddles_225<real_t>[225];
+template const twiddles_t<real_t>  twiddles_512<real_t>[512];
+#ifdef UPOS_MODE
+template const twiddles_t<mreal_t> twiddles_3200<mreal_t>[3200];
+template const twiddles_t<sreal_t> twiddles_3200<sreal_t>[3200];
+template const twiddles_t<mreal_t> twiddles_450<mreal_t>[450];
+template const twiddles_t<sreal_t> twiddles_450<sreal_t>[450];
+template const twiddles_t<mreal_t> twiddles_1024<mreal_t>[1024];
+template const twiddles_t<sreal_t> twiddles_1024<sreal_t>[1024];
+template const twiddles_t<mreal_t> twiddles_1600<mreal_t>[1600];
+template const twiddles_t<sreal_t> twiddles_1600<sreal_t>[1600];
+template const twiddles_t<mreal_t> twiddles_225<mreal_t>[225];
+template const twiddles_t<sreal_t> twiddles_225<sreal_t>[225];
+template const twiddles_t<mreal_t> twiddles_512<mreal_t>[512];
+template const twiddles_t<sreal_t> twiddles_512<sreal_t>[512];
+#endif
 
 #endif
 

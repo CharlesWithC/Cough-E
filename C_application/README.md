@@ -4,6 +4,7 @@ This folder contains the C implementation of the Cough-E embedded application, t
 
 The default build produces a `build/cough-e` executable. It can be compiled either as the original floating-point application or as the fixed-point application by passing the corresponding compiler flags.
 
+**NOTE**: Fixed point is BROKEN while adding precision analysis. This is due to changes in `kiss-fftr` where all functions were migrated to C++ templates. To fix the problem, relevant fixed point functions must be updated to select correct type when calling `kiss-fftr` functions.
 
 #### Folder structure
 

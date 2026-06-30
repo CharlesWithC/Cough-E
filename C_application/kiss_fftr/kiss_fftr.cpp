@@ -28,7 +28,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 /*
     Function to read the precomputed super_twiddle factors inside the FFTR cfg structure
 */
-void init_super_twiddles(kiss_fftr_cfg *st, const twiddles_t *twiddles, int16_t len);
+template<typename T>
+void init_super_twiddles(kiss_fftr_cfg<T> *st, const twiddles_t<T> *twiddles, int16_t len);
 
 #include "string.h"
 void tostring(char str[], int num)
@@ -50,18 +51,20 @@ void tostring(char str[], int num)
     str[len] = '\0';
 }
 
-struct kiss_fftr_state{
-    kiss_fft_cfg substate;
-    kiss_fft_cpx * tmpbuf;
-    kiss_fft_cpx * super_twiddles;
+template<typename T>
+struct kiss_fftr_state {
+    kiss_fft_cfg<T> substate;
+    kiss_fft_cpx<T> * tmpbuf;
+    kiss_fft_cpx<T> * super_twiddles;
 #ifdef USE_SIMD
     void * pad;
 #endif
 };
 
-kiss_fftr_cfg kiss_fftr_alloc(int nfft,int inverse_fft,void * mem,size_t * lenmem)
+template<typename T>
+kiss_fftr_cfg<T> kiss_fftr_alloc(int nfft,int inverse_fft,void * mem,size_t * lenmem)
 {
-    kiss_fftr_cfg st = NULL;
+    kiss_fftr_cfg<T> st = NULL;
     size_t subsize, memneeded;
 
     if (nfft & 1) {
@@ -71,22 +74,22 @@ kiss_fftr_cfg kiss_fftr_alloc(int nfft,int inverse_fft,void * mem,size_t * lenme
     nfft >>= 1;
 
     // printf("-call fft alloc with nfft=%d\n", nfft);
-    kiss_fft_alloc (nfft, inverse_fft, NULL, &subsize);
-    memneeded = sizeof(struct kiss_fftr_state) + subsize + sizeof(kiss_fft_cpx) * ( nfft * 3 / 2);
+    kiss_fft_alloc<T> (nfft, inverse_fft, NULL, &subsize);
+    memneeded = sizeof(struct kiss_fftr_state<T>) + subsize + sizeof(kiss_fft_cpx<T>) * ( nfft * 3 / 2);
 
-    // printf("Size struct kiss_fftr_state: %zu\n", sizeof(struct kiss_fftr_state));
-    // printf("%zu\n%zu\n%zu\n%d\n", sizeof(struct kiss_fftr_state), subsize, sizeof(kiss_fft_cpx), nfft);
+    // printf("Size struct kiss_fftr_state: %zu\n", sizeof(struct kiss_fftr_state<T>));
+    // printf("%zu\n%zu\n%zu\n%d\n", sizeof(struct kiss_fftr_state<T>), subsize, sizeof(kiss_fft_cpx<T>), nfft);
     // printf("%zu\n\n", memneeded);
     // exit(0);
 
     if (lenmem == NULL) {
         // printf("lenmem = NULL\n");
-        st = (kiss_fftr_cfg) KISS_FFT_MALLOC (memneeded);
+        st = (kiss_fftr_cfg<T>) KISS_FFT_MALLOC (memneeded);
     } else {
         // printf("else lenmeme!=NULL\n");
         if (*lenmem >= memneeded){
             // printf("lenmeme >= memneeded\n");
-            st = (kiss_fftr_cfg) mem;
+            st = (kiss_fftr_cfg<T>) mem;
         }
         *lenmem = memneeded;
     }
@@ -95,10 +98,10 @@ kiss_fftr_cfg kiss_fftr_alloc(int nfft,int inverse_fft,void * mem,size_t * lenme
         return NULL;
     }
 
-    st->substate = (kiss_fft_cfg) (st + 1); /*just beyond kiss_fftr_state struct */
-    st->tmpbuf = (kiss_fft_cpx *) (((char *) st->substate) + subsize);
+    st->substate = (kiss_fft_cfg<T>) (st + 1); /*just beyond kiss_fftr_state struct */
+    st->tmpbuf = (kiss_fft_cpx<T> *) (((char *) st->substate) + subsize);
     st->super_twiddles = st->tmpbuf + nfft;
-    kiss_fft_alloc(nfft, inverse_fft, st->substate, &subsize);
+    kiss_fft_alloc<T>(nfft, inverse_fft, st->substate, &subsize);
 
     // // Online computation of the twiddles factors
     // printf("\nFFTR: %d\n", nfft/2);
@@ -118,15 +121,15 @@ kiss_fftr_cfg kiss_fftr_alloc(int nfft,int inverse_fft,void * mem,size_t * lenme
     switch (nfft/2)
     {
     case 225:
-        init_super_twiddles(&st, twiddles_225, nfft/2);
+        init_super_twiddles(&st, twiddles_225<T>, nfft/2);
         break;
 
     case 512:
-        init_super_twiddles(&st, twiddles_512, nfft/2);
+        init_super_twiddles(&st, twiddles_512<T>, nfft/2);
         break;
 
     case 1600:
-        init_super_twiddles(&st, twiddles_1600, nfft/2);
+        init_super_twiddles(&st, twiddles_1600<T>, nfft/2);
         break;
 
     default:
@@ -140,15 +143,15 @@ kiss_fftr_cfg kiss_fftr_alloc(int nfft,int inverse_fft,void * mem,size_t * lenme
     // switch (nfft/2)
     // {
     // case 4000:
-    //     init_super_twiddles(&st, twiddles_4000, nfft/2);
+    //     init_super_twiddles(&st, twiddles_4000<T>, nfft/2);
     //     break;
 
     // case 512:
-    //     init_super_twiddles(&st, twiddles_512, nfft/2);
+    //     init_super_twiddles(&st, twiddles_512<T>, nfft/2);
     //     break;
 
     // case 225:
-    //     init_super_twiddles(&st, twiddles_225, nfft/2);
+    //     init_super_twiddles(&st, twiddles_225<T>, nfft/2);
     //     break;
 
     // default:
@@ -164,17 +167,19 @@ kiss_fftr_cfg kiss_fftr_alloc(int nfft,int inverse_fft,void * mem,size_t * lenme
 /*
     Function to read the precomputed super_twiddle factors inside the FFTR cfg structure
 */
-void init_super_twiddles(kiss_fftr_cfg *st, const twiddles_t *twiddles, int16_t len){
+template<typename T>
+void init_super_twiddles(kiss_fftr_cfg<T> *st, const twiddles_t<T> *twiddles, int16_t len){
     // we assume (*st)->twiddles[i] is defined with r-i order
     // and twiddles[i] is defined as cosine-sine order
-    read_flash(twiddles, (*st)->super_twiddles, len*sizeof(twiddles_t));
+    read_flash(twiddles, (*st)->super_twiddles, len*sizeof(twiddles_t<T>));
 }
 
-void kiss_fftr(kiss_fftr_cfg st,const kiss_fft_scalar *timedata,kiss_fft_cpx *freqdata)
+template<typename T>
+void kiss_fftr(kiss_fftr_cfg<T> st,const T *timedata,kiss_fft_cpx<T> *freqdata)
 {
     /* input buffer timedata is stored row-wise */
     int k,ncfft;
-    kiss_fft_cpx fpnk,fpk,f1k,f2k,tw,tdc;
+    kiss_fft_cpx<T> fpnk,fpk,f1k,f2k,tw,tdc;
 
     if ( st->substate->inverse) {
         printf("kiss fft usage error: improper alloc\n");
@@ -184,7 +189,7 @@ void kiss_fftr(kiss_fftr_cfg st,const kiss_fft_scalar *timedata,kiss_fft_cpx *fr
     ncfft = st->substate->nfft;
 
     /*perform the parallel fft of two real signals packed in real,imag*/
-    kiss_fft( st->substate , (const kiss_fft_cpx*)timedata, st->tmpbuf );
+    kiss_fft( st->substate , (const kiss_fft_cpx<T>*)timedata, st->tmpbuf );
     /* The real part of the DC element of the frequency spectrum in st->tmpbuf
      * contains the sum of the even-numbered elements of the input time sequence
      * The imag part is the sum of the odd-numbered elements
@@ -226,7 +231,8 @@ void kiss_fftr(kiss_fftr_cfg st,const kiss_fft_scalar *timedata,kiss_fft_cpx *fr
     }
 }
 
-void kiss_fftri(kiss_fftr_cfg st,const kiss_fft_cpx *freqdata,kiss_fft_scalar *timedata)
+template<typename T>
+void kiss_fftri(kiss_fftr_cfg<T> st,const kiss_fft_cpx<T> *freqdata,T *timedata)
 {
     /* input buffer timedata is stored row-wise */
     int k, ncfft;
@@ -243,7 +249,7 @@ void kiss_fftri(kiss_fftr_cfg st,const kiss_fft_cpx *freqdata,kiss_fft_scalar *t
     C_FIXDIV(st->tmpbuf[0],2);
 
     for (k = 1; k <= ncfft / 2; ++k) {
-        kiss_fft_cpx fk, fnkc, fek, fok, tmp;
+        kiss_fft_cpx<T> fk, fnkc, fek, fok, tmp;
         fk = freqdata[k];
         fnkc.r = freqdata[ncfft - k].r;
         fnkc.i = -freqdata[ncfft - k].i;
@@ -261,5 +267,20 @@ void kiss_fftri(kiss_fftr_cfg st,const kiss_fft_cpx *freqdata,kiss_fft_scalar *t
         st->tmpbuf[ncfft - k].i *= -1;
 #endif
     }
-    kiss_fft (st->substate, st->tmpbuf, (kiss_fft_cpx *) timedata);
+    kiss_fft (st->substate, st->tmpbuf, (kiss_fft_cpx<T> *) timedata);
 }
+
+template struct kiss_fftr_state<real_t>;
+template kiss_fftr_cfg<real_t> kiss_fftr_alloc<real_t>(int nfft, int inverse_fft, void * mem, size_t * lenmem);
+template void kiss_fftr<real_t>(kiss_fftr_cfg<real_t> cfg, const real_t *timedata, kiss_fft_cpx<real_t> *freqdata);
+template void kiss_fftri<real_t>(kiss_fftr_cfg<real_t> cfg, const kiss_fft_cpx<real_t> *freqdata, real_t *timedata);
+#ifdef UPOS_MODE
+template struct kiss_fftr_state<mreal_t>;
+template kiss_fftr_cfg<mreal_t> kiss_fftr_alloc<mreal_t>(int nfft, int inverse_fft, void * mem, size_t * lenmem);
+template void kiss_fftr<mreal_t>(kiss_fftr_cfg<mreal_t> cfg, const mreal_t *timedata, kiss_fft_cpx<mreal_t> *freqdata);
+template void kiss_fftri<mreal_t>(kiss_fftr_cfg<mreal_t> cfg, const kiss_fft_cpx<mreal_t> *freqdata, mreal_t *timedata);
+template struct kiss_fftr_state<sreal_t>;
+template kiss_fftr_cfg<sreal_t> kiss_fftr_alloc<sreal_t>(int nfft, int inverse_fft, void * mem, size_t * lenmem);
+template void kiss_fftr<sreal_t>(kiss_fftr_cfg<sreal_t> cfg, const sreal_t *timedata, kiss_fft_cpx<sreal_t> *freqdata);
+template void kiss_fftri<sreal_t>(kiss_fftr_cfg<sreal_t> cfg, const kiss_fft_cpx<sreal_t> *freqdata, sreal_t *timedata);
+#endif

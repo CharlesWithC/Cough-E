@@ -32,18 +32,20 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 /**
  * Custom function to initialize the twiddles specific for the CoughDetetc application
 */
-void init_twiddles(kiss_fft_cfg *st, const twiddles_t *twiddles, int16_t len);
+template<typename T>
+void init_twiddles(kiss_fft_cfg<T> *st, const twiddles_t<T> *twiddles, int16_t len);
 
+template<typename T>
 static void kf_bfly2(
-        kiss_fft_cpx * Fout,
+        kiss_fft_cpx<T> * Fout,
         const size_t fstride,
-        const kiss_fft_cfg st,
+        const kiss_fft_cfg<T> st,
         int m
         )
 {
-    kiss_fft_cpx * Fout2;
-    kiss_fft_cpx * tw1 = st->twiddles;
-    kiss_fft_cpx t;
+    kiss_fft_cpx<T> * Fout2;
+    kiss_fft_cpx<T> * tw1 = st->twiddles;
+    kiss_fft_cpx<T> t;
     Fout2 = Fout + m;
     do{
         C_FIXDIV(*Fout,2); C_FIXDIV(*Fout2,2);
@@ -57,15 +59,16 @@ static void kf_bfly2(
     }while (--m);
 }
 
+template<typename T>
 static void kf_bfly4(
-        kiss_fft_cpx * Fout,
+        kiss_fft_cpx<T> * Fout,
         const size_t fstride,
-        const kiss_fft_cfg st,
+        const kiss_fft_cfg<T> st,
         const size_t m
         )
 {
-    kiss_fft_cpx *tw1,*tw2,*tw3;
-    kiss_fft_cpx scratch[6];
+    kiss_fft_cpx<T> *tw1,*tw2,*tw3;
+    kiss_fft_cpx<T> scratch[6];
     size_t k=m;
     const size_t m2=2*m;
     const size_t m3=3*m;
@@ -105,18 +108,19 @@ static void kf_bfly4(
     }while(--k);
 }
 
+template<typename T>
 static void kf_bfly3(
-         kiss_fft_cpx * Fout,
+         kiss_fft_cpx<T> * Fout,
          const size_t fstride,
-         const kiss_fft_cfg st,
+         const kiss_fft_cfg<T> st,
          size_t m
          )
 {
      size_t k=m;
      const size_t m2 = 2*m;
-     kiss_fft_cpx *tw1,*tw2;
-     kiss_fft_cpx scratch[5];
-     kiss_fft_cpx epi3;
+     kiss_fft_cpx<T> *tw1,*tw2;
+     kiss_fft_cpx<T> scratch[5];
+     kiss_fft_cpx<T> epi3;
      epi3 = st->twiddles[fstride*m];
 
      tw1=tw2=st->twiddles;
@@ -149,19 +153,20 @@ static void kf_bfly3(
      }while(--k);
 }
 
+template<typename T>
 static void kf_bfly5(
-        kiss_fft_cpx * Fout,
+        kiss_fft_cpx<T> * Fout,
         const size_t fstride,
-        const kiss_fft_cfg st,
+        const kiss_fft_cfg<T> st,
         int m
         )
 {
-    kiss_fft_cpx *Fout0,*Fout1,*Fout2,*Fout3,*Fout4;
+    kiss_fft_cpx<T> *Fout0,*Fout1,*Fout2,*Fout3,*Fout4;
     int u;
-    kiss_fft_cpx scratch[13];
-    kiss_fft_cpx * twiddles = st->twiddles;
-    kiss_fft_cpx *tw;
-    kiss_fft_cpx ya,yb;
+    kiss_fft_cpx<T> scratch[13];
+    kiss_fft_cpx<T> * twiddles = st->twiddles;
+    kiss_fft_cpx<T> *tw;
+    kiss_fft_cpx<T> ya,yb;
     ya = twiddles[fstride*m];
     yb = twiddles[fstride*2*m];
 
@@ -211,20 +216,21 @@ static void kf_bfly5(
 }
 
 /* perform the butterfly for one stage of a mixed radix FFT */
+template<typename T>
 static void kf_bfly_generic(
-        kiss_fft_cpx * Fout,
+        kiss_fft_cpx<T> * Fout,
         const size_t fstride,
-        const kiss_fft_cfg st,
+        const kiss_fft_cfg<T> st,
         int m,
         int p
         )
 {
     int u,k,q1,q;
-    kiss_fft_cpx * twiddles = st->twiddles;
-    kiss_fft_cpx t;
+    kiss_fft_cpx<T> * twiddles = st->twiddles;
+    kiss_fft_cpx<T> t;
     int Norig = st->nfft;
 
-    kiss_fft_cpx * scratch = (kiss_fft_cpx*)KISS_FFT_TMP_ALLOC(sizeof(kiss_fft_cpx)*p);
+    kiss_fft_cpx<T> * scratch = (kiss_fft_cpx<T>*)KISS_FFT_TMP_ALLOC(sizeof(kiss_fft_cpx<T>)*p);
 
     for ( u=0; u<m; ++u ) {
         k=u;
@@ -250,20 +256,21 @@ static void kf_bfly_generic(
     KISS_FFT_TMP_FREE(scratch);
 }
 
+template<typename T>
 static
 void kf_work(
-        kiss_fft_cpx * Fout,
-        const kiss_fft_cpx * f,
+        kiss_fft_cpx<T> * Fout,
+        const kiss_fft_cpx<T> * f,
         const size_t fstride,
         int in_stride,
         int * factors,
-        const kiss_fft_cfg st
+        const kiss_fft_cfg<T> st
         )
 {
-    kiss_fft_cpx * Fout_beg=Fout;
+    kiss_fft_cpx<T> * Fout_beg=Fout;
     const int p=*factors++; /* the radix  */
     const int m=*factors++; /* stage's fft length/p */
-    const kiss_fft_cpx * Fout_end = Fout + p*m;
+    const kiss_fft_cpx<T> * Fout_end = Fout + p*m;
 
 #ifdef _OPENMP
     // use openmp extensions at the
@@ -362,20 +369,21 @@ void kf_factor(int n,int * facbuf)
  * The return value is a contiguous block of memory, allocated with malloc.  As such,
  * It can be freed with free(), rather than a kiss_fft-specific function.
  * */
-kiss_fft_cfg kiss_fft_alloc(int nfft,int inverse_fft,void * mem,size_t * lenmem )
+template<typename T>
+kiss_fft_cfg<T> kiss_fft_alloc(int nfft,int inverse_fft,void * mem,size_t * lenmem )
 {
-    kiss_fft_cfg st=NULL;
-    size_t memneeded = sizeof(struct kiss_fft_state)
-        + sizeof(kiss_fft_cpx)*(nfft-1); /* twiddle factors*/
+    kiss_fft_cfg<T> st=NULL;
+    size_t memneeded = sizeof(struct kiss_fft_state<T>)
+        + sizeof(kiss_fft_cpx<T>)*(nfft-1); /* twiddle factors*/
     // printf("\n---\n");
     if ( lenmem==NULL ) {
         // printf("Case 1\n");
-        st = ( kiss_fft_cfg)KISS_FFT_MALLOC( memneeded );
+        st = ( kiss_fft_cfg<T>)KISS_FFT_MALLOC( memneeded );
     }else{
         // printf("Case 2\n");
         if (mem != NULL && *lenmem >= memneeded){
             // printf("Case 2 2\n");
-            st = (kiss_fft_cfg)mem;
+            st = (kiss_fft_cfg<T>)mem;
         }
         *lenmem = memneeded;
     }
@@ -401,15 +409,15 @@ kiss_fft_cfg kiss_fft_alloc(int nfft,int inverse_fft,void * mem,size_t * lenmem 
         switch (nfft)
         {
         case 450:
-            init_twiddles(&st, twiddles_450, nfft);
+            init_twiddles(&st, twiddles_450<T>, nfft);
             break;
 
         case 1024:
-            init_twiddles(&st, twiddles_1024, nfft);
+            init_twiddles(&st, twiddles_1024<T>, nfft);
             break;
 
         case 3200:
-            init_twiddles(&st, twiddles_3200, nfft);
+            init_twiddles(&st, twiddles_3200<T>, nfft);
             break;
 
         default:
@@ -423,15 +431,15 @@ kiss_fft_cfg kiss_fft_alloc(int nfft,int inverse_fft,void * mem,size_t * lenmem 
     //     switch (nfft)
     //     {
     //     case 8000:
-    //         init_twiddles(&st, twiddles_8000, nfft);
+    //         init_twiddles(&st, twiddles_8000<T>, nfft);
     //         break;
 
     //     case 1024:
-    //         init_twiddles(&st, twiddles_1024, nfft);
+    //         init_twiddles(&st, twiddles_1024<T>, nfft);
     //         break;
 
     //     case 450:
-    //         init_twiddles(&st, twiddles_450, nfft);
+    //         init_twiddles(&st, twiddles_450<T>, nfft);
     //         break;
 
     //     default:
@@ -449,28 +457,31 @@ kiss_fft_cfg kiss_fft_alloc(int nfft,int inverse_fft,void * mem,size_t * lenmem 
 /*
     Function to read the precomputed twiddle factors inside the FFTR cfg structure
 */
-void init_twiddles(kiss_fft_cfg *st, const twiddles_t *twiddles, int16_t len){
+template<typename T>
+void init_twiddles(kiss_fft_cfg<T> *st, const twiddles_t<T> *twiddles, int16_t len){
     // we assume (*st)->twiddles[i] is defined with r-i order
     // and twiddles[i] is defined as cosine-sine order
-    read_flash(twiddles, (*st)->twiddles, len*sizeof(twiddles_t));
+    read_flash(twiddles, (*st)->twiddles, len*sizeof(twiddles_t<T>));
 }
 
 
-void kiss_fft_stride(kiss_fft_cfg st,const kiss_fft_cpx *fin,kiss_fft_cpx *fout,int in_stride)
+template<typename T>
+void kiss_fft_stride(kiss_fft_cfg<T> st,const kiss_fft_cpx<T> *fin,kiss_fft_cpx<T> *fout,int in_stride)
 {
     if (fin == fout) {
         //NOTE: this is not really an in-place FFT algorithm.
         //It just performs an out-of-place FFT into a temp buffer
-        kiss_fft_cpx * tmpbuf = (kiss_fft_cpx*)KISS_FFT_TMP_ALLOC( sizeof(kiss_fft_cpx)*st->nfft);
+        kiss_fft_cpx<T> * tmpbuf = (kiss_fft_cpx<T>*)KISS_FFT_TMP_ALLOC( sizeof(kiss_fft_cpx<T>)*st->nfft);
         kf_work(tmpbuf,fin,1,in_stride, st->factors,st);
-        memcpy(fout,tmpbuf,sizeof(kiss_fft_cpx)*st->nfft);
+        memcpy(fout,tmpbuf,sizeof(kiss_fft_cpx<T>)*st->nfft);
         KISS_FFT_TMP_FREE(tmpbuf);
     }else{
         kf_work( fout, fin, 1,in_stride, st->factors,st );
     }
 }
 
-void kiss_fft(kiss_fft_cfg cfg,const kiss_fft_cpx *fin,kiss_fft_cpx *fout)
+template<typename T>
+void kiss_fft(kiss_fft_cfg<T> cfg,const kiss_fft_cpx<T> *fin,kiss_fft_cpx<T> *fout)
 {
     kiss_fft_stride(cfg,fin,fout,1);
 }
@@ -494,3 +505,15 @@ int kiss_fft_next_fast_size(int n)
     }
     return n;
 }
+
+template struct kiss_fft_state<real_t>;
+template kiss_fft_cfg<real_t> kiss_fft_alloc<real_t>(int, int, void*, size_t*);
+template void kiss_fft<real_t>(kiss_fft_cfg<real_t>, const kiss_fft_cpx<real_t>*, kiss_fft_cpx<real_t>*);
+#ifdef UPOS_MODE
+template struct kiss_fft_state<mreal_t>;
+template kiss_fft_cfg<mreal_t> kiss_fft_alloc<mreal_t>(int, int, void*, size_t*);
+template void kiss_fft<mreal_t>(kiss_fft_cfg<mreal_t>, const kiss_fft_cpx<mreal_t>*, kiss_fft_cpx<mreal_t>*);
+template struct kiss_fft_state<sreal_t>;
+template kiss_fft_cfg<sreal_t> kiss_fft_alloc<sreal_t>(int, int, void*, size_t*);
+template void kiss_fft<sreal_t>(kiss_fft_cfg<sreal_t>, const kiss_fft_cpx<sreal_t>*, kiss_fft_cpx<sreal_t>*);
+#endif

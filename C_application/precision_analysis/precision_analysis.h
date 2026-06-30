@@ -93,7 +93,7 @@ struct VariableConverter<Target, Src, std::enable_if_t<std::is_pointer_v<Src>>> 
 //                []   compute_skew
 //                  [] compute_rfft
 
-#define RFFT(op) op(sig, len) op(mags, (len / 2) + 1) op(freqs, (len / 2) + 1) op(sum_mags, 0)
+#define RFFT(op) op(sig, len) op(mags, (len / 2) + 1) op(freqs, (len / 2) + 1) op(sum_mags, 1)
 #define MFLS(op) op(mags, len) op(freqs, len) op(sum_mags, 0)
 #define SPRD(op) op(mags, len) op(freqs, len) op(sum_mags, 0) op(centroid, 0)
 #define KTSK(op) op(mags, len) op(freqs, len) op(sum_mags, 0) op(centroid, 0) op(spread, 0)

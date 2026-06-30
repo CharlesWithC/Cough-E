@@ -48,7 +48,7 @@ $(CFLAGS_MARKER):
 
 $(BUILD_DIR)/$(APP): $(OBJS)
 	$(CC) -o $@ $(OBJS) $(MATH) $(CFLAGS)
-	@echo $(COMP_STRING)
+	@echo -e $(COMP_STRING)
 
 $(BUILD_DIR)/%.o: %.cpp $(CFLAGS_MARKER)
 	@mkdir -p $(dir $@)

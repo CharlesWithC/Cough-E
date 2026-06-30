@@ -52,8 +52,8 @@ template <RealType T> void stft(const T *x, int16_t len, int16_t n_frames, T *re
     T *column = (T *)malloc(N_FFT * sizeof(T));
 
     // initialize RFFT structures
-    kiss_fftr_cfg cfg = kiss_fftr_alloc(N_FFT, 0, 0, 0);
-    kiss_fft_cpx *cx_out = (kiss_fft_cpx *)malloc(FFT_RES_LEN * sizeof(kiss_fft_cpx));
+    kiss_fftr_cfg<T> cfg = kiss_fftr_alloc<T>(N_FFT, 0, 0, 0);
+    kiss_fft_cpx<T> *cx_out = (kiss_fft_cpx<T> *)malloc(FFT_RES_LEN * sizeof(kiss_fft_cpx<T>));
     T *fft_res = (T *)malloc(FFT_RES_LEN * sizeof(T));
     T *fft_re = (T *)malloc(FFT_RES_LEN * sizeof(T));
     T *fft_im = (T *)malloc(FFT_RES_LEN * sizeof(T));
