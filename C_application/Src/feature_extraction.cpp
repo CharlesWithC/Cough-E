@@ -29,112 +29,8 @@ int _ra_imu_active = 0;
 #ifndef FXP_MODE
 
 //////////////////////////////////////////////////////////////////////////////////
-/*                      Local functions declaration                             */
-//////////////////////////////////////////////////////////////////////////////////
-
-
-/**
-    Given the features selector vector and two indexes (start and end), it
-    returns 1 if feature_selector has at least a 1 in the range specified
-    by the indexes, 0 otherwise
-
-    @param *features_selector   :   one-hot vector for which features to extract
-    @param start_index          :   starting index from which to check the `features_selector`
-    @param end_index            :   end index to check in the `features_selector`
-*/
-int is_required(const int8_t *features_selector, uint16_t start_index, uint16_t end_index);
-
-
-/**
-    Computes the required FFT-based features of the audio signal
-
-    @param *features_selector   :   one-hot vector for which features to extract
-    @param *sig                 :   signal to process
-    @param len                  :   length of the signal
-    @param fs                   :   sampling frequency
-    @param *feats               :   array of extracted features
-*/
-void fft_based_features(const int8_t *features_selector, const audio_sample_t *sig, int16_t len, int16_t fs, audio_feat_t *feats);
-
-
-/**
-    Computes the required periodogram-based features of the audio signal
-
-    @param *features_selector   :   one-hot vector for which features to extract
-    @param *sig                 :   signal to process
-    @param len                  :   length of the signal
-    @param *feats               :   array of extracted features
-*/
-void periodogram_based_features(const int8_t *features_selector, const audio_sample_t *sig, int16_t len, int16_t fs, audio_feat_t *feats);
-
-
-/**
-    Computes the required MFCC features of the audio signal
-
-    @param *features_selector   :   one-hot vector for which features to extract
-    @param *sig                 :   signal to process
-    @param len                  :   length of the signal
-    @param *feats               :   array of extracted features
-*/
-void mfcc_features(const int8_t *features_selector, const audio_sample_t *sig, int16_t len, audio_feat_t *feats);
-
-
-/**
-    Computes the required Mel Spectrogram features of the audio signal
-
-    @param *features_selector   :   one-hot vector for which features to extract
-    @param *sig                 :   signal to process
-    @param len                  :   length of the signal
-    @param *feats               :   array of extracted features
-*/
-void mel_spectrogram_features(const int8_t *features_selector, const audio_sample_t *sig, int16_t len, audio_feat_t *feats);
-
-/**
-    Computes the required mean-based features of the audio signal
-
-    @param *features_selector   :   one-hot vector for which features to extract
-    @param *sig                 :   signal to process
-    @param len                  :   length of the signal
-    @param *feats               :   array of extracted features
-*/
-void mean_based_features(const int8_t *features_selector, const audio_sample_t *sig, int16_t len, audio_feat_t *feats);
-
-
-/**
-    Computes the required EEPD features of the audio signal
-
-    @param *features_selector   :   one-hot vector for which features to extract
-    @param *sig                 :   signal to process
-    @param len                  :   length of the signal
-    @param fs                   :   sampling frequency
-    @param *feats               :   array of extracted features
-*/
-void eepd_features(const int8_t *features_selector, const audio_sample_t *sig, int16_t len, int16_t fs, audio_feat_t *feats);
-
-
-/**
-    This function triggers the feature extraction process for a specific IMU feature family.
-    First it checks the the features has to be computed, by means of the features_selector array.
-    Then it retrieves the proper data and it calls the feature extraction function.
-
-    The discrimination between different IMU signal here is done through the use of the two
-    input parameters "signal_idx" and "sig_feat_idx".
-
-    @param *features_selector   :   one-hot vector for which features to extract
-    @param signal               :   signal to process
-    @param len                  :   length of the signal
-    @param signal_idx           :   index of the specific IMU signal
-    @param sig_feat_idx         :   starting index of the features for the IMU signal inside the features_selector vector
-    @param *feats               :   array of extracted features
-*/
-void compute_imu_family(const int8_t *features_selector, const imu_sample_t signal[][Num_IMU_signals], int16_t len, int8_t signal_idx, int8_t sig_feat_idx, imu_feat_t *feats);
-
-//////////////////////////////////////////////////////////////////////////////////
-
-//////////////////////////////////////////////////////////////////////////////////
 /*                      Local functions definitions                             */
 //////////////////////////////////////////////////////////////////////////////////
-
 
 int is_required(const int8_t *features_selector, uint16_t start_index, uint16_t end_index){
 
@@ -152,26 +48,33 @@ static void imu_run_float_features(const int8_t *features_selector,
                                    real_t *feats)
 {
     if (features_selector[LINE_LENGTH]) {
-        feats[LINE_LENGTH] = get_line_length<real_t>(sig, len);
+        feats[LINE_LENGTH] = wrapper_get_line_length(sig, len);
+        PA_LOG("imu", "line_length", feats[LINE_LENGTH]);
     }
     if (features_selector[ZERO_CROSSING_RATE_IMU]) {
-        feats[ZERO_CROSSING_RATE_IMU] = compute_zrc<real_t>(sig, len);
+        feats[ZERO_CROSSING_RATE_IMU] = wrapper_compute_zrc(sig, len);
+        PA_LOG("imu", "zrc", feats[ZERO_CROSSING_RATE_IMU]);
     }
     if (features_selector[KURTOSIS]) {
-        feats[KURTOSIS] = get_kurtosis<real_t>(sig, len);
+        feats[KURTOSIS] = wrapper_get_kurtosis(sig, len);
+        PA_LOG("imu", "kurtosis", feats[KURTOSIS]);
     }
     if (features_selector[ROOT_MEANS_SQUARED_IMU]) {
-        feats[ROOT_MEANS_SQUARED_IMU] = get_rms<real_t>(sig, len);
+        feats[ROOT_MEANS_SQUARED_IMU] = wrapper_get_rms(sig, len);
+        PA_LOG("imu", "rms", feats[ROOT_MEANS_SQUARED_IMU]);
     }
     if (features_selector[CREST_FACTOR_IMU]) {
-        real_t rms = get_rms<real_t>(sig, len);
-        feats[CREST_FACTOR_IMU] = (rms > 0.0f) ? ((real_t)get_max(sig, len) / rms) : 0.0f;
+        real_t rms = get_rms(sig, len);
+        // feats[CREST_FACTOR_IMU] = (rms > 0.0f) ? (get_max(sig, len) / rms) : 0.0f;
+        feats[CREST_FACTOR_IMU] = rms > 0.0f ? wrapper_get_crest(sig, len, rms) : 0.0f;
+        PA_LOG("imu", "crest", feats[CREST_FACTOR_IMU]);
     }
     for (uint8_t i = 0; i < N_AZC; i++) {
         uint8_t idx = (uint8_t)(APPROXIMATE_ZERO_CROSSING + i);
         if (features_selector[idx]) {
             real_t eps = EPSILON_START + (EPSILON_STEP * (real_t)i);
-            feats[idx] = (real_t)azc_computation(sig, len, eps);
+            feats[idx] = wrapper_azc_computation(sig, len, eps);
+            PA_LOG("imu", "azc", feats[idx]);
         }
     }
 }
@@ -411,19 +314,21 @@ void mean_based_features(const int8_t *features_selector, const real_t *sig, int
 
         // compute mean
         real_t *zero_mean = (real_t *) malloc(len * sizeof(real_t));  // to store the signal after subtracting the mean
-        sub_mean(sig, zero_mean, len);
+        wrapper_sub_mean(sig, zero_mean, len);
         RA_LOG_ARRAY("AUDIO_FFT", "mean_based_features", "zero_mean", zero_mean, len);
 
 
         if(features_selector[ZERO_CROSSING_RATE]){
             // compute ZCR
-            real_t zcr = compute_zrc<real_t>(zero_mean, len);
+            real_t zcr = wrapper_compute_zrc(zero_mean, len);
+            PA_LOG("audio_mean", "zcr", zcr);
             feats[ZERO_CROSSING_RATE] = zcr;
         }
 
         if(features_selector[ROOT_MEANS_SQUARED] || features_selector[CREST_FACTOR]){
             // compute RMS
-            real_t rms = get_rms<real_t>(zero_mean, len);
+            real_t rms = wrapper_get_rms(zero_mean, len);
+            PA_LOG("audio_mean", "rms", rms);
             RA_LOG_SCALAR("AUDIO_FFT", "audio_rms", "result", rms);
 
             if(features_selector[ROOT_MEANS_SQUARED]){
@@ -433,9 +338,11 @@ void mean_based_features(const int8_t *features_selector, const real_t *sig, int
 
             if(features_selector[CREST_FACTOR]){
                 // compute CREST
-                real_t peak = get_max(zero_mean, len);
-                real_t crest_factor = (real_t)peak / rms;
-                RA_LOG_SCALAR("AUDIO_FFT", "audio_crest", "peak", peak);
+                // real_t peak = get_max(zero_mean, len);
+                // real_t crest_factor = (real_t)peak / rms;
+                real_t crest_factor = get_crest(zero_mean, len, rms);
+                PA_LOG("audio_mean", "crest", crest_factor);
+                // RA_LOG_SCALAR("AUDIO_FFT", "audio_crest", "peak", peak);
                 RA_LOG_SCALAR("AUDIO_FFT", "audio_crest", "result", crest_factor);
                 feats[CREST_FACTOR] = crest_factor;
             }
@@ -454,9 +361,10 @@ void eepd_features(const int8_t *features_selector, const real_t *sig, int16_t l
         int16_t *eepds = (int16_t*)malloc(N_EEPD * sizeof(int16_t));
 
         // compute EEPD
-        eepd(sig, len, fs, &features_selector[ENERGY_ENVELOPE_PEAK_DETECT], eepds);
+        wrapper_eepd(sig, len, fs, &features_selector[ENERGY_ENVELOPE_PEAK_DETECT], eepds);
 
         for(int16_t i=0; i<N_EEPD; i++){
+            PA_LOG("audio_eepd", "eepd", eepds[i]);
             feats[ENERGY_ENVELOPE_PEAK_DETECT + i] = eepds[i];
         }
 
@@ -471,11 +379,11 @@ static const char *_imu_signal_names[] = {
 };
 #endif
 
-void compute_imu_family(const int8_t *features_selector, const real_t signal[][Num_IMU_signals], int16_t len, int8_t signal_idx, int8_t sig_feat_idx, real_t *feats){
+template <RealType T>
+void compute_imu_family(const int8_t *features_selector, const T signal[][Num_IMU_signals], int16_t len, int8_t signal_idx, int8_t sig_feat_idx, T *feats){
     if(is_required(features_selector, sig_feat_idx, sig_feat_idx+Num_imu_feat_families-1)){
-
         // Extract samples for the required signal axis
-        real_t *signal_samples = (real_t*)malloc(len * sizeof(real_t));
+        T *signal_samples = (T*)malloc(len * sizeof(T));
 
         for(int16_t i=0; i<len; i++){
             signal_samples[i] = signal[i][signal_idx];
@@ -488,6 +396,20 @@ void compute_imu_family(const int8_t *features_selector, const real_t signal[][N
         RA_CLEAR_IMU_CTX();
         free(signal_samples);
     }
+}
+
+template <RealType T>
+void compute_imu_l2(const int8_t *features_selector, const T signal[][Num_IMU_signals], int16_t len, int8_t signal_idx, int8_t sig_feat_idx, T *feats) {
+    T *combo_signal = (T*)malloc(len * sizeof(T));
+
+    for(int16_t i=0; i<len; i++){
+        combo_signal[i] = L2_norm(&signal[i][signal_idx], 3);
+    }
+    RA_IMU_LOG_ARRAY("imu_features", "sig_input", combo_signal, len);
+
+    imu_run_float_features(&features_selector[sig_feat_idx], combo_signal, len, &feats[sig_feat_idx]);
+
+    free(combo_signal);
 }
 
 
@@ -545,27 +467,14 @@ void imu_features(const int8_t *features_selector, const real_t sig[][Num_IMU_si
     // GYRO_R
     compute_imu_family(features_selector, sig, len, GYROSCOPE_R, GYRO_R_FEAT, feats);
 
-    // Combine signals via L2 norm (real_t mode)
-    real_t *combo_signal = (real_t*)malloc(len * sizeof(real_t));
-
+    // Combine signals via L2 norm (float mode)
     RA_SET_IMU_CTX("IMU_L2_ACCEL");
-    for(int16_t i=0; i<len; i++){
-        combo_signal[i] = L2_norm<real_t>(&sig[i][0], 3);
-    }
-    RA_IMU_LOG_ARRAY("imu_features", "sig_input", combo_signal, len);
-    imu_run_float_features(&features_selector[ACCEL_COMBO], combo_signal, len, &feats[ACCEL_COMBO]);
+    compute_imu_l2(features_selector, sig, len, 0, ACCEL_COMBO, feats);
     RA_CLEAR_IMU_CTX();
 
     RA_SET_IMU_CTX("IMU_L2_GYRO");
-    for(int16_t i=0; i<len; i++){
-        combo_signal[i] = L2_norm<real_t>(&sig[i][3], 3);
-    }
-    RA_IMU_LOG_ARRAY("imu_features", "sig_input", combo_signal, len);
-    imu_run_float_features(&features_selector[GYRO_COMBO], combo_signal, len, &feats[GYRO_COMBO]);
+    compute_imu_l2(features_selector, sig, len, 3, GYRO_COMBO, feats);
     RA_CLEAR_IMU_CTX();
-
-    free(combo_signal);
-
 }
 
 

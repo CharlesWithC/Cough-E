@@ -5,7 +5,10 @@
 #include <vector>
 
 #include <audio_model.h>
+#include <azc.h>
 #include <frequency_features.h>
+#include <helpers.h>
+#include <time_domain_feat.h>
 #include <types.h>
 
 template <typename Target, typename Src, typename Enable = void> struct VariableConverter;
@@ -75,19 +78,25 @@ struct VariableConverter<Target, Src, std::enable_if_t<std::is_pointer_v<Src>>> 
         func<T> args;                                                                                                  \
     }
 
+#ifdef PRECISION_ANALYSIS
+#define PA_LOG(category, name, value)                                                                                  \
+    printf("PRECISION|%04X%04X%04X%04X|%s|%s|%f\n", (unsigned int)(PRECISION_CTRL1), (unsigned int)(PRECISION_CTRL2),  \
+           (unsigned int)(PRECISION_CTRL3), (unsigned int)(PRECISION_CTRL4), (category), (name), (float)(value))
+#else
+#define PA_LOG(category, name, value) ((void)0)
+#endif
+
 #ifndef PRECISION_CTRL1
 #define PRECISION_CTRL1 0
 #endif
 #ifndef PRECISION_CTRL2
 #define PRECISION_CTRL2 0
 #endif
-
-#if defined(PRECISION_CTRL1) || defined(PRECISION_CTRL2)
-#define PA_LOG(category, name, value)                                                                                  \
-    printf("PRECISION|%04X%04X|%s|%s|%f\n", (unsigned int)(PRECISION_CTRL1), (unsigned int)(PRECISION_CTRL2),          \
-           (category), (name), (float)(value))
-#else
-#define PA_LOG(category, name, value) ((void)0)
+#ifndef PRECISION_CTRL3
+#define PRECISION_CTRL3 0
+#endif
+#ifndef PRECISION_CTRL4
+#define PRECISION_CTRL4 0
 #endif
 
 // 00 = no conversion / 01 = use sreal / 10 = use mreal / 11 = not used (reserved for possible custom type mix)
@@ -109,6 +118,24 @@ struct VariableConverter<Target, Src, std::enable_if_t<std::is_pointer_v<Src>>> 
 //             []      normalized_bandpowers
 //                []   get_mfcc_features
 //                  [] get_mel_spectrogram_features
+// 0000 0000 0000 0000 PRECISION_CTRL3 (Mean + EEPD + IMU)
+// []                  sub_mean
+//   []                compute_zrc
+//      []             get_rms
+//        []           get_crest
+//           []        eepd
+//             []      get_line_length
+//                []   get_kurtosis
+//                  [] azc_computation
+// 0000 0000 0000 0000 PRECISION_CTRL4 (IMU)
+// []                  ACCEL_X
+//   []                ACCEL_Y
+//      []             ACCEL_Z
+//        []           GYRO_Y
+//           []        GYRO_P
+//             []      GYRO_R
+//                []   L2_ACCEL
+//                  [] L2_GYRO
 
 #define RFFT(op) op(sig, len) op(mags, (len / 2) + 1) op(freqs, (len / 2) + 1) op(sum_mags, 1)
 #define MFLS(op) op(mags, len) op(freqs, len) op(sum_mags, 0)
@@ -266,5 +293,64 @@ DEFINE_VOID_PASSTHROUGH(PRECISION_CTRL2, 0x0003, get_mel_spectrogram_features, r
                          real_t *entropy_mel_spectr),
                         (x, len, idx_needed, n_mels_needed, mean_mel_spectr, std_mel_spectr, max_mel_spectr,
                          entropy_mel_spectr))
+
+#define SBMN(op) op(sig, len) op(res, len)
+#define SIGL(op) op(sig, len)
+#define CRST(op) op(sig, len) op(rms, 0)
+
+DEFINE_VOID_WRAPPER(PRECISION_CTRL3, 0x8000, sub_mean, <mreal_t>, mreal_t,
+                    (const real_t *sig, real_t *res, int16_t len), (sig, res, len), SBMN)
+DEFINE_VOID_WRAPPER(PRECISION_CTRL3, 0x4000, sub_mean, <sreal_t>, sreal_t,
+                    (const real_t *sig, real_t *res, int16_t len), (sig, res, len), SBMN)
+DEFINE_VOID_PASSTHROUGH(PRECISION_CTRL3, 0xC000, sub_mean, real_t, (const real_t *sig, real_t *res, int16_t len),
+                        (sig, res, len))
+
+DEFINE_WRAPPER(PRECISION_CTRL3, 0x2000, compute_zrc, <mreal_t>, real_t, mreal_t, (real_t * sig, int16_t len),
+               (sig, len), SIGL)
+DEFINE_WRAPPER(PRECISION_CTRL3, 0x1000, compute_zrc, <sreal_t>, real_t, sreal_t, (real_t * sig, int16_t len),
+               (sig, len), SIGL)
+DEFINE_PASSTHROUGH(PRECISION_CTRL3, 0x3000, compute_zrc, real_t, real_t, (real_t * sig, int16_t len), (sig, len))
+
+DEFINE_WRAPPER(PRECISION_CTRL3, 0x0800, get_rms, <mreal_t>, real_t, mreal_t, (real_t * sig, int16_t len), (sig, len),
+               SIGL)
+DEFINE_WRAPPER(PRECISION_CTRL3, 0x0400, get_rms, <sreal_t>, real_t, sreal_t, (real_t * sig, int16_t len), (sig, len),
+               SIGL)
+DEFINE_PASSTHROUGH(PRECISION_CTRL3, 0x0C00, get_rms, real_t, real_t, (real_t * sig, int16_t len), (sig, len))
+
+DEFINE_WRAPPER(PRECISION_CTRL3, 0x0200, get_crest, <mreal_t>, real_t, mreal_t, (real_t * sig, int16_t len, real_t rms),
+               (sig, len, rms), CRST)
+DEFINE_WRAPPER(PRECISION_CTRL3, 0x0100, get_crest, <sreal_t>, real_t, sreal_t, (real_t * sig, int16_t len, real_t rms),
+               (sig, len, rms), CRST)
+DEFINE_PASSTHROUGH(PRECISION_CTRL3, 0x0300, get_crest, real_t, real_t, (real_t * sig, int16_t len, real_t rms),
+                   (sig, len, rms))
+
+DEFINE_VOID_WRAPPER(PRECISION_CTRL3, 0x0080, eepd, <mreal_t>, mreal_t,
+                    (const real_t *sig, int16_t len, int16_t fs, const int8_t *select, int16_t *res),
+                    (sig, len, fs, select, res), SIGL)
+DEFINE_VOID_WRAPPER(PRECISION_CTRL3, 0x0040, eepd, <sreal_t>, sreal_t,
+                    (const real_t *sig, int16_t len, int16_t fs, const int8_t *select, int16_t *res),
+                    (sig, len, fs, select, res), SIGL)
+DEFINE_VOID_PASSTHROUGH(PRECISION_CTRL3, 0x00C0, eepd, real_t,
+                        (const real_t *sig, int16_t len, int16_t fs, const int8_t *select, int16_t *res),
+                        (sig, len, fs, select, res))
+
+DEFINE_WRAPPER(PRECISION_CTRL3, 0x0020, get_line_length, <mreal_t>, real_t, mreal_t, (real_t * x, int16_t len),
+               (x, len), XLEN)
+DEFINE_WRAPPER(PRECISION_CTRL3, 0x0010, get_line_length, <sreal_t>, real_t, sreal_t, (real_t * x, int16_t len),
+               (x, len), XLEN)
+DEFINE_PASSTHROUGH(PRECISION_CTRL3, 0x0030, get_line_length, real_t, real_t, (real_t * x, int16_t len), (x, len))
+
+DEFINE_WRAPPER(PRECISION_CTRL3, 0x0008, get_kurtosis, <mreal_t>, real_t, mreal_t, (real_t * x, int16_t len), (x, len),
+               XLEN)
+DEFINE_WRAPPER(PRECISION_CTRL3, 0x0004, get_kurtosis, <sreal_t>, real_t, sreal_t, (real_t * x, int16_t len), (x, len),
+               XLEN)
+DEFINE_PASSTHROUGH(PRECISION_CTRL3, 0x000C, get_kurtosis, real_t, real_t, (real_t * x, int16_t len), (x, len))
+
+DEFINE_WRAPPER(PRECISION_CTRL3, 0x0002, azc_computation, <mreal_t>, int16_t, mreal_t,
+               (real_t * sig, int16_t len, real_t epsilon), (sig, len, epsilon), SIGL)
+DEFINE_WRAPPER(PRECISION_CTRL3, 0x0001, azc_computation, <sreal_t>, int16_t, sreal_t,
+               (real_t * sig, int16_t len, real_t epsilon), (sig, len, epsilon), SIGL)
+DEFINE_PASSTHROUGH(PRECISION_CTRL3, 0x0003, azc_computation, real_t, int16_t,
+                   (real_t * sig, int16_t len, real_t epsilon), (sig, len, epsilon))
 
 #endif

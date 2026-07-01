@@ -25,6 +25,12 @@ template <RealType T> T get_max(T *sig, int16_t len) {
     return max;
 }
 
+template <RealType T> T get_crest(T *sig, int16_t len, T rms) {
+    T peak = get_max(sig, len);
+    T crest_factor = peak / rms;
+    return crest_factor;
+}
+
 template <RealType T> void sub_mean(const T *sig, T *res, int16_t len) {
     T mean = vect_mean(sig, len);
 
@@ -101,9 +107,9 @@ template <RealType T> void eepd(const T *sig, int16_t len, int16_t fs, const int
     for (int16_t i = 0; i < N_EEPD; i++) {
         if (select[i] == 1) {
 
-            b = filters_parameters.filters[i].b;
-            a = filters_parameters.filters[i].a;
-            zi = filters_parameters.filters[i].zi;
+            b = filters_parameters<T>.filters[i].b;
+            a = filters_parameters<T>.filters[i].a;
+            zi = filters_parameters<T>.filters[i].zi;
 
             filtfilt(sig, len, b, a, zi, interm);
             RA_LOG_ARRAY("AUDIO_EEPD", "eepd", "bandpass_out", interm, len);
@@ -111,7 +117,7 @@ template <RealType T> void eepd(const T *sig, int16_t len, int16_t fs, const int
             vect_mult(interm, interm, len, interm); // squared vector
             RA_LOG_ARRAY("AUDIO_EEPD", "eepd", "squared", interm, len);
 
-            filtfilt(interm, len, b_second, a_second, zi_second, filtered);
+            filtfilt(interm, len, b_second<T>, a_second<T>, zi_second<T>, filtered);
             RA_LOG_ARRAY("AUDIO_EEPD", "eepd", "envelope", filtered, len);
 
             normalize_max(filtered, len, filtered); // divide each number by the maximum
