@@ -77,11 +77,19 @@ struct VariableConverter<Target, Src, std::enable_if_t<std::is_pointer_v<Src>>> 
 
 #ifndef PRECISION_CTRL1
 #define PRECISION_CTRL1 0
-#define PA_LOG(category, name, value) ((void)0)
-#else
-#define PA_LOG(category, name, value)                                                                                  \
-    printf("PRECISION|%04X|%s|%s|%f\n", (unsigned int)(PRECISION_CTRL1), (category), (name), (float)(value))
 #endif
+#ifndef PRECISION_CTRL2
+#define PRECISION_CTRL2 0
+#endif
+
+#if defined(PRECISION_CTRL1) || defined(PRECISION_CTRL2)
+#define PA_LOG(category, name, value)                                                                                  \
+    printf("PRECISION|%04X%04X|%s|%s|%f\n", (unsigned int)(PRECISION_CTRL1), (unsigned int)(PRECISION_CTRL2),          \
+           (category), (name), (float)(value))
+#else
+#define PA_LOG(category, name, value) ((void)0)
+#endif
+
 // 00 = no conversion / 01 = use sreal / 10 = use mreal / 11 = not used (reserved for possible custom type mix)
 // 0000 0000 0000 0000 PRECISION_CTRL1 (FFT)
 // []                  compute_spec_decrease
@@ -92,6 +100,15 @@ struct VariableConverter<Target, Src, std::enable_if_t<std::is_pointer_v<Src>>> 
 //             []      compute_kurt
 //                []   compute_skew
 //                  [] compute_rfft
+// 0000 0000 0000 0000 PRECISION_CTRL2 (Periodogram + MFCC + MEL)
+// []                  compute_periodogram
+//   []                compute_flatness
+//      []             compute_std
+//        []           compute_spectral_entropy
+//           []        get_domiant_freq
+//             []      normalized_bandpowers
+//                []   get_mfcc_features
+//                  [] get_mel_spectrogram_features
 
 #define RFFT(op) op(sig, len) op(mags, (len / 2) + 1) op(freqs, (len / 2) + 1) op(sum_mags, 1)
 #define MFLS(op) op(mags, len) op(freqs, len) op(sum_mags, 0)
@@ -165,5 +182,89 @@ DEFINE_VOID_WRAPPER(PRECISION_CTRL1, 0x0001, compute_rfft, <sreal_t>, sreal_t,
 DEFINE_VOID_PASSTHROUGH(PRECISION_CTRL1, 0x0003, compute_rfft, real_t,
                         (const real_t *sig, int16_t len, int16_t fs, real_t *mags, real_t *freqs, real_t *sum_mags),
                         (sig, len, fs, mags, freqs, sum_mags))
+
+#define PERIO(op) op(sig, len) op(psd, (NPERSEG / 2) + 1) op(freqs, (NPERSEG / 2) + 1)
+#define XLEN(op) op(x, len)
+#define DOMF(op) op(psd, len) op(freqs, len)
+#define NBPW(op) op(psd, len) op(freqs, len) op(band_powers, N_PSD)
+#define MFCF(op) op(x, len) op(mean_mfcc, N_MFCC) op(std_mfcc, N_MFCC)
+#define MELS(op)                                                                                                       \
+    op(x, len) op(mean_mel_spectr, n_mels_needed) op(std_mel_spectr, n_mels_needed) op(max_mel_spectr, n_mels_needed)  \
+        op(entropy_mel_spectr, n_mels_needed)
+
+DEFINE_VOID_WRAPPER(PRECISION_CTRL2, 0x8000, compute_periodogram, <mreal_t>, mreal_t,
+                    (const real_t *sig, int16_t len, int16_t fs, real_t *psd, real_t *freqs),
+                    (sig, len, fs, psd, freqs), PERIO)
+DEFINE_VOID_WRAPPER(PRECISION_CTRL2, 0x4000, compute_periodogram, <sreal_t>, sreal_t,
+                    (const real_t *sig, int16_t len, int16_t fs, real_t *psd, real_t *freqs),
+                    (sig, len, fs, psd, freqs), PERIO)
+DEFINE_VOID_PASSTHROUGH(PRECISION_CTRL2, 0xC000, compute_periodogram, real_t,
+                        (const real_t *sig, int16_t len, int16_t fs, real_t *psd, real_t *freqs),
+                        (sig, len, fs, psd, freqs))
+
+DEFINE_WRAPPER(PRECISION_CTRL2, 0x2000, compute_flatness, <mreal_t>, real_t, mreal_t, (real_t * x, int16_t len),
+               (x, len), XLEN)
+DEFINE_WRAPPER(PRECISION_CTRL2, 0x1000, compute_flatness, <sreal_t>, real_t, sreal_t, (real_t * x, int16_t len),
+               (x, len), XLEN)
+DEFINE_PASSTHROUGH(PRECISION_CTRL2, 0x3000, compute_flatness, real_t, real_t, (real_t * x, int16_t len), (x, len))
+
+DEFINE_WRAPPER(PRECISION_CTRL2, 0x0800, compute_std, <mreal_t>, real_t, mreal_t, (real_t * x, int16_t len), (x, len),
+               XLEN)
+DEFINE_WRAPPER(PRECISION_CTRL2, 0x0400, compute_std, <sreal_t>, real_t, sreal_t, (real_t * x, int16_t len), (x, len),
+               XLEN)
+DEFINE_PASSTHROUGH(PRECISION_CTRL2, 0x0C00, compute_std, real_t, real_t, (real_t * x, int16_t len), (x, len))
+
+DEFINE_WRAPPER(PRECISION_CTRL2, 0x0200, compute_spectral_entropy, <mreal_t>, real_t, mreal_t, (real_t * x, int16_t len),
+               (x, len), XLEN)
+DEFINE_WRAPPER(PRECISION_CTRL2, 0x0100, compute_spectral_entropy, <sreal_t>, real_t, sreal_t, (real_t * x, int16_t len),
+               (x, len), XLEN)
+DEFINE_PASSTHROUGH(PRECISION_CTRL2, 0x0300, compute_spectral_entropy, real_t, real_t, (real_t * x, int16_t len),
+                   (x, len))
+
+DEFINE_WRAPPER(PRECISION_CTRL2, 0x0080, get_domiant_freq, <mreal_t>, real_t, mreal_t,
+               (real_t * psd, real_t *freqs, int16_t len), (psd, freqs, len), DOMF)
+DEFINE_WRAPPER(PRECISION_CTRL2, 0x0040, get_domiant_freq, <sreal_t>, real_t, sreal_t,
+               (real_t * psd, real_t *freqs, int16_t len), (psd, freqs, len), DOMF)
+DEFINE_PASSTHROUGH(PRECISION_CTRL2, 0x00C0, get_domiant_freq, real_t, real_t,
+                   (real_t * psd, real_t *freqs, int16_t len), (psd, freqs, len))
+
+DEFINE_VOID_WRAPPER(PRECISION_CTRL2, 0x0020, normalized_bandpowers, <mreal_t>, mreal_t,
+                    (real_t * psd, real_t *freqs, int16_t len, const int8_t *psd_selector, real_t *band_powers),
+                    (psd, freqs, len, psd_selector, band_powers), NBPW)
+DEFINE_VOID_WRAPPER(PRECISION_CTRL2, 0x0010, normalized_bandpowers, <sreal_t>, sreal_t,
+                    (real_t * psd, real_t *freqs, int16_t len, const int8_t *psd_selector, real_t *band_powers),
+                    (psd, freqs, len, psd_selector, band_powers), NBPW)
+DEFINE_VOID_PASSTHROUGH(PRECISION_CTRL2, 0x0030, normalized_bandpowers, real_t,
+                        (real_t * psd, real_t *freqs, int16_t len, const int8_t *psd_selector, real_t *band_powers),
+                        (psd, freqs, len, psd_selector, band_powers))
+
+DEFINE_VOID_WRAPPER(PRECISION_CTRL2, 0x0008, get_mfcc_features, <mreal_t>, mreal_t,
+                    (const real_t *x, int16_t len, real_t *mean_mfcc, real_t *std_mfcc), (x, len, mean_mfcc, std_mfcc),
+                    MFCF)
+DEFINE_VOID_WRAPPER(PRECISION_CTRL2, 0x0004, get_mfcc_features, <sreal_t>, sreal_t,
+                    (const real_t *x, int16_t len, real_t *mean_mfcc, real_t *std_mfcc), (x, len, mean_mfcc, std_mfcc),
+                    MFCF)
+DEFINE_VOID_PASSTHROUGH(PRECISION_CTRL2, 0x000C, get_mfcc_features, real_t,
+                        (const real_t *x, int16_t len, real_t *mean_mfcc, real_t *std_mfcc),
+                        (x, len, mean_mfcc, std_mfcc))
+
+DEFINE_VOID_WRAPPER(PRECISION_CTRL2, 0x0002, get_mel_spectrogram_features, <mreal_t>, mreal_t,
+                    (const real_t *x, int16_t len, uint8_t *idx_needed, uint8_t n_mels_needed, real_t *mean_mel_spectr,
+                     real_t *std_mel_spectr, real_t *max_mel_spectr, real_t *entropy_mel_spectr),
+                    (x, len, idx_needed, n_mels_needed, mean_mel_spectr, std_mel_spectr, max_mel_spectr,
+                     entropy_mel_spectr),
+                    MELS)
+DEFINE_VOID_WRAPPER(PRECISION_CTRL2, 0x0001, get_mel_spectrogram_features, <sreal_t>, sreal_t,
+                    (const real_t *x, int16_t len, uint8_t *idx_needed, uint8_t n_mels_needed, real_t *mean_mel_spectr,
+                     real_t *std_mel_spectr, real_t *max_mel_spectr, real_t *entropy_mel_spectr),
+                    (x, len, idx_needed, n_mels_needed, mean_mel_spectr, std_mel_spectr, max_mel_spectr,
+                     entropy_mel_spectr),
+                    MELS)
+DEFINE_VOID_PASSTHROUGH(PRECISION_CTRL2, 0x0003, get_mel_spectrogram_features, real_t,
+                        (const real_t *x, int16_t len, uint8_t *idx_needed, uint8_t n_mels_needed,
+                         real_t *mean_mel_spectr, real_t *std_mel_spectr, real_t *max_mel_spectr,
+                         real_t *entropy_mel_spectr),
+                        (x, len, idx_needed, n_mels_needed, mean_mel_spectr, std_mel_spectr, max_mel_spectr,
+                         entropy_mel_spectr))
 
 #endif

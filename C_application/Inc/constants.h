@@ -1,8 +1,8 @@
 #ifndef _CONSTANTS_H_
 #define _CONSTANTS_H_
 
-#include <types.h>
 #include <stdint.h>
+#include <types.h>
 
 // dct_lin.h
 #ifndef TYPE_DCT_COS
@@ -18,11 +18,12 @@ extern const TYPE_DCT_COS FLASH1 dct_cos[16384];
 #endif
 //////////////////////////////////////////////////////////////////////////////////
 // Note that this only works when the RFFT size used is 2048 (so the output		//
-// will be 1025 samples)														//
+// will be 1025 samples)
+// //
 //////////////////////////////////////////////////////////////////////////////////
-#define MEL_ROWS		64
-#define MEL_COLUMNS		1025
-#define MAX_NZ_ELEMS    73  // max number of non-zero elements
+#define MEL_ROWS 64
+#define MEL_COLUMNS 1025
+#define MAX_NZ_ELEMS 73 // max number of non-zero elements
 /*
     Indexes of the first and last non-zero elements for each row of the mel basis.
     For each row, the non-zero elements are stored one after the other, so I just
@@ -33,19 +34,16 @@ extern const int16_t mel_nz_indexes[MEL_ROWS][2];
 extern const real_t DINTL1 mel_basis[MEL_ROWS][MAX_NZ_ELEMS];
 
 // mfcc_hann_wind.h (Hanning window to be used in the STFT method before the RFFT)
-#ifndef TYPE_HANN_MFCC_WIND
-#define TYPE_HANN_MFCC_WIND real_t
-#endif
-#define HANN_SIZE   2048
+#define HANN_SIZE 2048
 // 2048 values * 4 bytes = 8192 bytes
-extern const TYPE_HANN_MFCC_WIND DINTL1 hann_mfcc_wind[HANN_SIZE];
+template <RealType T> extern const T DINTL1 hann_mfcc_wind[HANN_SIZE];
 
 // welch_psd.h
 #ifndef TYPE_HANN_WIND
 #define TYPE_HANN_WIND real_t
 #endif
-#define NPERSEG 900     // number of samples in each window of the welch method
-#define NOVERLAP 450    // number of overlapping samples between subsequent windows
+#define NPERSEG 900  // number of samples in each window of the welch method
+#define NOVERLAP 450 // number of overlapping samples between subsequent windows
 // 900 values * 4 bytes = 3600 bytes
 extern const TYPE_HANN_WIND DINTL1 hann_window[NPERSEG];
 

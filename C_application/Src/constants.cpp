@@ -26692,7 +26692,7 @@ const int16_t FLASH0 imu_feat_comp_src[IMU_N_TREES][IMU_MAX_NODES] = {
 //////////////////////////////////////////////////////////////////////////////////////
 // constants.h (dct_lin.h)
 #if defined(LPOS_MODE) && POSIT_SIZE == 32
-const TYPE_DCT_COS FLASH1 dct_cos[16384] = {
+const Posit FLASH1 dct_cos[16384] = {
     POS(1073741824U),
     POS(1073741824U),
     POS(1073741824U),
@@ -59538,7 +59538,7 @@ const int16_t mel_nz_indexes[MEL_ROWS][2] = {
 	{951, 1024}
 };
 #if defined(LPOS_MODE) && POSIT_SIZE == 32
-const TYPE_MEL_BASIS DINTL1 mel_basis[MEL_ROWS][MAX_NZ_ELEMS] = {
+const Posit DINTL1 mel_basis[MEL_ROWS][MAX_NZ_ELEMS] = {
     {POS(252920508U), POS(304514424U), POS(345826328U), POS(371623288U), POS(397420248U), POS(412935192U), POS(425833672U), POS(438732152U), POS(451630632U), POS(444736168U), POS(431837688U), POS(418939208U), POS(406040728U), POS(383631320U), POS(357834360U), POS(328530488U), POS(276936568U), POS(215804276U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), },
     {POS(240912480U), POS(292506400U), POS(339822320U), POS(365619272U), POS(391416240U), POS(409933184U), POS(422831672U), POS(435730144U), POS(448628624U), POS(447738176U), POS(434839696U), POS(421941216U), POS(409042736U), POS(389635336U), POS(363838376U), POS(338041416U), POS(288944600U), POS(237350680U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), },
     {POS(222927880U), POS(280498368U), POS(332092288U), POS(359615264U), POS(385412216U), POS(406931184U), POS(419829664U), POS(432728136U), POS(445626624U), POS(450740184U), POS(437841704U), POS(424943224U), POS(412044744U), POS(395639352U), POS(369842384U), POS(344045432U), POS(300952624U), POS(249358708U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), POS(0U), },
@@ -61742,7 +61742,7 @@ const TYPE_MEL_BASIS DINTL1 mel_basis[MEL_ROWS][MAX_NZ_ELEMS] = {
 //////////////////////////////////////////////////////////////////////////////////////
 // constants.h (mfcc_hann_wind.h)
 #if defined(LPOS_MODE) && POSIT_SIZE == 32
-const TYPE_HANN_MFCC_WIND DINTL1 hann_mfcc_wind[HANN_SIZE] = {
+const Posit DINTL1 hann_mfcc_wind[HANN_SIZE] = {
     POS(0U),
     POS(43903454U),
     POS(60680646U),
@@ -63793,7 +63793,8 @@ const TYPE_HANN_MFCC_WIND DINTL1 hann_mfcc_wind[HANN_SIZE] = {
     POS(43903454U),
 };
 #else
-const TYPE_HANN_MFCC_WIND DINTL1 hann_mfcc_wind[HANN_SIZE] = {
+template <RealType T>
+const T DINTL1 hann_mfcc_wind[HANN_SIZE] = {
     0.0,
     2.35309521190441e-06,
     9.412358699445456e-06,
@@ -65843,6 +65844,12 @@ const TYPE_HANN_MFCC_WIND DINTL1 hann_mfcc_wind[HANN_SIZE] = {
     9.412358699445456e-06,
     2.35309521190441e-06
 };
+
+template const real_t DINTL1 hann_mfcc_wind<real_t>[HANN_SIZE];
+#ifdef UPOS_MODE
+template const mreal_t DINTL1 hann_mfcc_wind<mreal_t>[HANN_SIZE];
+template const sreal_t DINTL1 hann_mfcc_wind<sreal_t>[HANN_SIZE];
+#endif
 #endif
 // constants.h (mfcc_hann_wind.h)
 //////////////////////////////////////////////////////////////////////////////////////
@@ -65850,7 +65857,7 @@ const TYPE_HANN_MFCC_WIND DINTL1 hann_mfcc_wind[HANN_SIZE] = {
 //////////////////////////////////////////////////////////////////////////////////////
 // constants.h (welch_psd.h)
 #if defined(LPOS_MODE) && POSIT_SIZE == 32
-const TYPE_HANN_WIND DINTL1 hann_window[NPERSEG] = {
+const Posit DINTL1 hann_window[NPERSEG] = {
     POS(0U),
     POS(63728809U),
     POS(93902860U),

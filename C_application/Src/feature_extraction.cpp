@@ -203,25 +203,25 @@ void fft_based_features(const int8_t *features_selector, const real_t *sig, int1
 
     if(features_selector[SPECTRAL_DECREASE]){
         real_t spectral_decrease = wrapper_compute_spec_decrease(magnitudes, frequencies, (len/2)+1, sum_mags);
-        PA_LOG("audio", "spectral_decrease", spectral_decrease);
+        PA_LOG("audio_fft", "spectral_decrease", spectral_decrease);
         feats[SPECTRAL_DECREASE] = spectral_decrease;
     }
 
     if(features_selector[SPECTRAL_SLOPE]){
         real_t spectral_slope = wrapper_compute_spectral_slope(magnitudes, frequencies, (len/2)+1, sum_mags);
-        PA_LOG("audio", "spectral_slope", spectral_slope);
+        PA_LOG("audio_fft", "spectral_slope", spectral_slope);
         feats[SPECTRAL_SLOPE] = spectral_slope;
     }
 
     if(features_selector[SPECTRAL_ROLLOFF]){
         real_t spectral_rolloff = wrapper_compute_rolloff(magnitudes, frequencies, (len/2)+1, sum_mags);
-        PA_LOG("audio", "spectral_rolloff", spectral_rolloff);
+        PA_LOG("audio_fft", "spectral_rolloff", spectral_rolloff);
         feats[SPECTRAL_ROLLOFF] = spectral_rolloff;
     }
 
     if(is_required(features_selector, SPECTRAL_CENTROID, SPECTRAL_SKEW)){
         real_t spectral_cetroid = wrapper_compute_centroid(magnitudes, frequencies, (len/2)+1, sum_mags);
-        PA_LOG("audio", "spectral_cetroid", spectral_cetroid);
+        PA_LOG("audio_fft", "spectral_cetroid", spectral_cetroid);
 
         if(features_selector[SPECTRAL_CENTROID]){
             feats[SPECTRAL_CENTROID] = spectral_cetroid;
@@ -229,7 +229,7 @@ void fft_based_features(const int8_t *features_selector, const real_t *sig, int1
 
         if(is_required(features_selector, SPECTRAL_SPREAD, SPECTRAL_SKEW)){
             real_t spectral_spread = wrapper_compute_spread(magnitudes, frequencies, (len/2)+1, sum_mags, spectral_cetroid);
-            PA_LOG("audio", "spectral_spread", spectral_spread);
+            PA_LOG("audio_fft", "spectral_spread", spectral_spread);
 
             if(features_selector[SPECTRAL_SPREAD]){
                 feats[SPECTRAL_SPREAD] = spectral_spread;
@@ -237,13 +237,13 @@ void fft_based_features(const int8_t *features_selector, const real_t *sig, int1
 
             if(features_selector[SPECTRAL_KURTOSIS]){
                 real_t kurt = wrapper_compute_kurt(magnitudes, frequencies, (len/2)+1, sum_mags, spectral_cetroid, spectral_spread);
-                PA_LOG("audio", "spectral_kurt", kurt);
+                PA_LOG("audio_fft", "spectral_kurt", kurt);
                 feats[SPECTRAL_KURTOSIS] = kurt;
             }
 
             if(features_selector[SPECTRAL_SKEW]){
                 real_t skew = wrapper_compute_skew(magnitudes, frequencies, (len/2)+1, sum_mags, spectral_cetroid, spectral_spread);
-                PA_LOG("audio", "spectral_skew", skew);
+                PA_LOG("audio_fft", "spectral_skew", skew);
                 feats[SPECTRAL_SKEW] = skew;
             }
         }
@@ -274,34 +274,39 @@ void periodogram_based_features(const int8_t *features_selector, const real_t *s
         return;
     }
 
-    compute_periodogram(sig, len, fs, psd, freqs);
+    wrapper_compute_periodogram(sig, len, fs, psd, freqs);
 
     if(features_selector[SPECTRAL_FLATNESS]){
-       real_t spectral_flatness = compute_flatness(psd, psd_size);
+       real_t spectral_flatness = wrapper_compute_flatness(psd, psd_size);
+       PA_LOG("audio_periodogram", "spectral_flatness", spectral_flatness);
        feats[SPECTRAL_FLATNESS] = spectral_flatness;
     }
 
     if(features_selector[SPECTRAL_STD]){
-        real_t spectral_std = compute_std(psd, psd_size);
+        real_t spectral_std = wrapper_compute_std(psd, psd_size);
+        PA_LOG("audio_periodogram", "spectral_std", spectral_std);
         feats[SPECTRAL_STD] = spectral_std;
     }
 
 
     if(features_selector[SPECTRAL_ENTROPY]){
-        real_t spectral_entr = compute_spectral_entropy(psd, psd_size);
+        real_t spectral_entr = wrapper_compute_spectral_entropy(psd, psd_size);
+        PA_LOG("audio_periodogram", "spectral_entropy", spectral_entr);
         feats[SPECTRAL_ENTROPY] = spectral_entr;
     }
 
 
     if(features_selector[DOMINANT_FREQUENCY]){
-        real_t dominant_freq = get_domiant_freq(psd, freqs, psd_size);
+        real_t dominant_freq = wrapper_get_domiant_freq(psd, freqs, psd_size);
+        PA_LOG("audio_periodogram", "dominant_freq", dominant_freq);
         feats[DOMINANT_FREQUENCY] = dominant_freq;
     }
 
     if(is_required(features_selector, POWER_SPECTRAL_DENSITY, POWER_SPECTRAL_DENSITY + N_PSD - 1)){
         real_t *band_powers = (real_t*)malloc(N_PSD * sizeof(real_t));
-        normalized_bandpowers(psd, freqs, psd_size, &features_selector[POWER_SPECTRAL_DENSITY], band_powers);
+        wrapper_normalized_bandpowers(psd, freqs, psd_size, &features_selector[POWER_SPECTRAL_DENSITY], band_powers);
         for(int8_t i=0; i<N_PSD; i++){
+            PA_LOG("audio_periodogram", "band_powers", band_powers[i]);
             feats[POWER_SPECTRAL_DENSITY + i] = band_powers[i];
         }
 
@@ -321,10 +326,12 @@ void mfcc_features(const int8_t *features_selector, const real_t *sig, int16_t l
 
         real_t *mean_mfcc = (real_t*)malloc(N_MFCC * sizeof(real_t));
         real_t *std_mfcc = (real_t*)malloc(N_MFCC * sizeof(real_t));
-        get_mfcc_features(sig, len, mean_mfcc, std_mfcc);
+        wrapper_get_mfcc_features(sig, len, mean_mfcc, std_mfcc);
 
         // stores first the mean and then the std, one after the other
         for(int16_t i=0; i<N_MFCC; i++){
+            PA_LOG("audio_mfcc", "mean_mfcc", mean_mfcc[i]);
+            PA_LOG("audio_mfcc", "std_mfcc", std_mfcc[i]);
             feats[MEL_FREQUENCY_CEPSTRAL_COEFFICIENT + i] = mean_mfcc[i];
             feats[MEL_FREQUENCY_CEPSTRAL_COEFFICIENT + N_MFCC + i] = std_mfcc[i];
         }
@@ -368,12 +375,16 @@ void mel_spectrogram_features(const int8_t *features_selector, const real_t *sig
         real_t *max_mel_spectr = (real_t*)malloc(n_mels_needed * sizeof(real_t));
         real_t *entropy_mel_spectr = (real_t*)malloc(n_mels_needed * sizeof(real_t));
 
-        get_mel_spectrogram_features(sig, len, idxs_needed, n_mels_needed, mean_mel_spectr, std_mel_spectr, max_mel_spectr, entropy_mel_spectr);
+        wrapper_get_mel_spectrogram_features(sig, len, idxs_needed, n_mels_needed, mean_mel_spectr, std_mel_spectr, max_mel_spectr, entropy_mel_spectr);
 
         // stores first the mean, the std, the max and the entropy, one after the other
         int idx = 0;
         for(int16_t i=0; i<N_MFCC; i++){
             if(i == idxs_needed[idx]){  // Only if the feature is one of the needed ones
+                PA_LOG("audio_mel", "mean_mel_spectr", mean_mel_spectr[idx]);
+                PA_LOG("audio_mel", "std_mel_spectr", std_mel_spectr[idx]);
+                PA_LOG("audio_mel", "max_mel_spectr", max_mel_spectr[idx]);
+                PA_LOG("audio_mel", "entropy_mel_spectr", entropy_mel_spectr[idx]);
                 feats[MEL_FREQUENCY_CEPSTRAL_COEFFICIENT + i] = mean_mel_spectr[idx];
                 feats[MEL_FREQUENCY_CEPSTRAL_COEFFICIENT + N_MFCC + i] = std_mel_spectr[idx];
                 feats[MEL_FREQUENCY_CEPSTRAL_COEFFICIENT + (2*N_MFCC) + i] = max_mel_spectr[idx];

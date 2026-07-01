@@ -6,6 +6,8 @@ The default build produces a `build/cough-e` executable. It can be compiled eith
 
 **NOTE**: Fixed point is BROKEN while adding precision analysis. This is due to changes in `kiss-fftr` where all functions were migrated to C++ templates. To fix the problem, relevant fixed point functions must be updated to select correct type when calling `kiss-fftr` functions.
 
+**NOTE**: `g++` is BROKEN while using templated constant values with external linkage, such as `hann_mfcc_wind`. We get "explicit instantiation but no definition available" when compiling `constants.cpp`. This issue does not exist on `clang++`.
+
 #### Folder structure
 
 The `Inc` folder contains the public headers for the floating-point feature extractors, model stages, post-processing, and application configuration.

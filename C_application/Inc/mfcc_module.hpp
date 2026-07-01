@@ -66,7 +66,7 @@ template <RealType T> void stft(const T *x, int16_t len, int16_t n_frames, T *re
         }
 
         // apply the Hann window
-        vect_mult(column, hann_mfcc_wind, N_FFT, column);
+        vect_mult(column, hann_mfcc_wind<T>, N_FFT, column);
 
         RA_LOG_ARRAY("AUDIO_MEL", "stft", "windowed_frame", column, N_FFT);
 

@@ -1,5 +1,5 @@
 
-CC 			=	ccache g++
+CC 			=	ccache clang++
 APP 		= 	cough-e
 BUILD_DIR 	= 	build
 .DEFAULT_GOAL = all
@@ -23,7 +23,6 @@ TWIDDLE_Q15 = kiss_fftr/twiddles_win08_fs8000_q15.h
 TWIDDLE_Q31 = kiss_fftr/twiddles_win08_fs8000_q31.h
 
 MATH        =    -lm
-CFLAGS      +=   -Wall -O3 -g
 
 COMP_STRING = 	" |++++++++++++++++++++++++++++++++|\n"
 COMP_STRING +=  "|            Cough-E             |\n"
@@ -47,16 +46,16 @@ $(CFLAGS_MARKER):
 	@echo "$(CFLAGS)" > $@
 
 $(BUILD_DIR)/$(APP): $(OBJS)
-	$(CC) -o $@ $(OBJS) $(MATH) $(CFLAGS)
+	$(CC) -o $@ $(OBJS) $(MATH) $(CFLAGS) -O3 -g -std=c++20 -stdlib=libc++
 	@echo -e $(COMP_STRING)
 
 $(BUILD_DIR)/%.o: %.cpp $(CFLAGS_MARKER)
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) $(INC) -c $< -o $@
+	$(CC) $(CFLAGS) -O3 -g -std=c++20 -stdlib=libc++ $(INC) -c $< -o $@
 
 $(BUILD_DIR)/%.o: %.c $(CFLAGS_MARKER)
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) $(INC) -c $< -o $@
+	$(CC) $(CFLAGS) -O3 -g -std=c++20 -stdlib=libc++ $(INC) -c $< -o $@
 
 run: all
 	@echo $(EXEC_STRING)
