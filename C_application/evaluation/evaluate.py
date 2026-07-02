@@ -1,25 +1,7 @@
-"""
-Evaluation pipeline for the Cough-E C application.
-
-Pipeline per recording:
-  1. Generate C header files (via transform_dataset.py)
-  2. Update main.h includes to point to the generated headers
-  3. Compile the C application
-  4. Run the C application and capture output
-  5. Parse COUGH_SEG lines to get detected cough segment boundaries
-  6. Compare with ground truth using event-based scoring (timescoring)
-
-Usage:
-    python C_application/evaluation/evaluate.py
-    python C_application/evaluation/evaluate.py -j 4
-    python C_application/evaluation/evaluate.py --mode fxp -j 8
-    python C_application/evaluation/evaluate.py --mode fxp --twiddle 32
-    python C_application/evaluation/evaluate.py --mode fxp-error
-"""
-
 import argparse
 import concurrent.futures
 import csv
+import glob
 import hashlib
 import json
 import os
@@ -32,6 +14,7 @@ import tempfile
 from datetime import datetime
 
 import numpy as np
+from numpy._core.strings import startswith
 
 try:
     from timescoring.annotations import Annotation
@@ -121,12 +104,12 @@ def update_main_h(ws_path, audio_relpath, imu_relpath, bio_relpath):
 #  Compile & run
 # ──────────────────────────────────────────────
 
-def compile_c_app(ws_path, extra_flags=""):
+def compile_c_app(ws_path, app_name, extra_flags=""):
     """Compile the C application with EVALUATION_MODE enabled in the workspace."""
     flags = "-DEVALUATION_MODE"
     if extra_flags:
         flags += " " + extra_flags
-    result = subprocess.run(["nice", "-n", "19", "make", "-C", ws_path, f"CFLAGS={flags}"],
+    result = subprocess.run(["nice", "-n", "19", "make", "-C", ws_path, f"CFLAGS={flags}", f"APP={app_name}", "-j"],
                             capture_output=True, text=True)
     if result.returncode != 0:
         print(f"  Compilation failed: {result.stderr}")
@@ -134,9 +117,9 @@ def compile_c_app(ws_path, extra_flags=""):
     return True
 
 
-def run_c_app(ws_path):
+def run_c_app(ws_path, app_name):
     """Run the compiled C application from the workspace and return stdout."""
-    executable = os.path.join(ws_path, "build", "cough-e")
+    executable = os.path.join(ws_path, "build", app_name)
     try:
         result = subprocess.run(["nice", "-n", "19", executable], capture_output=True, text=True, timeout=300)
     except subprocess.TimeoutExpired:
@@ -277,11 +260,13 @@ def evaluate_recording_isolated(subj_id, trial, mov, noise, sound,
 
     update_main_h(ws_path, audio_relpath, imu_relpath, bio_relpath)
 
-    if not compile_c_app(ws_path, extra_flags=extra_flags):
+    app_name = f"cough-e-{subj_id}-t{trial}-{mov}-{noise}-{sound}"
+
+    if not compile_c_app(ws_path, app_name, extra_flags=extra_flags):
         print(f"  FAILED to compile for {suffix}")
         raise EvaluationError(f"C application compile failed for {suffix}")
 
-    output = run_c_app(ws_path)
+    output = run_c_app(ws_path, app_name)
     if not output:
         raise EvaluationError(f"C application produced no output (or timed out) for {suffix}")
 
@@ -299,13 +284,20 @@ def evaluate_recording_isolated(subj_id, trial, mov, noise, sound,
         "duration": duration,
     })
 
+    if "-DPRECISION_ANALYSIS" in extra_flags:
+        # append so we get result for same subject on different precision setup
+        open(f"{C_APP_DIR}/precision_analysis/results/{subj_id}_t{trial}_{mov}_{noise}_{sound}.log", "a")\
+            .write("\n".join([x for x in output.split("\n") if x.startswith("PRECISION")]))
+
     return scores
 
 
-def _worker_task(task_args, dataset_path, workspaces, extra_flags):
+def _worker_task(task_args, dataset_path, workspaces, log_pa, extra_flags):
     subj_id, trial, mov, noise, sound = task_args
     ws_path = workspaces.get()
     try:
+        if log_pa:
+            extra_flags += f" -DPRECISION_ANALYSIS"
         return evaluate_recording_isolated(
             subj_id, trial, mov, noise, sound,
             dataset_path, ws_path, extra_flags
@@ -340,7 +332,7 @@ def iter_existing_recordings(dataset_path):
     return recordings
 
 
-def evaluate_subjects(dataset_path, jobs=1, extra_flags=""):
+def evaluate_subjects(dataset_path, log_pa=False, jobs=1, extra_flags="", reuse_tmp_workers=False):
     all_results = []
     recordings = iter_existing_recordings(dataset_path)
     print(f"Expected recordings: {len(recordings)}")
@@ -348,17 +340,36 @@ def evaluate_subjects(dataset_path, jobs=1, extra_flags=""):
     temp_dirs = []
     workspaces = queue.Queue()
 
+    shared_build_dir = os.path.join(C_APP_DIR, "build")
+    os.makedirs(shared_build_dir, exist_ok=True)
+
     print(f"\nSetting up {jobs} isolated workspaces in /tmp...")
     try:
         for i in range(jobs):
-            ws_path = tempfile.mkdtemp(dir="/tmp", prefix=f"cough_e_eval_worker_{i}_")
+            ws_path = None
+            if reuse_tmp_workers:
+                pattern = os.path.join("/tmp", f"cough_e_eval_worker_{i}_*")
+                existing = glob.glob(pattern)
+                if existing and os.path.isdir(existing[0]):
+                    ws_path = existing[0]
+                    print(f"Reusing existing workspace: {ws_path}")
 
-            shutil.copytree(
-                C_APP_DIR,
-                ws_path,
-                dirs_exist_ok=True,
-                ignore=shutil.ignore_patterns('.*', 'evaluation', 'input_data')
-            )
+            if ws_path is None:
+                ws_path = tempfile.mkdtemp(dir="/tmp", prefix=f"cough_e_eval_worker_{i}_")
+                shutil.copytree(
+                    C_APP_DIR,
+                    ws_path,
+                    dirs_exist_ok=True,
+                    ignore=shutil.ignore_patterns('.*', 'evaluation', 'input_data', 'build')
+                )
+
+            ws_build_dir = os.path.join(ws_path, "build")
+            if os.path.exists(ws_build_dir) or os.path.islink(ws_build_dir):
+                if os.path.isdir(ws_build_dir) and not os.path.islink(ws_build_dir):
+                    shutil.rmtree(ws_build_dir)
+                else:
+                    os.unlink(ws_build_dir)
+            os.symlink(shared_build_dir, ws_build_dir)
 
             ws_input_data = os.path.join(ws_path, "input_data")
             os.makedirs(ws_input_data, exist_ok=True)
@@ -369,36 +380,66 @@ def evaluate_subjects(dataset_path, jobs=1, extra_flags=""):
                     main_item_path = os.path.join(main_input_data, item)
                     if os.path.isdir(main_item_path) and not item.startswith('.'):
                         ws_item_path = os.path.join(ws_input_data, item)
+                        if os.path.exists(ws_item_path) or os.path.islink(ws_item_path):
+                            if os.path.islink(ws_item_path):
+                                os.unlink(ws_item_path)
+                            else:
+                                shutil.rmtree(ws_item_path)
                         os.symlink(main_item_path, ws_item_path)
 
             workspaces.put(ws_path)
             temp_dirs.append(ws_path)
 
-        print(f"Beginning parallel evaluation of {len(recordings)} recordings...")
-        with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as executor:
-            future_to_rec = {
-                executor.submit(_worker_task, rec, dataset_path, workspaces, extra_flags): rec
-                for rec in recordings
-            }
+        if recordings:
+            first_rec = recordings[0]
 
-            for future in concurrent.futures.as_completed(future_to_rec):
-                rec = future_to_rec[future]
-                subj_id, trial, mov, noise, sound = rec
-                rec_id = f"t{trial}_{mov}_{noise}_{sound}"
+            print(f"Compiling for first recording to build objects...")
+            subj_id, trial, mov, noise, sound = first_rec
+            ws_path = workspaces.get()
+            try:
+                input_data_dir = os.path.join(ws_path, "input_data")
+                res = transform_recording(subj_id, trial, mov, noise, sound, dataset_path, input_data_dir)
+                if res is not None:
+                    suffix, audio_relpath, imu_relpath, bio_relpath = res
+                    update_main_h(ws_path, audio_relpath, imu_relpath, bio_relpath)
+                    app_name = f"cough-e-{subj_id}-t{trial}-{mov}-{noise}-{sound}"
+                    flags = extra_flags
+                    if log_pa:
+                        flags += " -DPRECISION_ANALYSIS"
+                    compile_c_app(ws_path, app_name, extra_flags=flags)
+            except Exception as exc:
+                print(f"  [{subj_id}] Pre-compilation generated an exception: {exc}")
+            finally:
+                workspaces.put(ws_path)
 
-                try:
-                    result = future.result()
-                    if result is not None:
-                        all_results.append(result)
-                        print(f"  [{subj_id}] {rec_id}: TP_evt={result['tp_evt']} "
-                              f"FP_evt={result['fp_evt']} FN_evt={result['fn_evt']}")
-                except Exception as exc:
-                    print(f"  [{subj_id}] {rec_id} generated an exception: {exc}")
+            print(f"Beginning parallel evaluation of all {len(recordings)} recordings...")
+            with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as executor:
+                future_to_rec = {
+                    executor.submit(_worker_task, rec, dataset_path, workspaces, log_pa, extra_flags): rec
+                    for rec in recordings
+                }
+
+                for future in concurrent.futures.as_completed(future_to_rec):
+                    rec = future_to_rec[future]
+                    subj_id, trial, mov, noise, sound = rec
+                    rec_id = f"t{trial}_{mov}_{noise}_{sound}"
+
+                    try:
+                        result = future.result()
+                        if result is not None:
+                            all_results.append(result)
+                            print(f"  [{subj_id}] {rec_id}: TP_evt={result['tp_evt']} "
+                                  f"FP_evt={result['fp_evt']} FN_evt={result['fn_evt']}")
+                    except Exception as exc:
+                        print(f"  [{subj_id}] {rec_id} generated an exception: {exc}")
 
     finally:
-        print("\nCleaning up workspaces...")
-        for d in temp_dirs:
-            shutil.rmtree(d, ignore_errors=True)
+        if not reuse_tmp_workers:
+            print("\nCleaning up workspaces...")
+            for d in temp_dirs:
+                shutil.rmtree(d, ignore_errors=True)
+        else:
+            print("\nPreserving workspaces as requested.")
 
     if len(all_results) != len(recordings):
         print(f"WARNING Unreliable result: processed {len(all_results)} of {len(recordings)} expected recordings")
@@ -807,15 +848,15 @@ def _compile_flags_for_mode(mode, twiddle):
     return f"-DFXP_MODE -DFIXED_POINT={twiddle}"
 
 
-def _run_mode_eval(mode, twiddle, jobs):
-    compile_flags = _compile_flags_for_mode(mode, twiddle)
+def _run_mode_eval(mode, twiddle, log_pa, cflags, jobs, reuse_tmp_workers=False):
+    compile_flags = _compile_flags_for_mode(mode, twiddle) + f" {cflags}"
 
     if mode == "float":
         print("Using float mode compile flags")
     else:
         print(f"Using {mode} mode compile flags: {compile_flags}")
 
-    results = evaluate_subjects(DEFAULT_DATASET_PATH, jobs=jobs, extra_flags=compile_flags)
+    results = evaluate_subjects(DEFAULT_DATASET_PATH, log_pa=log_pa, jobs=jobs, extra_flags=compile_flags, reuse_tmp_workers=reuse_tmp_workers)
     if not results:
         print("No recordings processed. Check the default dataset path.")
         sys.exit(1)
@@ -845,8 +886,12 @@ def main(argv=None):
                         help="KissFFT twiddle precision (FxP audio uses 32-bit KissFFT)")
     parser.add_argument("--fxp-block", choices=FXP_BLOCKS,
                         help="run mixed float/FxP ML metrics with only this feature block replaced by FxP outputs")
+    parser.add_argument("--log-pa", action="store_true", help="Produce precision analysis log")
+    parser.add_argument("--cflags", type=str, default="", help="Extra CFLAGS at compilation")
     parser.add_argument("-j", "--jobs", type=int, default=1,
                         help="Number of threads for parallel evaluation (default: 1)")
+    parser.add_argument("--reuse-tmp-workers", action="store_true",
+                        help="Reuse temporary worker workspaces")
 
     args = parser.parse_args(argv)
     try:
@@ -857,7 +902,7 @@ def main(argv=None):
         elif args.mode == "fxp-error":
             _evaluate_fxp_errors(DEFAULT_DATASET_PATH, args.twiddle)
         else:
-            _run_mode_eval(args.mode, args.twiddle, args.jobs)
+            _run_mode_eval(args.mode, args.twiddle, args.log_pa, args.cflags, args.jobs, args.reuse_tmp_workers)
     except EvaluationError as exc:
         print(f"\nEvaluation aborted: {exc}", file=sys.stderr)
         sys.exit(1)

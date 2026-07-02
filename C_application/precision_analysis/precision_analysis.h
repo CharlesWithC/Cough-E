@@ -84,7 +84,7 @@ struct VariableConverter<Target, Src, std::enable_if_t<std::is_pointer_v<Src>>> 
 #ifdef PRECISION_ANALYSIS
 #define PA_LOG(category, name, value)                                                                                  \
     printf("PRECISION|%04X%04X%04X|%s|%s|%f\n", (unsigned int)(PRECISION_CTRL1), (unsigned int)(PRECISION_CTRL2),      \
-           (unsigned int)(PRECISION_CTRL3), (category), (name), (float)(value))
+           (unsigned int)(PRECISION_CTRL3), (category), (name), (float)(value));
 #else
 #define PA_LOG(category, name, value) ((void)0)
 #endif
