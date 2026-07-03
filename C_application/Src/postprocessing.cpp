@@ -403,13 +403,13 @@ static audio_sample_t *_downsample(const audio_sample_t *sig, int16_t len, int16
     return res;
 }
 
-void _get_cough_peaks(const audio_sample_t *seg,
+void _get_cough_peaks(const postproc_peak_t *seg,
                       int16_t len,
                       int16_t fs,
                       uint16_t *starts,
                       uint16_t *ends,
                       uint16_t *peaks_locs,
-                      audio_feat_t *peaks_amps,
+                      postproc_peak_t *peaks_amps,
                       uint16_t *new_added)
 {
     RA_LOG_ARRAY("POSTPROC", "_get_cough_peaks", "seg_input", seg, len);
@@ -508,7 +508,7 @@ void _get_cough_peaks(const audio_sample_t *seg,
 uint16_t _clean_cough_segments(uint16_t *starts_idxs,
                                uint16_t *ends_idxs,
                                uint16_t *peaks_locs,
-                               real_t *peaks,
+                               postproc_peak_t *peaks,
                                uint16_t n_peaks,
                                uint16_t fs)
 {

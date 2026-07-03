@@ -1,11 +1,14 @@
-
-CC 			=	clang++
+CC 			=	ccache clang++
 APP 		= 	cough-e
 BUILD_DIR 	= 	build
+OBJ_DIR		=	$(BUILD_DIR)/obj
 .DEFAULT_GOAL = all
 
 SRC_DIRS 	= 	Src kiss_fftr FxP/imu FxP/audio
 SRC 		= 	$(foreach c, $(SRC_DIRS), $(wildcard $c/*.c*))
+OBJ			=	$(SRC:%=$(OBJ_DIR)/%.o)
+MAIN_OBJ	=	$(OBJ_DIR)/main.cpp.o
+DEPS		=	$(OBJ:.o=.d) $(MAIN_OBJ:.o=.d)
 
 INC_DIRS 	= 	Inc FxP universal/include/sw libposit/include ./ kiss_fftr precision_analysis range_analysis
 INC 		= 	$(foreach d, $(INC_DIRS), -I$d)
@@ -15,6 +18,8 @@ TWIDDLE_Q15 = kiss_fftr/twiddles_win08_fs8000_q15.h
 TWIDDLE_Q31 = kiss_fftr/twiddles_win08_fs8000_q31.h
 
 MATH        =    -lm
+
+CXXFLAGS	=	-Wall -O3 -g -std=c++20 -stdlib=libc++ -MMD -MP $(INC) $(CFLAGS)
 
 COMP_STRING = 	" |++++++++++++++++++++++++++++++++|\n"
 COMP_STRING +=  "|            Cough-E             |\n"
@@ -28,19 +33,33 @@ COMP_STRING += 	"|           \      /             |\n"
 COMP_STRING += 	"|            '----'              |\n"
 COMP_STRING += 	"|++++++++++++++++++++++++++++++++|\n"
 
-# @echo "Compilation terminated successfully! ☕\n"
-# @echo "Running with command:"
-
-
 EXEC_STRING =	" |++++++++++++++++++++++++++++++++|\n"
 EXEC_STRING +=	"|     Start of execution...      |\n"
 EXEC_STRING +=	"|++++++++++++++++++++++++++++++++|\n"
 
 
-all: $(TWIDDLE_Q15) $(TWIDDLE_Q31)
-	@mkdir -p $(BUILD_DIR)
-	$(CC) -Wall -o $(BUILD_DIR)/$(APP) main.cpp $(SRC) $(INC) $(MATH) -O3 -g -std=c++20 -stdlib=libc++ $(CFLAGS)
+all: $(TWIDDLE_Q15) $(TWIDDLE_Q31) $(BUILD_DIR)/$(APP)
 	@echo -e $(COMP_STRING)
+
+$(BUILD_DIR)/$(APP): $(MAIN_OBJ) $(OBJ)
+	@mkdir -p $(BUILD_DIR)
+	$(CC) -Wall -o $@ $^ $(MATH) -O3 -g -std=c++20 -stdlib=libc++ $(CFLAGS)
+
+$(MAIN_OBJ): main.cpp
+	@mkdir -p $(dir $@)
+	$(CC) $(CXXFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/%.o: % $(OBJ_DIR)/.cxxflags
+	@mkdir -p $(dir $@)
+	$(CC) $(CXXFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/.cxxflags: FORCE
+	@mkdir -p $(dir $@)
+	@echo '$(CXXFLAGS)' | cmp -s - $@ || echo '$(CXXFLAGS)' > $@
+
+FORCE:
+
+-include $(DEPS)
 
 run: all
 	@echo $(EXEC_STRING)

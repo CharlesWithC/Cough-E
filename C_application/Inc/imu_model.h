@@ -61,7 +61,7 @@ static const uint8_t imu_model_feature_frac[35] = {
  * Returns the model confidence for the current window to be COUGH
  */
 #ifndef FXP_MODE
-imu_score_t imu_predict(imu_feat_t *feat);
+imu_score_t imu_predict(imu_feat_t *feats);
 #endif
 
 /**

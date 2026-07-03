@@ -126,7 +126,7 @@ def compile_c_app(ws_path, extra_flags=""):
     flags = "-DEVALUATION_MODE"
     if extra_flags:
         flags += " " + extra_flags
-    result = subprocess.run(["nice", "-n", "19", "make", "-C", ws_path, f"CFLAGS={flags}"],
+    result = subprocess.run(["nice", "-n", "19", "make", "-C", ws_path, f"CFLAGS={flags}", "-j8"],
                             capture_output=True, text=True)
     if result.returncode != 0:
         print(f"  Compilation failed: {result.stderr}")
@@ -138,7 +138,7 @@ def run_c_app(ws_path):
     """Run the compiled C application from the workspace and return stdout."""
     executable = os.path.join(ws_path, "build", "cough-e")
     try:
-        result = subprocess.run(["nice", "-n", "19", executable], capture_output=True, text=True, timeout=300)
+        result = subprocess.run(["nice", "-n", "9", executable], capture_output=True, text=True, timeout=300)
     except subprocess.TimeoutExpired:
         print("    WARNING: C app timed out after 300s (possible stuck)", flush=True)
         return ""
@@ -301,7 +301,8 @@ def evaluate_recording_isolated(subj_id, trial, mov, noise, sound,
 
     if "-DPRECISION_ANALYSIS" in extra_flags:
         # append so we get result for same subject on different precision setup
-        open(f"{C_APP_DIR}/precision_analysis/results/{subj_id}_t{trial}_{mov}_{noise}_{sound}.log", "a")\
+        output_dir = os.path.join(os.path.dirname(__file__), "precision_analysis")
+        open(os.path.join(output_dir, f"{subj_id}_t{trial}_{mov}_{noise}_{sound}.log"), "a")\
             .write("\n".join([x for x in output.split("\n") if x.startswith("PRECISION")]))
 
     return scores
@@ -347,7 +348,19 @@ def iter_existing_recordings(dataset_path):
     return recordings
 
 
-def evaluate_subjects(dataset_path, log_pa=False, jobs=1, extra_flags=""):
+def _validate_workspace(ws_path):
+    """List workspace contents and check the files needed to build/run are present."""
+    if not os.path.isdir(ws_path):
+        return False
+    try:
+        entries = set(os.listdir(ws_path))
+    except OSError:
+        return False
+    required = {"main.h", "Makefile", "input_data"}
+    return required.issubset(entries)
+
+
+def evaluate_subjects(dataset_path, log_pa=False, jobs=1, extra_flags="", reuse_workspace=False):
     all_results = []
     recordings = iter_existing_recordings(dataset_path)
     print(f"Expected recordings: {len(recordings)}")
@@ -355,31 +368,58 @@ def evaluate_subjects(dataset_path, log_pa=False, jobs=1, extra_flags=""):
     temp_dirs = []
     workspaces = queue.Queue()
 
-    print(f"\nSetting up {jobs} isolated workspaces in /tmp...")
+    print(f"\nSetting up {jobs} workspace(s) in /tmp...")
     try:
         for i in range(jobs):
-            ws_path = tempfile.mkdtemp(dir="/tmp", prefix=f"cough_e_eval_worker_{i}_")
+            if reuse_workspace:
+                ws_path = os.path.join("/tmp", f"cough_e_eval_worker_{i}")
+            else:
+                ws_path = tempfile.mkdtemp(dir="/tmp", prefix=f"cough_e_eval_worker_{i}_")
 
-            shutil.copytree(
-                C_APP_DIR,
-                ws_path,
-                dirs_exist_ok=True,
-                ignore=shutil.ignore_patterns('.*', 'evaluation', 'input_data')
-            )
+            if reuse_workspace and _validate_workspace(ws_path):
+                print(f"  Reusing existing workspace: {ws_path}")
+            else:
+                if reuse_workspace:
+                    print(f"  No valid existing workspace at {ws_path}, building fresh")
+                    os.makedirs(ws_path, exist_ok=True)
 
-            ws_input_data = os.path.join(ws_path, "input_data")
-            os.makedirs(ws_input_data, exist_ok=True)
+                shutil.copytree(
+                    C_APP_DIR,
+                    ws_path,
+                    dirs_exist_ok=True,
+                    ignore=shutil.ignore_patterns('.*', 'evaluation', 'input_data')
+                )
 
-            main_input_data = os.path.join(C_APP_DIR, "input_data")
-            if os.path.exists(main_input_data):
-                for item in os.listdir(main_input_data):
-                    main_item_path = os.path.join(main_input_data, item)
-                    if os.path.isdir(main_item_path) and not item.startswith('.'):
-                        ws_item_path = os.path.join(ws_input_data, item)
-                        os.symlink(main_item_path, ws_item_path)
+                ws_input_data = os.path.join(ws_path, "input_data")
+                os.makedirs(ws_input_data, exist_ok=True)
+
+                main_input_data = os.path.join(C_APP_DIR, "input_data")
+                if os.path.exists(main_input_data):
+                    for item in os.listdir(main_input_data):
+                        main_item_path = os.path.join(main_input_data, item)
+                        if os.path.isdir(main_item_path) and not item.startswith('.'):
+                            ws_item_path = os.path.join(ws_input_data, item)
+                            if not os.path.exists(ws_item_path):
+                                os.symlink(main_item_path, ws_item_path)
 
             workspaces.put(ws_path)
-            temp_dirs.append(ws_path)
+            if not reuse_workspace:
+                temp_dirs.append(ws_path)
+
+        if recordings:
+            warmup_ws = workspaces.get()
+            try:
+                print("\nWarming up ccache with a throwaway compile...")
+                subj_id, trial, mov, noise, sound = recordings[0]
+                warmup_input_data_dir = os.path.join(warmup_ws, "input_data")
+                warmup_result = transform_recording(subj_id, trial, mov, noise, sound,
+                                                     dataset_path, warmup_input_data_dir)
+                if warmup_result is not None:
+                    _, audio_relpath, imu_relpath, bio_relpath = warmup_result
+                    update_main_h(warmup_ws, audio_relpath, imu_relpath, bio_relpath)
+                    compile_c_app(warmup_ws, extra_flags=extra_flags)
+            finally:
+                workspaces.put(warmup_ws)
 
         print(f"Beginning parallel evaluation of {len(recordings)} recordings...")
         with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as executor:
@@ -403,9 +443,12 @@ def evaluate_subjects(dataset_path, log_pa=False, jobs=1, extra_flags=""):
                     print(f"  [{subj_id}] {rec_id} generated an exception: {exc}")
 
     finally:
-        print("\nCleaning up workspaces...")
-        for d in temp_dirs:
-            shutil.rmtree(d, ignore_errors=True)
+        if reuse_workspace:
+            print("\n--reuse-workspace enabled: leaving workspaces in place.")
+        else:
+            print("\nCleaning up workspaces...")
+            for d in temp_dirs:
+                shutil.rmtree(d, ignore_errors=True)
 
     if len(all_results) != len(recordings):
         print(f"WARNING Unreliable result: processed {len(all_results)} of {len(recordings)} expected recordings")
@@ -814,7 +857,7 @@ def _compile_flags_for_mode(mode, twiddle):
     return f"-DFXP_MODE -DFIXED_POINT={twiddle}"
 
 
-def _run_mode_eval(mode, twiddle, log_pa, cflags, jobs):
+def _run_mode_eval(mode, twiddle, log_pa, cflags, jobs, reuse_workspace):
     compile_flags = _compile_flags_for_mode(mode, twiddle) + f" {cflags}"
 
     if mode == "float":
@@ -822,7 +865,8 @@ def _run_mode_eval(mode, twiddle, log_pa, cflags, jobs):
     else:
         print(f"Using {mode} mode compile flags: {compile_flags}")
 
-    results = evaluate_subjects(DEFAULT_DATASET_PATH, log_pa=log_pa, jobs=jobs, extra_flags=compile_flags)
+    results = evaluate_subjects(DEFAULT_DATASET_PATH, log_pa=log_pa, jobs=jobs,
+                                extra_flags=compile_flags, reuse_workspace=reuse_workspace)
     if not results:
         print("No recordings processed. Check the default dataset path.")
         sys.exit(1)
@@ -856,8 +900,16 @@ def main(argv=None):
     parser.add_argument("--cflags", type=str, default="", help="Extra CFLAGS at compilation")
     parser.add_argument("-j", "--jobs", type=int, default=1,
                         help="Number of threads for parallel evaluation (default: 1)")
+    parser.add_argument("--reuse-workspace", action="store_true",
+                            help="Reuse existing /tmp workspace(s) from a prior run if valid, "
+                                 "and don't delete workspaces after running")
 
     args = parser.parse_args(argv)
+
+    if args.log_pa:
+        output_dir = os.path.join(os.path.dirname(__file__), "precision_analysis")
+        os.makedirs(output_dir, exist_ok=True)
+
     try:
         if args.fxp_block:
             if args.mode != "float":
@@ -866,7 +918,7 @@ def main(argv=None):
         elif args.mode == "fxp-error":
             _evaluate_fxp_errors(DEFAULT_DATASET_PATH, args.twiddle)
         else:
-            _run_mode_eval(args.mode, args.twiddle, args.log_pa, args.cflags, args.jobs)
+            _run_mode_eval(args.mode, args.twiddle, args.log_pa, args.cflags, args.jobs, args.reuse_workspace)
     except EvaluationError as exc:
         print(f"\nEvaluation aborted: {exc}", file=sys.stderr)
         sys.exit(1)

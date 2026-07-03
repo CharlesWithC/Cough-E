@@ -77,7 +77,7 @@ static const uint8_t audio_model_feature_frac[83] = {
  * @param *feat 	:	pointer to the features to be processed
  */
 #ifndef FXP_MODE
-audio_score_t audio_predict(audio_feat_t *feat);
+audio_score_t audio_predict(audio_feat_t *feats);
 #endif
 
 /**
