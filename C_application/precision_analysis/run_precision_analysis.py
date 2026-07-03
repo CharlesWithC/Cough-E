@@ -57,7 +57,7 @@ def main():
 
                     flags = f"-DPRECISION_CTRL1={ctrl_vals[0]} -DPRECISION_CTRL2={ctrl_vals[1]} -DPRECISION_CTRL3={ctrl_vals[2]}"
 
-                    cmd = ["python3", "../evaluation/evaluate.py", "--mode", "upos", "--cflags", flags, "--log-pa", "--reuse-tmp-workers", "-j", str(args.jobs)]
+                    cmd = ["python3", "../evaluation/evaluate.py", "--mode", "upos", "--cflags", flags, "--log-pa", "-j", str(args.jobs)]
                     subprocess.run(cmd, check=True)
 
                     with open("../evaluation/summary_upos.json", "r") as json_f:

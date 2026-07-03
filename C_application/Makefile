@@ -1,19 +1,11 @@
 
-CC 			=	ccache clang++
+CC 			=	clang++
 APP 		= 	cough-e
 BUILD_DIR 	= 	build
 .DEFAULT_GOAL = all
 
-CFLAGS_MARKER = $(BUILD_DIR)/.last_cflags
-ifneq ($(shell cat $(CFLAGS_MARKER) 2>/dev/null),$(CFLAGS))
-.PHONY: $(CFLAGS_MARKER)
-endif
-
-SRC_DIRS 	= 	Src kiss_fftr input_data FxP/imu FxP/audio
-SRC 		= 	main.cpp $(foreach c, $(SRC_DIRS), $(wildcard $c/*.c*))
-
-OBJS          = $(patsubst %.cpp, $(BUILD_DIR)/%.o, $(filter %.cpp, $(SRC)))
-OBJS         += $(patsubst %.c, $(BUILD_DIR)/%.o, $(filter %.c, $(SRC)))
+SRC_DIRS 	= 	Src kiss_fftr FxP/imu FxP/audio
+SRC 		= 	$(foreach c, $(SRC_DIRS), $(wildcard $c/*.c*))
 
 INC_DIRS 	= 	Inc FxP universal/include/sw libposit/include ./ kiss_fftr precision_analysis range_analysis
 INC 		= 	$(foreach d, $(INC_DIRS), -I$d)
@@ -39,23 +31,16 @@ COMP_STRING += 	"|++++++++++++++++++++++++++++++++|\n"
 # @echo "Compilation terminated successfully! ☕\n"
 # @echo "Running with command:"
 
-all: $(TWIDDLE_Q15) $(TWIDDLE_Q31) $(BUILD_DIR)/$(APP)
 
-$(CFLAGS_MARKER):
-	@mkdir -p $(dir $@)
-	@echo "$(CFLAGS)" > $@
+EXEC_STRING =	" |++++++++++++++++++++++++++++++++|\n"
+EXEC_STRING +=	"|     Start of execution...      |\n"
+EXEC_STRING +=	"|++++++++++++++++++++++++++++++++|\n"
 
-$(BUILD_DIR)/$(APP): $(OBJS)
-	$(CC) -o $@ $(OBJS) $(MATH) $(CFLAGS) -O3 -g -std=c++20 -stdlib=libc++
+
+all: $(TWIDDLE_Q15) $(TWIDDLE_Q31)
+	@mkdir -p $(BUILD_DIR)
+	$(CC) -Wall -o $(BUILD_DIR)/$(APP) main.cpp $(SRC) $(INC) $(MATH) -O3 -g -std=c++20 -stdlib=libc++ $(CFLAGS)
 	@echo -e $(COMP_STRING)
-
-$(BUILD_DIR)/%.o: %.cpp $(CFLAGS_MARKER)
-	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -O3 -g -std=c++20 -stdlib=libc++ $(INC) -c $< -o $@
-
-$(BUILD_DIR)/%.o: %.c $(CFLAGS_MARKER)
-	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -O3 -g -std=c++20 -stdlib=libc++ $(INC) -c $< -o $@
 
 run: all
 	@echo $(EXEC_STRING)
