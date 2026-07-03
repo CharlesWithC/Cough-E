@@ -65,7 +65,7 @@ void filtfilt(const T *sig, int len, const T *b, const T *a, const T *zi,
     // for the reverse filtering
     T *reverse = (T *)malloc(padded_len * sizeof(T));
     for (int i = 0; i < padded_len; i++) {
-        reverse[i] = (T)intermediate[padded_len - 1 - i];
+        reverse[i] = intermediate[padded_len - 1 - i];
     }
 
     initial[0] = zi[0] * T(reverse[0]);

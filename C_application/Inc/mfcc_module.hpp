@@ -122,7 +122,7 @@ template <RealType T> void mel_spectrogram_full(const T *x, int16_t len, int16_t
         for (int16_t j = 0; j < n_frames; j++) { // columns for frames_powers and raws for mel_basis
             for (int16_t k = mel_nz_indexes[i][0]; k < mel_nz_indexes[i][1]; k++) { // columns in the mel basis
                 res[(i * n_frames) + j] +=
-                    (T)mel_basis[i][k - mel_nz_indexes[i][0]] * frames_power[(j * MEL_COLUMNS) + k];
+                    mel_basis<T>[i][k - mel_nz_indexes[i][0]] * frames_power[(j * MEL_COLUMNS) + k];
             }
         }
     }
@@ -150,7 +150,7 @@ template <RealType T> void mel_spectrogram(const T *x, int16_t len, int16_t n_fr
             for (int16_t j = 0; j < n_frames; j++) { // columns for frames_powers and raws for mel_basis
                 for (int16_t k = mel_nz_indexes[i][0]; k < mel_nz_indexes[i][1]; k++) { // columns in the mel basis
                     res[(current_idx * n_frames) + j] +=
-                        (T)mel_basis[i][k - mel_nz_indexes[i][0]] * frames_power[(j * MEL_COLUMNS) + k];
+                        mel_basis<T>[i][k - mel_nz_indexes[i][0]] * frames_power[(j * MEL_COLUMNS) + k];
                 }
             }
 
@@ -194,14 +194,14 @@ template <RealType T> void _dct_linear(T *x, int16_t len, T *y) {
     RA_LOG_ARRAY("AUDIO_MEL", "dct_linear", "input", x, len);
 
     T sum = 0.0f;
-    T scaling = sqrtreal((T)1.0f / (2 * len));
+    T scaling = sqrtreal(1.0f / (2 * len));
 
     T cos_v = 0.0f;
 
     T *dct_cos_buf = (T *)malloc(len * sizeof(T));
 
     for (int16_t k = 0; k < len; k++) {
-        read_flash(&dct_cos[(len * k)], dct_cos_buf, len * sizeof(T));
+        read_flash(&dct_cos<T>[(len * k)], dct_cos_buf, len * sizeof(T));
 
         sum = 0.0f;
         for (int16_t n = 0; n < len; n++) {
@@ -214,7 +214,7 @@ template <RealType T> void _dct_linear(T *x, int16_t len, T *y) {
             y[k] = y[k] * scaling;
         }
     }
-    y[0] = y[0] * sqrtreal((T)1.0f / (4 * len));
+    y[0] = y[0] * sqrtreal(1.0f / (4 * len));
 
     RA_LOG_ARRAY("AUDIO_MEL", "dct_linear", "output", y, len);
 }

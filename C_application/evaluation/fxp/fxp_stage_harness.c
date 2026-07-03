@@ -378,7 +378,7 @@ static double welch_psd_scale(int16_t fs, int16_t steps)
 {
     double win_sum = 0.0;
     for (int16_t i = 0; i < NPERSEG; i++) {
-        win_sum += (double)hann_window[i] * (double)hann_window[i];
+        win_sum += (double)hann_window<float>[i] * (double)hann_window<float>[i];
     }
     if (fs <= 0 || steps <= 0 || win_sum <= 0.0) return 0.0;
     return ((double)NPERSEG * (double)NPERSEG) / ((double)fs * win_sum * (double)steps);

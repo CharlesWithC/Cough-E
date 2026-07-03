@@ -85,7 +85,7 @@ template <RealType T> void compute_periodogram(const T *sig, int16_t len, int16_
     T sum = 0.0;
 
     for (int16_t i = 0; i < NPERSEG; i++) {
-        sum += hann_window[i] * hann_window[i];
+        sum += hann_window<T>[i] * hann_window<T>[i];
     }
 
     scale = 1 / (fs * sum);
@@ -107,7 +107,7 @@ template <RealType T> void compute_periodogram(const T *sig, int16_t len, int16_
 
         // Apply the window function
         for (int16_t i = 0; i < NPERSEG; i++) {
-            win[i] *= hann_window[i];
+            win[i] *= hann_window<T>[i];
         }
 
         RA_LOG_ARRAY("AUDIO_PSD", "periodogram", "windowed", win, NPERSEG);
@@ -181,8 +181,8 @@ template <RealType T> T compute_spectral_slope(T *mags, T *freqs, int16_t len, T
     T den = 0.0;
 
     for (int16_t i = 0; i < len; i++) {
-        num += ((T)freqs[i] - mean_freq) * ((T)mags[i] - mean_mag);
-        den += ((T)freqs[i] - mean_freq) * ((T)freqs[i] - mean_freq);
+        num += (freqs[i] - mean_freq) * (mags[i] - mean_mag);
+        den += (freqs[i] - mean_freq) * (freqs[i] - mean_freq);
     }
 
     RA_LOG_SCALAR("AUDIO_FFT", "spec_slope", "num", num);
@@ -230,7 +230,7 @@ template <RealType T> T compute_spread(T *mags, T *freqs, int16_t len, T sum_mag
     T sum = 0.0;
 
     for (int16_t i = 0; i < len; i++) {
-        sum += ((T)freqs[i] - centroid) * ((T)freqs[i] - centroid) * (T)mags[i];
+        sum += (freqs[i] - centroid) * (freqs[i] - centroid) * mags[i];
     }
 
     RA_LOG_SCALAR("AUDIO_FFT", "spread", "sum", sum);
@@ -246,8 +246,8 @@ template <RealType T> T compute_kurt(T *mags, T *freqs, int16_t len, T sum_mags,
     T sum = 0.0;
 
     for (int16_t i = 0; i < len; i++) {
-        T tmp = ((T)freqs[i] - centroid) * ((T)freqs[i] - centroid);
-        sum += tmp * tmp * (T)mags[i];
+        T tmp = (freqs[i] - centroid) * (freqs[i] - centroid);
+        sum += tmp * tmp * mags[i];
     }
 
     RA_LOG_SCALAR("AUDIO_FFT", "spec_kurt", "sum", sum);
@@ -263,8 +263,8 @@ template <RealType T> T compute_skew(T *mags, T *freqs, int16_t len, T sum_mags,
     T sum = 0.0;
 
     for (int16_t i = 0; i < len; i++) {
-        T tmp = ((T)freqs[i] - centroid) * ((T)freqs[i] - centroid);
-        sum += tmp * ((T)freqs[i] - centroid) * (T)mags[i];
+        T tmp = (freqs[i] - centroid) * (freqs[i] - centroid);
+        sum += tmp * (freqs[i] - centroid) * mags[i];
     }
 
     RA_LOG_SCALAR("AUDIO_FFT", "spec_skew", "sum", sum);

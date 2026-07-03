@@ -43079,7 +43079,7 @@ const Posit FLASH1 dct_cos[16384] = {
     POS(3921167704U),
 };
 #else
-const TYPE_DCT_COS FLASH1 dct_cos[16384] = {
+template <RealType T> const T FLASH1 dct_cos[16384] = {
     1.000000,
     1.000000,
     1.000000,
@@ -59465,6 +59465,12 @@ const TYPE_DCT_COS FLASH1 dct_cos[16384] = {
     0.036815,
     -0.012266
 };
+
+template const real_t FLASH1 dct_cos<real_t>[16384];
+#ifdef UPOS_MODE
+template const mreal_t FLASH1 dct_cos<mreal_t>[16384];
+template const sreal_t FLASH1 dct_cos<sreal_t>[16384];
+#endif
 #endif
 // constants.h (dct_lin.h)
 //////////////////////////////////////////////////////////////////////////////////////
@@ -59605,7 +59611,7 @@ const Posit DINTL1 mel_basis[MEL_ROWS][MAX_NZ_ELEMS] = {
     {POS(105598498U), POS(138131360U), POS(164743216U), POS(179563616U), POS(192869548U), POS(203751032U), POS(210404000U), POS(217056960U), POS(223709928U), POS(230362892U), POS(235948440U), POS(239274920U), POS(242601404U), POS(245927888U), POS(249254368U), POS(252580848U), POS(255907332U), POS(259233816U), POS(262560296U), POS(265886776U), POS(269213264U), POS(272539744U), POS(275866224U), POS(279192712U), POS(282519192U), POS(285845672U), POS(289172160U), POS(292498632U), POS(295825120U), POS(299151600U), POS(302478080U), POS(305804568U), POS(309131048U), POS(312457528U), POS(315784016U), POS(319110496U), POS(319912760U), POS(316707728U), POS(313502696U), POS(310297664U), POS(307092632U), POS(303887600U), POS(300682568U), POS(297477536U), POS(294272504U), POS(291067472U), POS(287862440U), POS(284657416U), POS(281452384U), POS(278247352U), POS(275042320U), POS(271837288U), POS(268632256U), POS(265427224U), POS(262222192U), POS(259017160U), POS(255812128U), POS(252607096U), POS(249402064U), POS(246197032U), POS(242992004U), POS(239786972U), POS(236581940U), POS(231872792U), POS(225462728U), POS(219052664U), POS(212642600U), POS(206232540U), POS(198318360U), POS(185498232U), POS(172678108U), POS(151943800U), POS(126303548U), },
 };
 #else
-const TYPE_MEL_BASIS DINTL1 mel_basis[MEL_ROWS][MAX_NZ_ELEMS] = {
+template <RealType T> const T DINTL1 mel_basis[MEL_ROWS][MAX_NZ_ELEMS] = {
 	{
 		0.0030031611677259207,
 		0.006006322335451841,
@@ -61735,6 +61741,12 @@ const TYPE_MEL_BASIS DINTL1 mel_basis[MEL_ROWS][MAX_NZ_ELEMS] = {
 		0.00018655738676898181,
 	},
 };
+
+template const real_t DINTL1 mel_basis<real_t>[MEL_ROWS][MAX_NZ_ELEMS];
+#ifdef UPOS_MODE
+template const mreal_t DINTL1 mel_basis<mreal_t>[MEL_ROWS][MAX_NZ_ELEMS];
+template const sreal_t DINTL1 mel_basis<sreal_t>[MEL_ROWS][MAX_NZ_ELEMS];
+#endif
 #endif
 // constants.h (mel_basis.h)
 //////////////////////////////////////////////////////////////////////////////////////
@@ -66760,7 +66772,7 @@ const Posit DINTL1 hann_window[NPERSEG] = {
     POS(63728809U),
 };
 #else
-const TYPE_HANN_WIND DINTL1 hann_window[NPERSEG] = {
+template <RealType T> const T DINTL1 hann_window[NPERSEG] = {
     0.0,
     1.2184647302626583e-05,
     4.873799534788059e-05,
@@ -67662,6 +67674,12 @@ const TYPE_HANN_WIND DINTL1 hann_window[NPERSEG] = {
     4.873799534788059e-05,
     1.2184647302626583e-05
 };
+
+template const real_t DINTL1 hann_window<real_t>[NPERSEG];
+#ifdef UPOS_MODE
+template const mreal_t DINTL1 hann_window<mreal_t>[NPERSEG];
+template const sreal_t DINTL1 hann_window<sreal_t>[NPERSEG];
+#endif
 #endif
 // constants.h (welch_psd.h)
 //////////////////////////////////////////////////////////////////////////////////////
