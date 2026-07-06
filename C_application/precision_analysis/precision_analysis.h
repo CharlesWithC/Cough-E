@@ -90,13 +90,13 @@ struct VariableConverter<Target, Src, std::enable_if_t<std::is_pointer_v<Src>>> 
 #endif
 
 #ifndef PRECISION_CTRL1
-#define PRECISION_CTRL1 0
+#define PRECISION_CTRL1 0xAAAA
 #endif
 #ifndef PRECISION_CTRL2
-#define PRECISION_CTRL2 0
+#define PRECISION_CTRL2 0xAAA8
 #endif
 #ifndef PRECISION_CTRL3
-#define PRECISION_CTRL3 0
+#define PRECISION_CTRL3 0x2AAA
 #endif
 
 // 00 = no conversion / 01 = use sreal / 10 = use mreal / 11 = not used (reserved for possible custom type mix)
@@ -288,6 +288,7 @@ DEFINE_VOID_PASSTHROUGH(PRECISION_CTRL2, 0x0003, get_mel_spectrogram_features, w
 
 #define SBMN(op) op(sig, len) op(res, len)
 #define SIGL(op) op(sig, len)
+#define SIGE(op) op(sig, len) op(epsilon, 0)
 #define CRST(op) op(sig, len) op(rms, 0)
 
 DEFINE_VOID_WRAPPER(PRECISION_CTRL3, 0x8000, sub_mean, wrapper_, <mreal_t>, mreal_t,
@@ -341,9 +342,9 @@ DEFINE_WRAPPER(PRECISION_CTRL3, 0x0004, get_kurtosis, wrapper_, <sreal_t>, real_
 DEFINE_PASSTHROUGH(PRECISION_CTRL3, 0x000C, get_kurtosis, wrapper_, real_t, real_t, (real_t * x, int16_t len), (x, len))
 
 DEFINE_WRAPPER(PRECISION_CTRL3, 0x0002, azc_computation, wrapper_, <mreal_t>, int16_t, mreal_t,
-               (real_t * sig, int16_t len, real_t epsilon), (sig, len, epsilon), SIGL)
+               (real_t * sig, int16_t len, real_t epsilon), (sig, len, epsilon), SIGE)
 DEFINE_WRAPPER(PRECISION_CTRL3, 0x0001, azc_computation, wrapper_, <sreal_t>, int16_t, sreal_t,
-               (real_t * sig, int16_t len, real_t epsilon), (sig, len, epsilon), SIGL)
+               (real_t * sig, int16_t len, real_t epsilon), (sig, len, epsilon), SIGE)
 DEFINE_PASSTHROUGH(PRECISION_CTRL3, 0x0003, azc_computation, wrapper_, real_t, int16_t,
                    (real_t * sig, int16_t len, real_t epsilon), (sig, len, epsilon))
 

@@ -17,8 +17,7 @@
     @param fs                   :   the sampling frequency
     @param *feats               :   array to be filled with the extracted features
 */
-void audio_features(const int8_t *features_selector, const real_t *sig, int16_t len, int16_t fs,
-                    real_t *feats);
+void audio_features(const int8_t *features_selector, const real_t *sig, int16_t len, int16_t fs, real_t *feats);
 
 /**
     Computes features from the IMU signal, passed as parameter.
@@ -28,8 +27,8 @@ void audio_features(const int8_t *features_selector, const real_t *sig, int16_t 
     @param len                  :   the length of the signal
     @param *feats               :   array to be filled with the extracted features
 */
-void imu_features(const int8_t *features_selector, const real_t sig[][Num_IMU_signals], int16_t len,
-                  real_t *feats);
+void imu_features(const int8_t *features_selector, const cough_imu_sample_t sig[][Num_IMU_signals], int16_t len,
+                  cough_imu_feat_t *feats);
 
 //////////////////////////////////////////////////////////////////////////////////
 /*                      Local functions declaration                             */
@@ -128,12 +127,10 @@ void eepd_features(const int8_t *features_selector, const audio_sample_t *sig, i
    vector
     @param *feats               :   array of extracted features
 */
-template <RealType T>
-void compute_imu_family(const int8_t *features_selector, const T signal[][Num_IMU_signals], int16_t len,
-                        int8_t signal_idx, int8_t sig_feat_idx, T *feats);
+void compute_imu_family(const int8_t *features_selector, const cough_imu_sample_t signal[][Num_IMU_signals],
+                        int16_t len, int8_t signal_idx, int8_t sig_feat_idx, cough_imu_feat_t *feats);
 
-template <RealType T>
-void compute_imu_l2(const int8_t *features_selector, const T signal[][Num_IMU_signals], int16_t len, int8_t signal_idx,
-                    int8_t sig_feat_idx, T *feats);
+void compute_imu_l2(const int8_t *features_selector, const cough_imu_sample_t signal[][Num_IMU_signals], int16_t len,
+                    int8_t signal_idx, int8_t sig_feat_idx, cough_imu_feat_t *feats);
 
 #endif

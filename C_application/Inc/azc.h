@@ -14,7 +14,7 @@
  *
  * @return the number of times the differentaition of the approximated signal crosses the 0-axis
  */
-template <RealType T> int16_t azc_computation(T *sig, int16_t len, real_t epsilon);
+template <RealType T> int16_t azc_computation(T *sig, int16_t len, T epsilon);
 
 #include <azc.hpp>
 

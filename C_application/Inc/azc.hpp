@@ -140,7 +140,7 @@ template <RealType T> T _max_vdist(T *sig, int16_t first, int16_t last, int16_t 
  * @return pointer to the array storing the indexes of the point in the original
  * signal that form the result.
  */
-template <RealType T> int16_t *polygonal_approx(T *sig, int16_t len, real_t eps, int16_t *res_len) {
+template <RealType T> int16_t *polygonal_approx(T *sig, int16_t len, T eps, int16_t *res_len) {
     // Array of the resulting indexes. For safety reasons it is allocated
     // at his maximum possible size (i.e. len)
     int16_t *res = (int16_t *)malloc(len * sizeof(int16_t));
@@ -181,7 +181,7 @@ template <RealType T> int16_t *polygonal_approx(T *sig, int16_t len, real_t eps,
 
         // Only keep the sample if it's max distance is greater then the
         // tolerance eps
-        if ((real_t)max_dist > eps) {
+        if (max_dist > eps) {
             stack[next_to_process + 1].first = first;
             stack[next_to_process + 1].last = max_idx;
 
@@ -219,7 +219,7 @@ template <RealType T> int16_t *polygonal_approx(T *sig, int16_t len, real_t eps,
     return res;
 }
 
-template <RealType T> int16_t azc_computation(T *sig, int16_t len, real_t epsilon) {
+template <RealType T> int16_t azc_computation(T *sig, int16_t len, T epsilon) {
     int16_t approx_len = 0;
 
     // Compute the approximation
