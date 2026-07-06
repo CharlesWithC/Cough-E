@@ -3,7 +3,7 @@
 
 #include <types.h>
 
-static const real_t gender = 0;
-static const real_t bmi = 21.95;
+static const sreal_t gender = 0;
+static const sreal_t bmi = 21.95;
 
 #endif

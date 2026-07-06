@@ -510,9 +510,6 @@ template struct kiss_fft_state<real_t>;
 template kiss_fft_cfg<real_t> kiss_fft_alloc<real_t>(int, int, void*, size_t*);
 template void kiss_fft<real_t>(kiss_fft_cfg<real_t>, const kiss_fft_cpx<real_t>*, kiss_fft_cpx<real_t>*);
 #ifdef UPOS_MODE
-template struct kiss_fft_state<mreal_t>;
-template kiss_fft_cfg<mreal_t> kiss_fft_alloc<mreal_t>(int, int, void*, size_t*);
-template void kiss_fft<mreal_t>(kiss_fft_cfg<mreal_t>, const kiss_fft_cpx<mreal_t>*, kiss_fft_cpx<mreal_t>*);
 template struct kiss_fft_state<sreal_t>;
 template kiss_fft_cfg<sreal_t> kiss_fft_alloc<sreal_t>(int, int, void*, size_t*);
 template void kiss_fft<sreal_t>(kiss_fft_cfg<sreal_t>, const kiss_fft_cpx<sreal_t>*, kiss_fft_cpx<sreal_t>*);

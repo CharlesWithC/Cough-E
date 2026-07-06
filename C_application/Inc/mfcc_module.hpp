@@ -249,7 +249,7 @@ template <RealType T, RealType S = T> void entropy(T *spectrogram, int16_t n_row
 
     for (int8_t i = 0; i < n_rows; i++) {
         // Sum each column of the spectrogram
-        row_sum = vect_sum(&spectrogram[i * n_columns], n_columns);
+        row_sum = vect_sum<T, S>(&spectrogram[i * n_columns], n_columns);
         RA_LOG_SCALAR("AUDIO_MEL", "entropy", "row_sum", row_sum);
 
         // Divide all the row's elements by the sum of the row.
@@ -264,7 +264,7 @@ template <RealType T, RealType S = T> void entropy(T *spectrogram, int16_t n_row
 
     // Sum each column of the spectrogram
     for (int8_t i = 0; i < n_rows; i++) {
-        res[i] = vect_sum(&spectrogram[i * n_columns], n_columns);
+        res[i] = vect_sum<T, S>(&spectrogram[i * n_columns], n_columns);
         RA_LOG_SCALAR("AUDIO_MEL", "entropy", "result", res[i]);
     }
 }

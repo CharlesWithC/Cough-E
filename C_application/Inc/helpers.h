@@ -107,7 +107,7 @@ template <RealType T> static inline void vect_mult(T *x, const T *y, int16_t len
 /// @param *x       pointer to the signal
 /// @param len      lenght of the signal
 /// @return         the standard deviation
-template <RealType T> static inline T vect_std(T *x, int16_t len);
+template <RealType T, RealType S> static inline T vect_std(T *x, int16_t len);
 
 /// @brief Copies "len" samples from "in" array of T starting at index "start"
 /// Destination is "out"

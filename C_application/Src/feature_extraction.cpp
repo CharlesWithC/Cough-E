@@ -54,7 +54,7 @@ static void imu_run_float_features(const int8_t *features_selector, imu_data_t *
         feats[KURTOSIS] = get_kurtosis(sig, len);
         // PA_LOG("imu", "kurtosis", feats[KURTOSIS]);
     }
-    imu_data_t rms = get_rms(sig, len);
+    imu_data_t rms = get_rms<imu_data_t, real_t>(sig, len);
     if (features_selector[ROOT_MEANS_SQUARED_IMU]) {
         feats[ROOT_MEANS_SQUARED_IMU] = rms;
         // PA_LOG("imu", "rms", feats[ROOT_MEANS_SQUARED_IMU]);
@@ -111,7 +111,7 @@ void fft_based_features(const int8_t *features_selector, const audio_data_t *sig
     }
 
     if (features_selector[SPECTRAL_ROLLOFF]) {
-        audio_data_t spectral_rolloff = compute_rolloff(magnitudes, frequencies, (len / 2) + 1, sum_mags);
+        audio_data_t spectral_rolloff = compute_rolloff<audio_data_t, real_t>(magnitudes, frequencies, (len / 2) + 1, sum_mags);
         // PA_LOG("audio_fft", "spectral_rolloff", spectral_rolloff);
         feats[SPECTRAL_ROLLOFF] = spectral_rolloff;
     }
@@ -174,7 +174,7 @@ void periodogram_based_features(const int8_t *features_selector, const audio_dat
         return;
     }
 
-    compute_periodogram(sig, len, fs, psd, freqs);
+    compute_periodogram<audio_data_t, real_t>(sig, len, fs, psd, freqs);
 
     if (features_selector[SPECTRAL_FLATNESS]) {
         audio_data_t spectral_flatness = compute_flatness<audio_data_t, real_t>(psd, psd_size);
@@ -318,7 +318,7 @@ void mean_based_features(const int8_t *features_selector, const audio_data_t *si
 
         if (features_selector[ROOT_MEANS_SQUARED] || features_selector[CREST_FACTOR]) {
             // compute RMS
-            audio_data_t rms = get_rms(zero_mean, len);
+            audio_data_t rms = get_rms<audio_data_t, real_t>(zero_mean, len);
             // PA_LOG("audio_mean", "rms", rms);
             RA_LOG_SCALAR("AUDIO_FFT", "audio_rms", "result", rms);
 

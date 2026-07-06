@@ -20,7 +20,7 @@
 /// @param *mags        pointer of the array in which to store the magnitudes of the result
 /// @param *freqs       pointer of the array in which to store the frequencies of the result
 /// @param *sum_mags    pointer to the value that stores the sum of the resulting magnitudes
-template <RealType T> void compute_rfft(const T *sig, int16_t len, int16_t fs, T *mags, T *freqs, T *sum_mags);
+template <RealType T, RealType S> void compute_rfft(const T *sig, int16_t len, int16_t fs, T *mags, T *freqs, T *sum_mags);
 
 /// @brief Computes the periodogram of a signal using the Welch's method
 /// @param *sig     pointer to the signal
@@ -28,7 +28,7 @@ template <RealType T> void compute_rfft(const T *sig, int16_t len, int16_t fs, T
 /// @param fs       sampling frequency
 /// @param *psd     pointer to the array that stores the resulting power spectral densities
 /// @param *freqs   pointer to the array that stores the resulting frequencies
-template <RealType T> void compute_periodogram(const T *sig, int16_t len, int16_t fs, T *psd, T *freqs);
+template <RealType T, RealType S> void compute_periodogram(const T *sig, int16_t len, int16_t fs, T *psd, T *freqs);
 
 /// @brief Returns the spectral decrease computed from the magnitudes and the frequencies of the spectrum of a signal
 /// @param *mags        pointer to the magnitudes
@@ -52,7 +52,7 @@ template <RealType T> T compute_spectral_slope(T *mags, T *freqs, int16_t len, T
 /// @param len          length
 /// @param sum_mags     sum of the magnitues
 /// @return rolloff
-template <RealType T> T compute_rolloff(T *mags, T *freqs, int16_t len, T sum_mags);
+template <RealType T, RealType S> T compute_rolloff(T *mags, T *freqs, int16_t len, T sum_mags);
 
 /// @brief Returns the spectral centroid computed from the magnitudes and the frequencies of the spectrum of a signal
 /// @param *mags        pointer to the magnitudes

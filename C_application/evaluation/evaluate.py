@@ -126,7 +126,7 @@ def compile_c_app(ws_path, extra_flags=""):
     flags = "-DEVALUATION_MODE"
     if extra_flags:
         flags += " " + extra_flags
-    result = subprocess.run(["nice", "-n", "19", "make", "-C", ws_path, f"CFLAGS={flags}", "-j8"],
+    result = subprocess.run(["nice", "-n", "9", "make", "-C", ws_path, f"CFLAGS={flags}", "-j8"],
                             capture_output=True, text=True)
     if result.returncode != 0:
         print(f"  Compilation failed: {result.stderr}")
@@ -138,7 +138,7 @@ def run_c_app(ws_path):
     """Run the compiled C application from the workspace and return stdout."""
     executable = os.path.join(ws_path, "build", "cough-e")
     try:
-        result = subprocess.run(["nice", "-n", "9", executable], capture_output=True, text=True, timeout=300)
+        result = subprocess.run(["nice", "-n", "19", executable], capture_output=True, text=True, timeout=300)
     except subprocess.TimeoutExpired:
         print("    WARNING: C app timed out after 300s (possible stuck)", flush=True)
         return ""

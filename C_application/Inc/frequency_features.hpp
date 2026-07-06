@@ -67,10 +67,11 @@ template <RealType T> void _rfft(const T *sig, int16_t len, T *real, T *imag) {
     free(cx_out);
 }
 
-template <RealType T> void compute_periodogram(const T *sig, int16_t len, int16_t fs, T *psd, T *freqs) {
+template <RealType T, RealType S = T>
+void compute_periodogram(const T *sig, int16_t len, int16_t fs, T *psd, T *freqs) {
     T freq_step = ((T)fs / 2) / ((T)NPERSEG / 2);     // the frequency step for eah bin
     T *win = (T *)malloc(NPERSEG * sizeof(T));        // to keep the data of the current processed window
-    T *cumul_sums = (T *)malloc(NPERSEG * sizeof(T)); // To store the cumulative sum of the FFT of each frequency bin
+    S *cumul_sums = (S *)malloc(NPERSEG * sizeof(S)); // To store the cumulative sum of the FFT of each frequency bin
     for (int i = 0; i < NPERSEG; i++)
         cumul_sums[i] = 0;
 
@@ -81,8 +82,8 @@ template <RealType T> void compute_periodogram(const T *sig, int16_t len, int16_
     T *mags_squared = (T *)malloc(((NPERSEG / 2) + 1) * sizeof(T));
 
     T mean = 0.0;
-    T scale = 0.0;
-    T sum = 0.0;
+    S scale = 0.0;
+    S sum = 0.0;
 
     for (int16_t i = 0; i < NPERSEG; i++) {
         sum += hann_window<T>[i] * hann_window<T>[i];
@@ -102,7 +103,7 @@ template <RealType T> void compute_periodogram(const T *sig, int16_t len, int16_
         vect_copy(sig, start, NPERSEG, win); // copies the current window from the signal
 
         // subtract the mean
-        mean = vect_mean(win, NPERSEG);
+        mean = vect_mean<T, S>(win, NPERSEG);
         sub_constant(win, NPERSEG, mean, win);
 
         // Apply the window function
@@ -118,7 +119,7 @@ template <RealType T> void compute_periodogram(const T *sig, int16_t len, int16_
         RA_LOG_ARRAY("AUDIO_PSD", "periodogram", "im", im, psd_size);
 
         for (int16_t i = 0; i < psd_size; i++) {
-            mags_squared[i] = ((re[i] * re[i]) + (im[i] * im[i])) * scale;
+            mags_squared[i] = (S)((re[i] * re[i]) + (im[i] * im[i])) * scale;
 
             if (i != 0 && i != (NPERSEG / 2)) {
                 mags_squared[i] *= 2; // Multiply by 2, apart from DC frequency (first element) and last element
@@ -192,9 +193,9 @@ template <RealType T> T compute_spectral_slope(T *mags, T *freqs, int16_t len, T
     return result;
 }
 
-template <RealType T> T compute_rolloff(T *mags, T *freqs, int16_t len, T sum_mags) {
-    T rolloff_energy = 0.95 * sum_mags;
-    T sum = 0.0;
+template <RealType T, RealType S = T> T compute_rolloff(T *mags, T *freqs, int16_t len, T sum_mags) {
+    S rolloff_energy = 0.95 * (S)sum_mags;
+    S sum = 0.0;
     T rolloff = -1.0; // Error value
 
     RA_LOG_SCALAR("AUDIO_FFT", "rolloff", "rolloff_energy", rolloff_energy);
@@ -279,8 +280,8 @@ template <RealType T> T compute_skew(T *mags, T *freqs, int16_t len, T sum_mags,
 template <RealType T, RealType S = T> T compute_flatness(T *x, int16_t len) {
     RA_LOG_ARRAY("AUDIO_PSD", "flatness", "input", x, len);
 
-    S gmean = 0.0; // geometric
-    S amean = 0.0; // arithmetic
+    T gmean = 0.0; // geometric
+    T amean = 0.0; // arithmetic
 
     S sum_logs = 0.0;
     for (int16_t i = 0; i < len; i++) {
@@ -292,7 +293,7 @@ template <RealType T, RealType S = T> T compute_flatness(T *x, int16_t len) {
     sum_logs = sum_logs / len;
 
     gmean = expreal(sum_logs);
-    amean = vect_mean(x, len);
+    amean = vect_mean<T, S>(x, len);
 
     RA_LOG_SCALAR("AUDIO_PSD", "flatness", "sum_logs", sum_logs);
     RA_LOG_SCALAR("AUDIO_PSD", "flatness", "gmean", gmean);
@@ -434,8 +435,8 @@ void get_mel_spectrogram_features(const T *x, int16_t len, uint8_t *idx_needed, 
 
     // Computes the mean, std and maximum value of each MEL bin
     for (int8_t i = 0; i < n_mels_needed; i++) {
-        mean_mel_spectr[i] = vect_mean(&mel_dB[i * n_frames], n_frames);
-        std_mel_spectr[i] = vect_std(&mel_dB[i * n_frames], n_frames);
+        mean_mel_spectr[i] = vect_mean<T, S>(&mel_dB[i * n_frames], n_frames);
+        std_mel_spectr[i] = vect_std<T, S>(&mel_dB[i * n_frames], n_frames);
         max_mel_spectr[i] = vect_max_value(&mel_dB[i * n_frames], n_frames);
     }
 

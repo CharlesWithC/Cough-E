@@ -159,8 +159,8 @@ int launch(void)
     uint16_t n_idxs_above_th = 0;
     int debug_cnt = 0;
 
-    feat_t gender_feature = 0;
-    feat_t bmi_feature = 0;
+    sreal_t gender_feature = 0;
+    sreal_t bmi_feature = 0;
 
 #ifdef FXP_MODE
     int16_t *audio = (int16_t *)malloc((size_t)AUDIO_LEN * sizeof(int16_t));

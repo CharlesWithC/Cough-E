@@ -104,9 +104,9 @@ template <RealType T> static inline void vect_mult(T *x, const T *y, int16_t len
     }
 }
 
-template <RealType T> static inline T vect_std(T *x, int16_t len) {
-    T mean = vect_mean(x, len);
-    T sum = 0.0;
+template <RealType T, RealType S = T> static inline T vect_std(T *x, int16_t len) {
+    T mean = vect_mean<T, S>(x, len);
+    S sum = 0.0;
 
     for (int16_t i = 0; i < len; i++) {
         T centered = x[i] - mean;

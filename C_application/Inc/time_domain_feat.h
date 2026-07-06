@@ -20,7 +20,7 @@ template <RealType T, RealType S> void sub_mean(const T *sig, T *res, int16_t le
 /// @param *sig     pointer to the input signal
 /// @param len      lenght of the input signal
 /// @return The root mean squared
-template <RealType T> T get_rms(T *sig, int16_t len);
+template <RealType T, RealType S> T get_rms(T *sig, int16_t len);
 
 /// @brief Computes the Zero Crossing Rate
 /// @param *sig     pointer to the input signal

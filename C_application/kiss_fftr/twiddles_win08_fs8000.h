@@ -10,7 +10,7 @@ struct twiddles_t
 	T sine;
 };
 
-#if (defined(UPOS_MODE) || defined(LPOS_MODE)) && POSIT_SIZE == 32
+#if defined(LPOS_MODE) && POSIT_SIZE == 32
 static const twiddles_t<Posit> FLASH1 twiddles_3200[3200] = {
     { POS(1073741824U), POS(0U) },
     { POS(1073741280U), POS(4059916620U) },
@@ -14072,17 +14072,11 @@ template const twiddles_t<real_t>  twiddles_1600<real_t>[1600];
 template const twiddles_t<real_t>  twiddles_225<real_t>[225];
 template const twiddles_t<real_t>  twiddles_512<real_t>[512];
 #ifdef UPOS_MODE
-template const twiddles_t<mreal_t> twiddles_3200<mreal_t>[3200];
 template const twiddles_t<sreal_t> twiddles_3200<sreal_t>[3200];
-template const twiddles_t<mreal_t> twiddles_450<mreal_t>[450];
 template const twiddles_t<sreal_t> twiddles_450<sreal_t>[450];
-template const twiddles_t<mreal_t> twiddles_1024<mreal_t>[1024];
 template const twiddles_t<sreal_t> twiddles_1024<sreal_t>[1024];
-template const twiddles_t<mreal_t> twiddles_1600<mreal_t>[1600];
 template const twiddles_t<sreal_t> twiddles_1600<sreal_t>[1600];
-template const twiddles_t<mreal_t> twiddles_225<mreal_t>[225];
 template const twiddles_t<sreal_t> twiddles_225<sreal_t>[225];
-template const twiddles_t<mreal_t> twiddles_512<mreal_t>[512];
 template const twiddles_t<sreal_t> twiddles_512<sreal_t>[512];
 #endif
 

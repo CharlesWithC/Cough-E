@@ -37,10 +37,10 @@ template <RealType T, RealType S = T> void sub_mean(const T *sig, T *res, int16_
     sub_constant(sig, len, mean, res);
 }
 
-template <RealType T> T get_rms(T *sig, int16_t len) {
-    T sum = 0;
+template <RealType T, RealType S = T> T get_rms(T *sig, int16_t len) {
+    S sum = 0;
     for (int16_t i = 0; i < len; i++) {
-        T sq = sig[i] * sig[i];
+        S sq = (S)sig[i] * (S)sig[i];
         RA_IMU_LOG_SCALAR("get_rms", "sig_sq", sq);
         sum += sq;
     }

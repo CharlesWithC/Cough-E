@@ -59468,7 +59468,6 @@ template <RealType T> const T FLASH1 dct_cos[16384] = {
 
 template const real_t FLASH1 dct_cos<real_t>[16384];
 #ifdef UPOS_MODE
-template const mreal_t FLASH1 dct_cos<mreal_t>[16384];
 template const sreal_t FLASH1 dct_cos<sreal_t>[16384];
 #endif
 #endif
@@ -61744,7 +61743,6 @@ template <RealType T> const T DINTL1 mel_basis[MEL_ROWS][MAX_NZ_ELEMS] = {
 
 template const real_t DINTL1 mel_basis<real_t>[MEL_ROWS][MAX_NZ_ELEMS];
 #ifdef UPOS_MODE
-template const mreal_t DINTL1 mel_basis<mreal_t>[MEL_ROWS][MAX_NZ_ELEMS];
 template const sreal_t DINTL1 mel_basis<sreal_t>[MEL_ROWS][MAX_NZ_ELEMS];
 #endif
 #endif
@@ -65859,7 +65857,6 @@ const T DINTL1 hann_mfcc_wind[HANN_SIZE] = {
 
 template const real_t DINTL1 hann_mfcc_wind<real_t>[HANN_SIZE];
 #ifdef UPOS_MODE
-template const mreal_t DINTL1 hann_mfcc_wind<mreal_t>[HANN_SIZE];
 template const sreal_t DINTL1 hann_mfcc_wind<sreal_t>[HANN_SIZE];
 #endif
 #endif
@@ -67677,7 +67674,6 @@ template <RealType T> const T DINTL1 hann_window[NPERSEG] = {
 
 template const real_t DINTL1 hann_window<real_t>[NPERSEG];
 #ifdef UPOS_MODE
-template const mreal_t DINTL1 hann_window<mreal_t>[NPERSEG];
 template const sreal_t DINTL1 hann_window<sreal_t>[NPERSEG];
 #endif
 #endif

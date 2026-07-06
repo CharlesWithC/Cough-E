@@ -382,7 +382,7 @@ static audio_data_t *_downsample(const audio_data_t *sig, int16_t len, int16_t f
     *new_len = len / scale_factor;
 
     audio_data_t *res = (audio_data_t *)malloc(*new_len * sizeof(audio_data_t));
-    audio_data_t mean = 0.0f;
+    real_t mean = 0.0f;
 
     for (int16_t i = 0; i < *new_len; i++) {
         res[i] = sig[i * scale_factor];
@@ -392,7 +392,7 @@ static audio_data_t *_downsample(const audio_data_t *sig, int16_t len, int16_t f
     mean = mean / *new_len;
     RA_LOG_SCALAR("POSTPROC", "_downsample", "mean", mean);
 
-    sub_constant(res, *new_len, mean, res);
+    sub_constant(res, *new_len, (audio_data_t)mean, res);
     RA_LOG_ARRAY("POSTPROC", "_downsample", "zero_mean", res, *new_len);
 
     audio_data_t max_abs = vect_max_abs_value(res, *new_len);
