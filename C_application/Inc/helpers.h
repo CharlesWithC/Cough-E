@@ -85,7 +85,7 @@ template <RealType T> static inline void vect_div_const(T *x, int16_t len, T div
  * @param *x    : pointer to the input array
  * @param len   : lenght of the input array
  */
-template <RealType T> static inline T vect_sum(const T *x, int16_t len);
+template <RealType T, RealType S> static inline S vect_sum(const T *x, int16_t len);
 
 /**
  * Returns the mean of a sequence of numbers
@@ -93,7 +93,7 @@ template <RealType T> static inline T vect_sum(const T *x, int16_t len);
 * @param *x    : pointer to the input array
 * @param len   : lenght of the input array
  */
-template <RealType T> static inline T vect_mean(const T *x, int16_t len);
+template <RealType T, RealType S> static inline T vect_mean(const T *x, int16_t len);
 
 /// @brief Computes the element-wise multiplication between x and y arrays,
 /// the multiplication is stored in r array.

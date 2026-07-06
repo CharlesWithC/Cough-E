@@ -17,7 +17,8 @@
     @param fs                   :   the sampling frequency
     @param *feats               :   array to be filled with the extracted features
 */
-void audio_features(const int8_t *features_selector, const real_t *sig, int16_t len, int16_t fs, real_t *feats);
+void audio_features(const int8_t *features_selector, const audio_data_t *sig, int16_t len, int16_t fs,
+                    audio_data_t *feats);
 
 /**
     Computes features from the IMU signal, passed as parameter.
@@ -27,8 +28,8 @@ void audio_features(const int8_t *features_selector, const real_t *sig, int16_t 
     @param len                  :   the length of the signal
     @param *feats               :   array to be filled with the extracted features
 */
-void imu_features(const int8_t *features_selector, const cough_imu_sample_t sig[][Num_IMU_signals], int16_t len,
-                  cough_imu_feat_t *feats);
+void imu_features(const int8_t *features_selector, const imu_data_t sig[][Num_IMU_signals], int16_t len,
+                  imu_data_t *feats);
 
 //////////////////////////////////////////////////////////////////////////////////
 /*                      Local functions declaration                             */
@@ -54,8 +55,8 @@ int is_required(const int8_t *features_selector, uint16_t start_index, uint16_t 
     @param fs                   :   sampling frequency
     @param *feats               :   array of extracted features
 */
-void fft_based_features(const int8_t *features_selector, const audio_sample_t *sig, int16_t len, int16_t fs,
-                        audio_feat_t *feats);
+void fft_based_features(const int8_t *features_selector, const audio_data_t *sig, int16_t len, int16_t fs,
+                        audio_data_t *feats);
 
 /**
     Computes the required periodogram-based features of the audio signal
@@ -65,8 +66,8 @@ void fft_based_features(const int8_t *features_selector, const audio_sample_t *s
     @param len                  :   length of the signal
     @param *feats               :   array of extracted features
 */
-void periodogram_based_features(const int8_t *features_selector, const audio_sample_t *sig, int16_t len, int16_t fs,
-                                audio_feat_t *feats);
+void periodogram_based_features(const int8_t *features_selector, const audio_data_t *sig, int16_t len, int16_t fs,
+                                audio_data_t *feats);
 
 /**
     Computes the required MFCC features of the audio signal
@@ -76,7 +77,7 @@ void periodogram_based_features(const int8_t *features_selector, const audio_sam
     @param len                  :   length of the signal
     @param *feats               :   array of extracted features
 */
-void mfcc_features(const int8_t *features_selector, const audio_sample_t *sig, int16_t len, audio_feat_t *feats);
+void mfcc_features(const int8_t *features_selector, const audio_data_t *sig, int16_t len, audio_data_t *feats);
 
 /**
     Computes the required Mel Spectrogram features of the audio signal
@@ -86,8 +87,8 @@ void mfcc_features(const int8_t *features_selector, const audio_sample_t *sig, i
     @param len                  :   length of the signal
     @param *feats               :   array of extracted features
 */
-void mel_spectrogram_features(const int8_t *features_selector, const audio_sample_t *sig, int16_t len,
-                              audio_feat_t *feats);
+void mel_spectrogram_features(const int8_t *features_selector, const audio_data_t *sig, int16_t len,
+                              audio_data_t *feats);
 
 /**
     Computes the required mean-based features of the audio signal
@@ -97,19 +98,19 @@ void mel_spectrogram_features(const int8_t *features_selector, const audio_sampl
     @param len                  :   length of the signal
     @param *feats               :   array of extracted features
 */
-void mean_based_features(const int8_t *features_selector, const audio_sample_t *sig, int16_t len, audio_feat_t *feats);
+void mean_based_features(const int8_t *features_selector, const audio_data_t *sig, int16_t len, audio_data_t *feats);
 
 /**
     Computes the required EEPD features of the audio signal
 
     @param *features_selector   :   one-hot vector for which features to extract
     @param *sig                 :   signal to process
-    @param len                  :   length of the signal
+    @param len                  :   length of the signals
     @param fs                   :   sampling frequency
     @param *feats               :   array of extracted features
 */
-void eepd_features(const int8_t *features_selector, const audio_sample_t *sig, int16_t len, int16_t fs,
-                   audio_feat_t *feats);
+void eepd_features(const int8_t *features_selector, const audio_data_t *sig, int16_t len, int16_t fs,
+                   audio_data_t *feats);
 
 /**
     This function triggers the feature extraction process for a specific IMU feature family.
@@ -127,10 +128,10 @@ void eepd_features(const int8_t *features_selector, const audio_sample_t *sig, i
    vector
     @param *feats               :   array of extracted features
 */
-void compute_imu_family(const int8_t *features_selector, const cough_imu_sample_t signal[][Num_IMU_signals],
-                        int16_t len, int8_t signal_idx, int8_t sig_feat_idx, cough_imu_feat_t *feats);
+void compute_imu_family(const int8_t *features_selector, const imu_data_t signal[][Num_IMU_signals], int16_t len,
+                        int8_t signal_idx, int8_t sig_feat_idx, imu_data_t *feats);
 
-void compute_imu_l2(const int8_t *features_selector, const cough_imu_sample_t signal[][Num_IMU_signals], int16_t len,
-                    int8_t signal_idx, int8_t sig_feat_idx, cough_imu_feat_t *feats);
+void compute_imu_l2(const int8_t *features_selector, const imu_data_t signal[][Num_IMU_signals], int16_t len,
+                    int8_t signal_idx, int8_t sig_feat_idx, imu_data_t *feats);
 
 #endif

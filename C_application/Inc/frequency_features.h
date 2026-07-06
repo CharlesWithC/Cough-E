@@ -70,7 +70,7 @@ template <RealType T> T compute_centroid(T *mags, T *freqs, int16_t len, T sum_m
 /// @param sum_mags     sum of the magnitues
 /// @param centroid     centroid
 /// @return spread
-template <RealType T> T compute_spread(T *mags, T *freqs, int16_t len, T sum_mags, T centroid);
+template <RealType T, RealType S> T compute_spread(T *mags, T *freqs, int16_t len, T sum_mags, T centroid);
 
 /// @brief Returns the spectral kurtosis computed from the magnitudes and the frequencies of
 /// the spectrum of a signal. Note that this also requires the spectral centroid and the spectral spread as inputs
@@ -81,7 +81,7 @@ template <RealType T> T compute_spread(T *mags, T *freqs, int16_t len, T sum_mag
 /// @param centroid     centroid
 /// @param spread       spread
 /// @return kurtosis
-template <RealType T> T compute_kurt(T *mags, T *freqs, int16_t len, T sum_mags, T centroid, T spread);
+template <RealType T, RealType S> T compute_kurt(T *mags, T *freqs, int16_t len, T sum_mags, T centroid, T spread);
 
 /// @brief Returns the spectral skewness computed from the magnitudes and the frequencies of
 /// the spectrum of a signal. Note that this also requires the spectral centroid and the spectral spread as inputs
@@ -98,7 +98,7 @@ template <RealType T> T compute_skew(T *mags, T *freqs, int16_t len, T sum_mags,
 /// @param *x   pointer to the signal
 /// @param len  lenght of the signal
 /// @return     the flatness of the signal
-template <RealType T> T compute_flatness(T *x, int16_t len);
+template <RealType T, RealType S> T compute_flatness(T *x, int16_t len);
 
 /// @brief Returns the standard deviation of the given signal
 /// @param *x   pointer to the signal
@@ -160,9 +160,9 @@ template <RealType T> void get_mfcc_features(const T *x, int16_t len, T *mean_mf
 /// @param *std_mel_spectr      pointer to the resulting standard deviations of the mels
 /// @param *max_mel_spectr      pointer to the resulting max of the mels
 /// @param *entropy_mel_spectr  pointer to the resulting entropies of the mels
-template <RealType T>
+template <RealType T, RealType S>
 void get_mel_spectrogram_features(const T *x, int16_t len, uint8_t *idx_needed, uint8_t n_mels_needed,
-                                  T *mean_mel_spectr, T *std_mel_spectr, T *max_mel_spectr, T *entropy_mel_spectr);
+                                  S *mean_mel_spectr, S *std_mel_spectr, S *max_mel_spectr, S *entropy_mel_spectr);
 
 #include <frequency_features.hpp>
 

@@ -35,11 +35,12 @@ typedef float sreal_t;
 #endif
 
 #ifndef FXP_MODE
+// for FXP compatability, not used in float/pos
 typedef real_t cough_audio_sample_t;
-typedef sreal_t cough_imu_sample_t;
-typedef sreal_t cough_feat_t;
+typedef real_t cough_imu_sample_t;
+typedef real_t cough_feat_t;
 typedef real_t cough_audio_feat_t;
-typedef sreal_t cough_imu_feat_t;
+typedef real_t cough_imu_feat_t;
 
 typedef cough_feat_t feat_t;
 typedef cough_audio_feat_t audio_feat_t;
@@ -48,7 +49,11 @@ typedef cough_audio_sample_t audio_sample_t;
 typedef cough_imu_sample_t imu_sample_t;
 
 typedef real_t audio_score_t;
-typedef sreal_t imu_score_t;
+typedef real_t imu_score_t;
+
+// actually used in float/pos
+typedef sreal_t audio_data_t;
+typedef sreal_t imu_data_t;
 #endif // for FXP_MODE, these are defined in fxp_core.h
 
 #ifdef UPOS_MODE

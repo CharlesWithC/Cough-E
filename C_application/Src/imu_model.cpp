@@ -53,20 +53,20 @@ fxp_q16_t imu_predict(const fxp_feat_t *feats)
 #include <math.h>
 #include <range_analysis.h>
 
-imu_score_t _imu_sigmoid(imu_score_t score)
+imu_data_t _imu_sigmoid(imu_data_t score)
 {
     if (score < 0.0f) {
-        imu_score_t z = expreal(score);
+        imu_data_t z = expreal(score);
         return z / (1.0f + z);
     }
     return (1.0f / (1.0f + expreal(-score)));
 }
 
-imu_score_t imu_predict(imu_feat_t *feats)
+imu_data_t imu_predict(imu_data_t *feats)
 {
     RA_LOG_ARRAY("CLASSIFY", "imu_predict", "feats_input", feats, TOT_FEATURES_IMU_MODEL_IMU);
 
-    imu_score_t score = 0.0f;
+    imu_data_t score = 0.0f;
     int16_t current_node = 0;
     int16_t child_type = 0;
 
@@ -92,7 +92,7 @@ imu_score_t imu_predict(imu_feat_t *feats)
 
     RA_LOG_SCALAR("CLASSIFY", "imu_predict", "score", score);
 
-    imu_score_t res = _imu_sigmoid(score);
+    imu_data_t res = _imu_sigmoid(score);
     RA_LOG_SCALAR("CLASSIFY", "_imu_sigmoid", "result", res);
     return res;
 }

@@ -10,7 +10,7 @@
 #define AUDIO_LEN 57600
 
 #ifndef FXP_MODE
-#define AUDIO_INPUT_TYPE cough_audio_sample_t
+#define AUDIO_INPUT_TYPE audio_data_t
 #else
 #define AUDIO_INPUT_TYPE float
 #endif

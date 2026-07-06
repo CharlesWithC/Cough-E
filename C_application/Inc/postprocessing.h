@@ -39,8 +39,8 @@
 typedef int16_t postproc_sample_t;
 typedef int16_t postproc_peak_t;
 #else
-typedef audio_sample_t postproc_sample_t;
-typedef audio_feat_t postproc_peak_t;
+typedef audio_data_t postproc_sample_t;
+typedef audio_data_t postproc_peak_t;
 #endif
 
 

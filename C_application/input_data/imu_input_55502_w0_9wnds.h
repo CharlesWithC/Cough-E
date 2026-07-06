@@ -27,7 +27,7 @@
 */
 
 #ifndef FXP_MODE
-#define IMU_INPUT_TYPE cough_imu_sample_t
+#define IMU_INPUT_TYPE imu_data_t
 #else
 #define IMU_INPUT_TYPE float
 #endif

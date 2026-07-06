@@ -241,11 +241,11 @@ template <RealType T> void dct_matrix(T *x, int16_t rows, int16_t cols, T *y) {
     free(c_res);
 }
 
-template <RealType T> void entropy(T *spectrogram, int16_t n_rows, int16_t n_columns, T *res) {
+template <RealType T, RealType S = T> void entropy(T *spectrogram, int16_t n_rows, int16_t n_columns, S *res) {
     RA_LOG_ARRAY("AUDIO_MEL", "entropy", "input", spectrogram, n_rows * n_columns);
 
     // Store the sum of each row of the spectrogram
-    T row_sum = 0.0f;
+    S row_sum = 0.0f;
 
     for (int8_t i = 0; i < n_rows; i++) {
         // Sum each column of the spectrogram
@@ -254,7 +254,7 @@ template <RealType T> void entropy(T *spectrogram, int16_t n_rows, int16_t n_col
 
         // Divide all the row's elements by the sum of the row.
         // Passing the same pointer for input and output --> the input is modified
-        vect_div_const(&spectrogram[i * n_columns], n_columns, row_sum, &spectrogram[i * n_columns]);
+        vect_div_const(&spectrogram[i * n_columns], n_columns, (T)row_sum, &spectrogram[i * n_columns]);
         RA_LOG_ARRAY("AUDIO_MEL", "entropy", "normalized_row", &spectrogram[i * n_columns], n_columns);
     }
 

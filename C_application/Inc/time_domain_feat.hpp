@@ -31,8 +31,8 @@ template <RealType T> T get_crest(T *sig, int16_t len, T rms) {
     return crest_factor;
 }
 
-template <RealType T> void sub_mean(const T *sig, T *res, int16_t len) {
-    T mean = vect_mean(sig, len);
+template <RealType T, RealType S = T> void sub_mean(const T *sig, T *res, int16_t len) {
+    T mean = vect_mean<T, S>(sig, len);
 
     sub_constant(sig, len, mean, res);
 }

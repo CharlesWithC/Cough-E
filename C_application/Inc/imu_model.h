@@ -61,7 +61,7 @@ static const uint8_t imu_model_feature_frac[35] = {
  * Returns the model confidence for the current window to be COUGH
  */
 #ifndef FXP_MODE
-imu_score_t imu_predict(imu_feat_t *feats);
+imu_data_t imu_predict(imu_data_t *feats);
 #endif
 
 /**
@@ -85,11 +85,11 @@ typedef struct imu_node_children {
 extern const imu_node_children_t DINTL0
     imu_children[IMU_N_TREES][IMU_MAX_NODES];
 // 6100 values * 4 bytes = 24400 bytes ~ 23.9kB
-extern imu_score_t CARUS11 imu_scores[IMU_N_TREES][IMU_MAX_LEAVES];
-extern const imu_score_t FLASH1 imu_scores_src[IMU_N_TREES][IMU_MAX_LEAVES];
+extern imu_data_t CARUS11 imu_scores[IMU_N_TREES][IMU_MAX_LEAVES];
+extern const imu_data_t FLASH1 imu_scores_src[IMU_N_TREES][IMU_MAX_LEAVES];
 // 6000 values * 4 bytes = 24000 bytes ~ 23.5kB
-extern imu_feat_t CARUS11 imu_values_comp[IMU_N_TREES][IMU_MAX_NODES];
-extern const imu_feat_t FLASH1 imu_values_comp_src[IMU_N_TREES][IMU_MAX_NODES];
+extern imu_data_t CARUS11 imu_values_comp[IMU_N_TREES][IMU_MAX_NODES];
+extern const imu_data_t FLASH1 imu_values_comp_src[IMU_N_TREES][IMU_MAX_NODES];
 // 6000 values * 2 bytes = 12000 bytes ~ 11.8kB
 extern int16_t CARUS10 imu_feat_comp[IMU_N_TREES][IMU_MAX_NODES];
 extern const int16_t FLASH0 imu_feat_comp_src[IMU_N_TREES][IMU_MAX_NODES];

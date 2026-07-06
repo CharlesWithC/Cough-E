@@ -19,20 +19,20 @@
 #include <audio_model.h>
 #include <imu_model.h>
 
-audio_score_t CARUS01 audio_scores[AUD_N_TREES][MAX_LEAVES];
-audio_feat_t CARUS01 audio_values_comp[AUD_N_TREES][AUD_MAX_NODES];
+audio_data_t CARUS01 audio_scores[AUD_N_TREES][MAX_LEAVES];
+audio_data_t CARUS01 audio_values_comp[AUD_N_TREES][AUD_MAX_NODES];
 int16_t CARUS00 audio_feat_comp[AUD_N_TREES][AUD_MAX_NODES];
-imu_score_t CARUS11 imu_scores[IMU_N_TREES][IMU_MAX_LEAVES];
-imu_feat_t CARUS11 imu_values_comp[IMU_N_TREES][IMU_MAX_NODES];
+imu_data_t CARUS11 imu_scores[IMU_N_TREES][IMU_MAX_LEAVES];
+imu_data_t CARUS11 imu_values_comp[IMU_N_TREES][IMU_MAX_NODES];
 int16_t CARUS10 imu_feat_comp[IMU_N_TREES][IMU_MAX_NODES];
 
 #ifdef FXP_MODE
 #include <FxP/core/fxp_core.h>
-#define SCORE_THRESHOLD_AUDIO ((audio_score_t)FXP_AUDIO_SCORE_TH_Q16)
-#define SCORE_THRESHOLD_IMU ((imu_score_t)FXP_IMU_SCORE_TH_Q16)
+#define SCORE_THRESHOLD_AUDIO ((audio_data_t)FXP_audio_data_tH_Q16)
+#define SCORE_THRESHOLD_IMU ((imu_data_t)FXP_imu_data_tH_Q16)
 #else
-#define SCORE_THRESHOLD_AUDIO ((audio_score_t)AUDIO_TH)
-#define SCORE_THRESHOLD_IMU ((imu_score_t)IMU_TH)
+#define SCORE_THRESHOLD_AUDIO ((audio_data_t)AUDIO_TH)
+#define SCORE_THRESHOLD_IMU ((imu_data_t)IMU_TH)
 #endif
 
 template<typename T>
@@ -133,17 +133,17 @@ int launch(void)
         }
     }
 
-    audio_feat_t *audio_feature_array = (audio_feat_t *)malloc((size_t)Number_AUDIO_Features * sizeof(audio_feat_t));
+    audio_data_t *audio_feature_array = (audio_data_t *)malloc((size_t)Number_AUDIO_Features * sizeof(audio_data_t));
     for (int i = 0; i < Number_AUDIO_Features; i++) audio_feature_array[i] = 0;
 
-    imu_feat_t *imu_feature_array = (imu_feat_t *)malloc((size_t)Number_IMU_Features * sizeof(imu_feat_t));
+    imu_data_t *imu_feature_array = (imu_data_t *)malloc((size_t)Number_IMU_Features * sizeof(imu_data_t));
     for (int i = 0; i < Number_IMU_Features; i++) imu_feature_array[i] = 0;
 
-    audio_feat_t *features_audio_model = (audio_feat_t *)malloc((size_t)TOT_FEATURES_AUDIO_MODEL_AUDIO * sizeof(audio_feat_t));
-    imu_feat_t *features_imu_model = (imu_feat_t *)malloc((size_t)TOT_FEATURES_IMU_MODEL_IMU * sizeof(imu_feat_t));
+    audio_data_t *features_audio_model = (audio_data_t *)malloc((size_t)TOT_FEATURES_AUDIO_MODEL_AUDIO * sizeof(audio_data_t));
+    imu_data_t *features_imu_model = (imu_data_t *)malloc((size_t)TOT_FEATURES_IMU_MODEL_IMU * sizeof(imu_data_t));
 
-    audio_score_t audio_score = 0;
-    imu_score_t imu_score = 0;
+    audio_data_t audio_score = 0;
+    imu_data_t imu_score = 0;
 
     uint16_t *starts = (uint16_t *)malloc((size_t)MAX_PEAKS_EXPECTED * sizeof(uint16_t));
     uint16_t *ends = (uint16_t *)malloc((size_t)MAX_PEAKS_EXPECTED * sizeof(uint16_t));
@@ -153,7 +153,7 @@ int launch(void)
     uint16_t n_peaks = 0;
     uint16_t new_added = 0;
 
-    audio_score_t *audio_confidence = (audio_score_t *)malloc((size_t)MAX_PEAKS_EXPECTED * sizeof(audio_score_t));
+    audio_data_t *audio_confidence = (audio_data_t *)malloc((size_t)MAX_PEAKS_EXPECTED * sizeof(audio_data_t));
 
     uint32_t idx_start_window = 0;
     uint16_t n_idxs_above_th = 0;
@@ -165,8 +165,8 @@ int launch(void)
 #ifdef FXP_MODE
     int16_t *audio = (int16_t *)malloc((size_t)AUDIO_LEN * sizeof(int16_t));
     q11_5_t (*imu)[Num_IMU_signals] = (q11_5_t(*)[Num_IMU_signals])malloc((size_t)IMU_LEN * sizeof(*imu));
-    const audio_sample_t *audio_runtime_in = NULL;
-    const imu_sample_t (*imu_runtime_in)[Num_IMU_signals] = NULL;
+    const audio_data_t *audio_runtime_in = NULL;
+    const imu_data_t (*imu_runtime_in)[Num_IMU_signals] = NULL;
 
     if (!audio || !imu) {
         free(audio);
@@ -207,10 +207,10 @@ int launch(void)
     bmi_feature = cough_source_feat(bmi);
 #else
     // for non-fxp, we route all data through `read_flash` for consistency
-    audio_sample_t *audio_buf = (audio_sample_t *)malloc(WINDOW_SAMP_AUDIO * sizeof(audio_sample_t));
-    imu_sample_t (*imu_buf)[Num_IMU_signals] = (imu_sample_t (*)[Num_IMU_signals])malloc(WINDOW_SAMP_IMU * Num_IMU_signals * sizeof(imu_sample_t));
-    gender_feature = (feat_t)gender;
-    bmi_feature = (feat_t)bmi;
+    audio_data_t *audio_buf = (audio_data_t *)malloc(WINDOW_SAMP_AUDIO * sizeof(audio_data_t));
+    imu_data_t (*imu_buf)[Num_IMU_signals] = (imu_data_t (*)[Num_IMU_signals])malloc(WINDOW_SAMP_IMU * Num_IMU_signals * sizeof(imu_data_t));
+    gender_feature = gender;
+    bmi_feature = bmi;
 #endif
 
     init_state();
@@ -226,10 +226,10 @@ int launch(void)
             }
 
 #ifdef FXP_MODE
-            const imu_sample_t (*imu_signal)[Num_IMU_signals] = &imu_runtime_in[idx_start_window];
+            const imu_data_t (*imu_signal)[Num_IMU_signals] = &imu_runtime_in[idx_start_window];
 #else
-            const imu_sample_t (*imu_signal)[Num_IMU_signals] = imu_buf;
-            read_flash(&imu_in[idx_start_window], imu_buf, WINDOW_SAMP_IMU * Num_IMU_signals * sizeof(imu_sample_t));
+            const imu_data_t (*imu_signal)[Num_IMU_signals] = imu_buf;
+            read_flash(&imu_in[idx_start_window], imu_buf, WINDOW_SAMP_IMU * Num_IMU_signals * sizeof(imu_data_t));
 #endif
 
             imu_features(imu_features_selector,
@@ -257,10 +257,10 @@ int launch(void)
             }
 
 #ifdef FXP_MODE
-            const audio_sample_t *audio_signal = &audio_runtime_in[idx_start_window];
+            const audio_data_t *audio_signal = &audio_runtime_in[idx_start_window];
 #else
-            const audio_sample_t *audio_signal = audio_buf;
-            read_flash(&audio_in.air[idx_start_window], audio_buf, WINDOW_SAMP_AUDIO * sizeof(audio_sample_t));
+            const audio_data_t *audio_signal = audio_buf;
+            read_flash(&audio_in.air[idx_start_window], audio_buf, WINDOW_SAMP_AUDIO * sizeof(audio_data_t));
 #endif
 
             audio_features(audio_features_selector,

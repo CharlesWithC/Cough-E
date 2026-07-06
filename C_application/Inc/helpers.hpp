@@ -86,15 +86,17 @@ template <RealType T> static inline void vect_div_const(T *x, int16_t len, T div
     }
 }
 
-template <RealType T> static inline T vect_sum(const T *x, int16_t len) {
-    T sum = 0.0;
+template <RealType T, RealType S = T> static inline S vect_sum(const T *x, int16_t len) {
+    S sum = 0.0;
     for (int16_t i = 0; i < len; i++) {
         sum += x[i];
     }
     return sum;
 }
 
-template <RealType T> static inline T vect_mean(const T *x, int16_t len) { return vect_sum(x, len) / len; }
+template <RealType T, RealType S = T> static inline T vect_mean(const T *x, int16_t len) {
+    return vect_sum<T, S>(x, len) / len;
+}
 
 template <RealType T> static inline void vect_mult(T *x, const T *y, int16_t len, T *r) {
     for (int16_t i = 0; i < len; i++) {

@@ -226,24 +226,26 @@ template <RealType T> T compute_centroid(T *mags, T *freqs, int16_t len, T sum_m
     return result;
 }
 
-template <RealType T> T compute_spread(T *mags, T *freqs, int16_t len, T sum_mags, T centroid) {
-    T sum = 0.0;
+// allow higher precision selection (based on precision analysis result)
+template <RealType T, RealType S = T> T compute_spread(T *mags, T *freqs, int16_t len, T sum_mags, T centroid) {
+    S sum = 0.0;
 
     for (int16_t i = 0; i < len; i++) {
         sum += (freqs[i] - centroid) * (freqs[i] - centroid) * mags[i];
     }
 
     RA_LOG_SCALAR("AUDIO_FFT", "spread", "sum", sum);
-    T result = sqrtreal(sum / sum_mags);
+    T result = sqrtreal(sum / (S)sum_mags);
     RA_LOG_SCALAR("AUDIO_FFT", "spread", "result", result);
     return result;
 }
 
-template <RealType T> T compute_kurt(T *mags, T *freqs, int16_t len, T sum_mags, T centroid, T spread) {
-    T spread_4 = spread * spread * spread * spread; // spread^4
+// allow higher precision selection (based on precision analysis result)
+template <RealType T, RealType S = T> T compute_kurt(T *mags, T *freqs, int16_t len, T sum_mags, T centroid, T spread) {
+    S spread_4 = spread * spread * spread * spread; // spread^4
     RA_LOG_SCALAR("AUDIO_FFT", "spec_kurt", "spread_4", spread_4);
 
-    T sum = 0.0;
+    S sum = 0.0;
 
     for (int16_t i = 0; i < len; i++) {
         T tmp = (freqs[i] - centroid) * (freqs[i] - centroid);
@@ -251,7 +253,7 @@ template <RealType T> T compute_kurt(T *mags, T *freqs, int16_t len, T sum_mags,
     }
 
     RA_LOG_SCALAR("AUDIO_FFT", "spec_kurt", "sum", sum);
-    T result = sum / (spread_4 * sum_mags);
+    T result = sum / (spread_4 * (S)sum_mags);
     RA_LOG_SCALAR("AUDIO_FFT", "spec_kurt", "result", result);
     return result;
 }
@@ -273,16 +275,16 @@ template <RealType T> T compute_skew(T *mags, T *freqs, int16_t len, T sum_mags,
     return result;
 }
 
-template <RealType T> T compute_flatness(T *x, int16_t len) {
+// allow higher precision selection (based on precision analysis result)
+template <RealType T, RealType S = T> T compute_flatness(T *x, int16_t len) {
     RA_LOG_ARRAY("AUDIO_PSD", "flatness", "input", x, len);
 
-    T gmean = 0.0; // geometric
-    T amean = 0.0; // arithmetic
+    S gmean = 0.0; // geometric
+    S amean = 0.0; // arithmetic
 
-    T sum_logs = 0.0;
-    T log_val = 0.0;
+    S sum_logs = 0.0;
     for (int16_t i = 0; i < len; i++) {
-        log_val = logreal(x[i]);
+        T log_val = logreal(x[i]);
         RA_LOG_SCALAR("AUDIO_PSD", "flatness", "log_val", log_val);
         sum_logs += log_val;
     }
@@ -407,9 +409,10 @@ template <RealType T> void get_mfcc_features(const T *x, int16_t len, T *mean_mf
     free(coeffs);
 }
 
-template <RealType T>
+// allow higher precision selection (based on precision analysis result)
+template <RealType T, RealType S = T>
 void get_mel_spectrogram_features(const T *x, int16_t len, uint8_t *idx_needed, uint8_t n_mels_needed,
-                                  T *mean_mel_spectr, T *std_mel_spectr, T *max_mel_spectr, T *entropy_mel_spectr) {
+                                  S *mean_mel_spectr, S *std_mel_spectr, S *max_mel_spectr, S *entropy_mel_spectr) {
     int16_t padded_len = (2 * PAD_LEN) + len;                // lenght of the padded signal
     int16_t n_frames = ((padded_len - N_FFT) / HOP_LEN) + 1; // number of frames for the stft
 

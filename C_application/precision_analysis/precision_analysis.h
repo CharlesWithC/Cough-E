@@ -90,13 +90,13 @@ struct VariableConverter<Target, Src, std::enable_if_t<std::is_pointer_v<Src>>> 
 #endif
 
 #ifndef PRECISION_CTRL1
-#define PRECISION_CTRL1 0xAAAA
+#define PRECISION_CTRL1 0
 #endif
 #ifndef PRECISION_CTRL2
-#define PRECISION_CTRL2 0xAAA8
+#define PRECISION_CTRL2 0
 #endif
 #ifndef PRECISION_CTRL3
-#define PRECISION_CTRL3 0x2AAA
+#define PRECISION_CTRL3 0
 #endif
 
 // 00 = no conversion / 01 = use sreal / 10 = use mreal / 11 = not used (reserved for possible custom type mix)
