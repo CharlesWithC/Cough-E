@@ -96,7 +96,7 @@ void fft_based_features(const int8_t *features_selector, const audio_data_t *sig
         return;
     }
 
-    compute_rfft(sig, len, fs, magnitudes, frequencies, &sum_mags);
+    compute_rfft<audio_data_t, real_t>(sig, len, fs, magnitudes, frequencies, &sum_mags);
 
     if (features_selector[SPECTRAL_DECREASE]) {
         audio_data_t spectral_decrease = compute_spec_decrease(magnitudes, frequencies, (len / 2) + 1, sum_mags);

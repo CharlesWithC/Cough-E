@@ -19,11 +19,11 @@
 #include <audio_model.h>
 #include <imu_model.h>
 
-audio_data_t CARUS01 audio_scores[AUD_N_TREES][MAX_LEAVES];
-audio_data_t CARUS01 audio_values_comp[AUD_N_TREES][AUD_MAX_NODES];
+audio_score_t CARUS01 audio_scores[AUD_N_TREES][MAX_LEAVES];
+audio_score_t CARUS01 audio_values_comp[AUD_N_TREES][AUD_MAX_NODES];
 int16_t CARUS00 audio_feat_comp[AUD_N_TREES][AUD_MAX_NODES];
-imu_data_t CARUS11 imu_scores[IMU_N_TREES][IMU_MAX_LEAVES];
-imu_data_t CARUS11 imu_values_comp[IMU_N_TREES][IMU_MAX_NODES];
+imu_score_t CARUS11 imu_scores[IMU_N_TREES][IMU_MAX_LEAVES];
+imu_score_t CARUS11 imu_values_comp[IMU_N_TREES][IMU_MAX_NODES];
 int16_t CARUS10 imu_feat_comp[IMU_N_TREES][IMU_MAX_NODES];
 
 #ifdef FXP_MODE

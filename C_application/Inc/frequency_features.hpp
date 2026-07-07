@@ -21,7 +21,7 @@
 */
 template <RealType T> void _rfft(const T *sig, int16_t len, T *real, T *imag);
 
-template <RealType T> void compute_rfft(const T *sig, int16_t len, int16_t fs, T *mags, T *freqs, T *sum_mags) {
+template <RealType T, RealType S = T> void compute_rfft(const T *sig, int16_t len, int16_t fs, T *mags, T *freqs, T *sum_mags) {
     RA_LOG_ARRAY("AUDIO_FFT", "compute_rfft", "sig_input", sig, len);
 
     T *re = (T *)malloc(len * sizeof(T));
@@ -33,10 +33,12 @@ template <RealType T> void compute_rfft(const T *sig, int16_t len, int16_t fs, T
     RA_LOG_ARRAY("AUDIO_FFT", "compute_rfft", "im", im, fft_size);
 
     // Compute the magnitude of each FFT output
+    S sum_mags_local = *sum_mags; // use high precision accumulator to reduce rounding error
     for (int16_t i = 0; i < fft_size; i++) {
         mags[i] = sqrtreal((re[i] * re[i]) + (im[i] * im[i]));
-        *sum_mags += mags[i];
+        sum_mags_local += mags[i];
     }
+    *sum_mags = sum_mags_local;
 
     RA_LOG_ARRAY("AUDIO_FFT", "compute_rfft", "magnitudes", mags, fft_size);
 

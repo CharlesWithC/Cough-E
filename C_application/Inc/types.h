@@ -34,6 +34,9 @@ typedef float sreal_t;
 #ifndef FXP_MODE
 typedef sreal_t audio_data_t;
 typedef sreal_t imu_data_t;
+
+typedef real_t audio_score_t;
+typedef real_t imu_score_t;
 #endif // for FXP_MODE, these are defined in fxp_core.h
 
 #ifdef UPOS_MODE

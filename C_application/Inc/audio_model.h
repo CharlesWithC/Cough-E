@@ -77,7 +77,7 @@ static const uint8_t audio_model_feature_frac[83] = {
  * @param *feat 	:	pointer to the features to be processed
  */
 #ifndef FXP_MODE
-audio_data_t audio_predict(audio_data_t *feats);
+audio_score_t audio_predict(audio_data_t *feats);
 #endif
 
 /**
@@ -101,11 +101,11 @@ typedef struct node_children {
 extern const audio_node_children_t DINTL0
     audio_children[AUD_N_TREES][AUD_MAX_NODES];
 // 5500 values * 4 bytes = 22000 bytes ~ 21.5kB
-extern audio_data_t CARUS01 audio_scores[AUD_N_TREES][MAX_LEAVES];
-extern const audio_data_t FLASH1 audio_scores_src[AUD_N_TREES][MAX_LEAVES];
+extern audio_score_t CARUS01 audio_scores[AUD_N_TREES][MAX_LEAVES];
+extern const audio_score_t FLASH1 audio_scores_src[AUD_N_TREES][MAX_LEAVES];
 // 5400 values * 4 bytes = 21600 bytes ~ 21.1kB
-extern audio_data_t CARUS01 audio_values_comp[AUD_N_TREES][AUD_MAX_NODES];
-extern const audio_data_t FLASH1 audio_values_comp_src[AUD_N_TREES][AUD_MAX_NODES];
+extern audio_score_t CARUS01 audio_values_comp[AUD_N_TREES][AUD_MAX_NODES];
+extern const audio_score_t FLASH1 audio_values_comp_src[AUD_N_TREES][AUD_MAX_NODES];
 // 5400 values * 2 bytes = 10800 bytes ~ 10.6kB
 extern int16_t CARUS00 audio_feat_comp[AUD_N_TREES][AUD_MAX_NODES];
 extern const int16_t FLASH0 audio_feat_comp_src[AUD_N_TREES][AUD_MAX_NODES];

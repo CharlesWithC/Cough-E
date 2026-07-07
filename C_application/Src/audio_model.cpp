@@ -56,20 +56,20 @@ fxp_q16_t audio_predict(const fxp_feat_t *feats)
 /// @brief Computes the sigmoid value of a given score
 /// @param score    :   the score for which to compute the sigmoid
 /// @return The resulting value
-audio_data_t _audio_sigmoid(audio_data_t score)
+audio_score_t _audio_sigmoid(audio_score_t score)
 {
     if (score < 0.0f) {
-        audio_data_t z = expreal(score);
+        audio_score_t z = expreal(score);
         return z / (1.0f + z);
     }
     return (1.0f / (1.0f + expreal(-score)));
 }
 
-audio_data_t audio_predict(audio_data_t *feats)
+audio_score_t audio_predict(audio_data_t *feats)
 {
     RA_LOG_ARRAY("CLASSIFY", "audio_predict", "feats_input", feats, TOT_FEATURES_AUDIO_MODEL_AUDIO);
 
-    audio_data_t score = 0.0f;
+    audio_score_t score = 0.0f;
     int16_t current_node = 0;
     int16_t child_type = 0;
 
@@ -78,7 +78,7 @@ audio_data_t audio_predict(audio_data_t *feats)
         child_type = 0;
 
         for (int16_t n = 0; n < AUD_MAX_NODES; n++) {
-            if (feats[audio_feat_comp[t][current_node]] < audio_values_comp[t][current_node]) {
+            if ((audio_score_t)feats[audio_feat_comp[t][current_node]] < audio_values_comp[t][current_node]) {
                 child_type = audio_children[t][current_node].child_left.type;
                 current_node = audio_children[t][current_node].child_left.id;
             } else {
@@ -95,7 +95,7 @@ audio_data_t audio_predict(audio_data_t *feats)
 
     RA_LOG_SCALAR("CLASSIFY", "audio_predict", "score", score);
 
-    audio_data_t res = _audio_sigmoid(score);
+    audio_score_t res = _audio_sigmoid(score);
     RA_LOG_SCALAR("CLASSIFY", "_audio_sigmoid", "result", res);
     return res;
 }
