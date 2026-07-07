@@ -506,11 +506,6 @@ int kiss_fft_next_fast_size(int n)
     return n;
 }
 
-template struct kiss_fft_state<real_t>;
-template kiss_fft_cfg<real_t> kiss_fft_alloc<real_t>(int, int, void*, size_t*);
-template void kiss_fft<real_t>(kiss_fft_cfg<real_t>, const kiss_fft_cpx<real_t>*, kiss_fft_cpx<real_t>*);
-#ifdef UPOS_MODE
 template struct kiss_fft_state<sreal_t>;
 template kiss_fft_cfg<sreal_t> kiss_fft_alloc<sreal_t>(int, int, void*, size_t*);
 template void kiss_fft<sreal_t>(kiss_fft_cfg<sreal_t>, const kiss_fft_cpx<sreal_t>*, kiss_fft_cpx<sreal_t>*);
-#endif

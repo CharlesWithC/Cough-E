@@ -386,7 +386,7 @@ static audio_data_t *_downsample(const audio_data_t *sig, int16_t len, int16_t f
 
     for (int16_t i = 0; i < *new_len; i++) {
         res[i] = sig[i * scale_factor];
-        mean += res[i];
+        mean += (real_t)res[i];
     }
 
     mean = mean / *new_len;
@@ -512,10 +512,10 @@ uint16_t _clean_cough_segments(uint16_t *starts_idxs,
                                uint16_t n_peaks,
                                uint16_t fs)
 {
-    real_t min_dist_btwn_cough_peaks = COUGH_BURST_MIN_DUR + COUGH_EXP_MIN_DUR;
-    real_t min_time_before_peak = COUGH_BURST_MIN_DUR / 2;
-    real_t min_time_after_peak = COUGH_BURST_MIN_DUR / 2 + COUGH_EXP_MIN_DUR;
-    real_t max_dist_btwn_cough_peaks_in_burst = COUGH_EXP_MAX_DUR + COUGH_BURST_MIN_DUR;
+    sreal_t min_dist_btwn_cough_peaks = COUGH_BURST_MIN_DUR + COUGH_EXP_MIN_DUR;
+    sreal_t min_time_before_peak = COUGH_BURST_MIN_DUR / 2;
+    sreal_t min_time_after_peak = COUGH_BURST_MIN_DUR / 2 + COUGH_EXP_MIN_DUR;
+    sreal_t max_dist_btwn_cough_peaks_in_burst = COUGH_EXP_MAX_DUR + COUGH_BURST_MIN_DUR;
 
     uint16_t *sorted_idxs = (uint16_t *)malloc(n_peaks * sizeof(uint16_t));
     argsort(peaks_locs, n_peaks, sorted_idxs);
@@ -533,7 +533,7 @@ uint16_t _clean_cough_segments(uint16_t *starts_idxs,
     uint16_t locs_final[n_peaks];
     uint16_t n_peaks_final = 0;
 
-    real_t dist = 0;
+    sreal_t dist = 0;
     uint16_t tmp_start = 0;
     uint16_t tmp_end = 0;
     uint16_t tmp_loc = 0;
@@ -545,7 +545,7 @@ uint16_t _clean_cough_segments(uint16_t *starts_idxs,
             tmp_loc = peaks_locs[i];
 
             for (uint16_t j = (i + 1); j < n_peaks; j++) {
-                dist = (peaks_locs[j] - peaks_locs[i]) / (real_t)fs;
+                dist = (peaks_locs[j] - peaks_locs[i]) / (sreal_t)fs;
                 if (dist < min_dist_btwn_cough_peaks) {
                     idxs_merged[n_peaks_merged] = j;
                     n_peaks_merged++;
@@ -567,13 +567,13 @@ uint16_t _clean_cough_segments(uint16_t *starts_idxs,
         }
     }
 
-    real_t *cough_distances = (real_t *)malloc((uint32_t)((n_peaks_final - 1) * sizeof(real_t)));
+    sreal_t *cough_distances = (sreal_t *)malloc((uint32_t)((n_peaks_final - 1) * sizeof(sreal_t)));
 
     for (uint16_t i = 0; i < (n_peaks_final - 1); i++) {
-        cough_distances[i] = (locs_final[i + 1] - locs_final[i]) / (real_t)fs;
+        cough_distances[i] = (locs_final[i + 1] - locs_final[i]) / (sreal_t)fs;
     }
 
-    real_t *cough_burst_distances = (real_t *)malloc((n_peaks_final - 1) * sizeof(real_t));
+    sreal_t *cough_burst_distances = (sreal_t *)malloc((n_peaks_final - 1) * sizeof(sreal_t));
     uint16_t n_busts_dists = 0;
     for (uint16_t i = 0; i < (n_peaks_final - 1); i++) {
         if (cough_distances[i] <= max_dist_btwn_cough_peaks_in_burst) {
@@ -584,7 +584,7 @@ uint16_t _clean_cough_segments(uint16_t *starts_idxs,
 
     free(cough_distances);
 
-    real_t avg_cough_end_times = min_time_after_peak;
+    sreal_t avg_cough_end_times = min_time_after_peak;
 
     if (n_busts_dists > 0) {
         avg_cough_end_times = vect_mean(cough_burst_distances, n_busts_dists) - COUGH_BURST_MAX_DUR;
@@ -592,20 +592,20 @@ uint16_t _clean_cough_segments(uint16_t *starts_idxs,
 
     free(cough_burst_distances);
 
-    real_t time_start_peak = 0.0f;
-    real_t time_to_next_peak = 0.0f;
+    sreal_t time_start_peak = 0.0f;
+    sreal_t time_to_next_peak = 0.0f;
     uint16_t cough_series_count = 0;
-    real_t series_multiplier = 0.0f;
+    sreal_t series_multiplier = 0.0f;
 
     for (uint16_t i = 0; i < n_peaks_final; i++) {
-        time_start_peak = (locs_final[i] - starts_idxs[i]) / (real_t)fs;
+        time_start_peak = (locs_final[i] - starts_idxs[i]) / (sreal_t)fs;
 
         if (time_start_peak < min_time_before_peak) {
             starts_idxs[i] = locs_final[i] - (uint16_t)(float)(min_time_before_peak * fs);
         }
 
         if (i < (n_peaks_final - 1)) {
-            time_to_next_peak = (real_t)(locs_final[i + 1] - locs_final[i]) / fs;
+            time_to_next_peak = (sreal_t)(locs_final[i + 1] - locs_final[i]) / fs;
         } else {
             time_to_next_peak = 100;
         }

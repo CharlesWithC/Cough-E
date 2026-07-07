@@ -59466,10 +59466,7 @@ template <RealType T> const T FLASH1 dct_cos[16384] = {
     -0.012266
 };
 
-template const real_t FLASH1 dct_cos<real_t>[16384];
-#ifdef UPOS_MODE
 template const sreal_t FLASH1 dct_cos<sreal_t>[16384];
-#endif
 #endif
 // constants.h (dct_lin.h)
 //////////////////////////////////////////////////////////////////////////////////////
@@ -61741,10 +61738,7 @@ template <RealType T> const T DINTL1 mel_basis[MEL_ROWS][MAX_NZ_ELEMS] = {
 	},
 };
 
-template const real_t DINTL1 mel_basis<real_t>[MEL_ROWS][MAX_NZ_ELEMS];
-#ifdef UPOS_MODE
 template const sreal_t DINTL1 mel_basis<sreal_t>[MEL_ROWS][MAX_NZ_ELEMS];
-#endif
 #endif
 // constants.h (mel_basis.h)
 //////////////////////////////////////////////////////////////////////////////////////
@@ -65855,10 +65849,7 @@ const T DINTL1 hann_mfcc_wind[HANN_SIZE] = {
     2.35309521190441e-06
 };
 
-template const real_t DINTL1 hann_mfcc_wind<real_t>[HANN_SIZE];
-#ifdef UPOS_MODE
 template const sreal_t DINTL1 hann_mfcc_wind<sreal_t>[HANN_SIZE];
-#endif
 #endif
 // constants.h (mfcc_hann_wind.h)
 //////////////////////////////////////////////////////////////////////////////////////
@@ -67672,10 +67663,7 @@ template <RealType T> const T DINTL1 hann_window[NPERSEG] = {
     1.2184647302626583e-05
 };
 
-template const real_t DINTL1 hann_window<real_t>[NPERSEG];
-#ifdef UPOS_MODE
 template const sreal_t DINTL1 hann_window<sreal_t>[NPERSEG];
-#endif
 #endif
 // constants.h (welch_psd.h)
 //////////////////////////////////////////////////////////////////////////////////////

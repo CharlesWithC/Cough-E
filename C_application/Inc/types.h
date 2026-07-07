@@ -10,7 +10,7 @@
 #endif
 #include <universal/number/posit/posit.hpp>
 using namespace sw::universal;
-typedef posit<32, 2> real_t;
+typedef float real_t;
 typedef posit<16, 2> sreal_t;
 template <typename T>
 concept Universal = requires(T x) { T::nbits; };
@@ -35,8 +35,8 @@ typedef float sreal_t;
 typedef sreal_t audio_data_t;
 typedef sreal_t imu_data_t;
 
-typedef real_t audio_score_t;
-typedef real_t imu_score_t;
+typedef sreal_t audio_score_t;
+typedef sreal_t imu_score_t;
 #endif // for FXP_MODE, these are defined in fxp_core.h
 
 #ifdef UPOS_MODE

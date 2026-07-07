@@ -265,9 +265,9 @@ void mel_spectrogram_features(const int8_t *features_selector, const audio_data_
         }
 
         // Arrays to temporary store the features
-        real_t *mean_mel_spectr = (real_t *)malloc(n_mels_needed * sizeof(real_t));
-        real_t *std_mel_spectr = (real_t *)malloc(n_mels_needed * sizeof(real_t));
-        real_t *max_mel_spectr = (real_t *)malloc(n_mels_needed * sizeof(real_t));
+        audio_data_t *mean_mel_spectr = (audio_data_t *)malloc(n_mels_needed * sizeof(audio_data_t));
+        audio_data_t *std_mel_spectr = (audio_data_t *)malloc(n_mels_needed * sizeof(audio_data_t));
+        audio_data_t *max_mel_spectr = (audio_data_t *)malloc(n_mels_needed * sizeof(audio_data_t));
         real_t *entropy_mel_spectr = (real_t *)malloc(n_mels_needed * sizeof(real_t));
 
         get_mel_spectrogram_features(sig, len, idxs_needed, n_mels_needed, mean_mel_spectr, std_mel_spectr,

@@ -33,10 +33,10 @@ template <RealType T, RealType S = T> void compute_rfft(const T *sig, int16_t le
     RA_LOG_ARRAY("AUDIO_FFT", "compute_rfft", "im", im, fft_size);
 
     // Compute the magnitude of each FFT output
-    S sum_mags_local = *sum_mags; // use high precision accumulator to reduce rounding error
+    S sum_mags_local = (S)*sum_mags; // use high precision accumulator to reduce rounding error
     for (int16_t i = 0; i < fft_size; i++) {
         mags[i] = sqrtreal((re[i] * re[i]) + (im[i] * im[i]));
-        sum_mags_local += mags[i];
+        sum_mags_local += (S)mags[i];
     }
     *sum_mags = sum_mags_local;
 
@@ -88,7 +88,7 @@ void compute_periodogram(const T *sig, int16_t len, int16_t fs, T *psd, T *freqs
     S sum = 0.0;
 
     for (int16_t i = 0; i < NPERSEG; i++) {
-        sum += hann_window<T>[i] * hann_window<T>[i];
+        sum += (S)(hann_window<T>[i] * hann_window<T>[i]);
     }
 
     scale = 1 / (fs * sum);
@@ -127,7 +127,7 @@ void compute_periodogram(const T *sig, int16_t len, int16_t fs, T *psd, T *freqs
                 mags_squared[i] *= 2; // Multiply by 2, apart from DC frequency (first element) and last element
             }
             cumul_sums[i] +=
-                mags_squared[i]; // Update the cumulative sum (element-wise across FFT result of different windows)
+                (S)mags_squared[i]; // Update the cumulative sum (element-wise across FFT result of different windows)
         }
 
         RA_LOG_ARRAY("AUDIO_PSD", "periodogram", "mags_squared", mags_squared, psd_size);
@@ -203,7 +203,7 @@ template <RealType T, RealType S = T> T compute_rolloff(T *mags, T *freqs, int16
     RA_LOG_SCALAR("AUDIO_FFT", "rolloff", "rolloff_energy", rolloff_energy);
 
     for (int16_t i = 0; i < len; i++) {
-        sum += mags[i];
+        sum += (S)mags[i];
         RA_LOG_SCALAR("AUDIO_FFT", "rolloff", "sum", sum);
 
         if (sum >= rolloff_energy) {
@@ -234,7 +234,7 @@ template <RealType T, RealType S = T> T compute_spread(T *mags, T *freqs, int16_
     S sum = 0.0;
 
     for (int16_t i = 0; i < len; i++) {
-        sum += (freqs[i] - centroid) * (freqs[i] - centroid) * mags[i];
+        sum += (S)((freqs[i] - centroid) * (freqs[i] - centroid) * mags[i]);
     }
 
     RA_LOG_SCALAR("AUDIO_FFT", "spread", "sum", sum);
@@ -245,14 +245,14 @@ template <RealType T, RealType S = T> T compute_spread(T *mags, T *freqs, int16_
 
 // allow higher precision selection (based on precision analysis result)
 template <RealType T, RealType S = T> T compute_kurt(T *mags, T *freqs, int16_t len, T sum_mags, T centroid, T spread) {
-    S spread_4 = spread * spread * spread * spread; // spread^4
+    S spread_4 = (S)(spread * spread * spread * spread); // spread^4
     RA_LOG_SCALAR("AUDIO_FFT", "spec_kurt", "spread_4", spread_4);
 
     S sum = 0.0;
 
     for (int16_t i = 0; i < len; i++) {
         T tmp = (freqs[i] - centroid) * (freqs[i] - centroid);
-        sum += tmp * tmp * mags[i];
+        sum += (S)(tmp * tmp * mags[i]);
     }
 
     RA_LOG_SCALAR("AUDIO_FFT", "spec_kurt", "sum", sum);
@@ -289,7 +289,7 @@ template <RealType T, RealType S = T> T compute_flatness(T *x, int16_t len) {
     for (int16_t i = 0; i < len; i++) {
         T log_val = logreal(x[i]);
         RA_LOG_SCALAR("AUDIO_PSD", "flatness", "log_val", log_val);
-        sum_logs += log_val;
+        sum_logs += (S)log_val;
     }
     RA_LOG_SCALAR("AUDIO_PSD", "flatness", "sum_logs_raw", sum_logs);
     sum_logs = sum_logs / len;
@@ -415,7 +415,7 @@ template <RealType T> void get_mfcc_features(const T *x, int16_t len, T *mean_mf
 // allow higher precision selection (based on precision analysis result)
 template <RealType T, RealType S = T>
 void get_mel_spectrogram_features(const T *x, int16_t len, uint8_t *idx_needed, uint8_t n_mels_needed,
-                                  S *mean_mel_spectr, S *std_mel_spectr, S *max_mel_spectr, S *entropy_mel_spectr) {
+                                  T *mean_mel_spectr, T *std_mel_spectr, T *max_mel_spectr, S *entropy_mel_spectr) {
     int16_t padded_len = (2 * PAD_LEN) + len;                // lenght of the padded signal
     int16_t n_frames = ((padded_len - N_FFT) / HOP_LEN) + 1; // number of frames for the stft
 

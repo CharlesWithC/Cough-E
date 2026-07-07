@@ -270,13 +270,7 @@ void kiss_fftri(kiss_fftr_cfg<T> st,const kiss_fft_cpx<T> *freqdata,T *timedata)
     kiss_fft (st->substate, st->tmpbuf, (kiss_fft_cpx<T> *) timedata);
 }
 
-template struct kiss_fftr_state<real_t>;
-template kiss_fftr_cfg<real_t> kiss_fftr_alloc<real_t>(int nfft, int inverse_fft, void * mem, size_t * lenmem);
-template void kiss_fftr<real_t>(kiss_fftr_cfg<real_t> cfg, const real_t *timedata, kiss_fft_cpx<real_t> *freqdata);
-template void kiss_fftri<real_t>(kiss_fftr_cfg<real_t> cfg, const kiss_fft_cpx<real_t> *freqdata, real_t *timedata);
-#ifdef UPOS_MODE
 template struct kiss_fftr_state<sreal_t>;
 template kiss_fftr_cfg<sreal_t> kiss_fftr_alloc<sreal_t>(int nfft, int inverse_fft, void * mem, size_t * lenmem);
 template void kiss_fftr<sreal_t>(kiss_fftr_cfg<sreal_t> cfg, const sreal_t *timedata, kiss_fft_cpx<sreal_t> *freqdata);
 template void kiss_fftri<sreal_t>(kiss_fftr_cfg<sreal_t> cfg, const kiss_fft_cpx<sreal_t> *freqdata, sreal_t *timedata);
-#endif

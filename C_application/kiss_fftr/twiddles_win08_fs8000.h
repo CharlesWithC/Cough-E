@@ -14065,20 +14065,12 @@ static const twiddles_t<T> FLASH1 twiddles_512[512] = {
 	{ -1.000000, -0.000000 }
 };
 
-template const twiddles_t<real_t>  twiddles_3200<real_t>[3200];
-template const twiddles_t<real_t>  twiddles_450<real_t>[450];
-template const twiddles_t<real_t>  twiddles_1024<real_t>[1024];
-template const twiddles_t<real_t>  twiddles_1600<real_t>[1600];
-template const twiddles_t<real_t>  twiddles_225<real_t>[225];
-template const twiddles_t<real_t>  twiddles_512<real_t>[512];
-#ifdef UPOS_MODE
 template const twiddles_t<sreal_t> twiddles_3200<sreal_t>[3200];
 template const twiddles_t<sreal_t> twiddles_450<sreal_t>[450];
 template const twiddles_t<sreal_t> twiddles_1024<sreal_t>[1024];
 template const twiddles_t<sreal_t> twiddles_1600<sreal_t>[1600];
 template const twiddles_t<sreal_t> twiddles_225<sreal_t>[225];
 template const twiddles_t<sreal_t> twiddles_512<sreal_t>[512];
-#endif
 
 #endif
 

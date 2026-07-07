@@ -166,8 +166,8 @@ def generate_bio_header(bio_path, subj_id, output_dir):
         f.write(f"#ifndef {guard}\n")
         f.write(f"#define {guard}\n\n")
         f.write(f"#include <types.h>\n\n")
-        f.write(f"static const real_t gender = {int(gender)};\n")
-        f.write(f"static const real_t bmi = {bmi};\n\n")
+        f.write(f"static const sreal_t gender = {int(gender)};\n")
+        f.write(f"static const sreal_t bmi = {bmi};\n\n")
         f.write("#endif\n")
 
     return filename

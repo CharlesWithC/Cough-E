@@ -89,7 +89,7 @@ template <RealType T> static inline void vect_div_const(T *x, int16_t len, T div
 template <RealType T, RealType S = T> static inline S vect_sum(const T *x, int16_t len) {
     S sum = 0.0;
     for (int16_t i = 0; i < len; i++) {
-        sum += x[i];
+        sum += (S)x[i];
     }
     return sum;
 }
@@ -113,7 +113,7 @@ template <RealType T, RealType S = T> static inline T vect_std(T *x, int16_t len
         RA_IMU_LOG_SCALAR("vect_std", "x_minus_mean", centered);
         T sq_dev = centered * centered;
         RA_IMU_LOG_SCALAR("vect_std", "sq_dev", sq_dev);
-        sum += sq_dev;
+        sum += (S)sq_dev;
     }
 
     RA_IMU_LOG_SCALAR("vect_std", "sum_sq_dev", sum);

@@ -162,7 +162,7 @@ template <RealType T> void get_mfcc_features(const T *x, int16_t len, T *mean_mf
 /// @param *entropy_mel_spectr  pointer to the resulting entropies of the mels
 template <RealType T, RealType S>
 void get_mel_spectrogram_features(const T *x, int16_t len, uint8_t *idx_needed, uint8_t n_mels_needed,
-                                  S *mean_mel_spectr, S *std_mel_spectr, S *max_mel_spectr, S *entropy_mel_spectr);
+                                  T *mean_mel_spectr, T *std_mel_spectr, T *max_mel_spectr, S *entropy_mel_spectr);
 
 #include <frequency_features.hpp>
 

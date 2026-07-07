@@ -40,9 +40,9 @@ template <RealType T, RealType S = T> void sub_mean(const T *sig, T *res, int16_
 template <RealType T, RealType S = T> T get_rms(T *sig, int16_t len) {
     S sum = 0;
     for (int16_t i = 0; i < len; i++) {
-        S sq = (S)sig[i] * (S)sig[i];
+        T sq = sig[i] * sig[i];
         RA_IMU_LOG_SCALAR("get_rms", "sig_sq", sq);
-        sum += sq;
+        sum += (S)sq;
     }
     RA_IMU_LOG_SCALAR("get_rms", "sum_sq", sum);
     T result = sqrtreal(sum / len);
