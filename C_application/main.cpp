@@ -237,9 +237,12 @@ int launch(void)
                          WINDOW_SAMP_IMU,
                          imu_feature_array);
 
+            DEBUG_PRINTF("IMU FEATURES\n");
             for (int16_t j = 0; j < N_IMU_FEATURES; j++) {
                 features_imu_model[j] = imu_feature_array[indexes_imu_f[j]];
+                DEBUG_PRINT_FLOAT((float)features_imu_model[j], 8); DEBUG_PRINTF(" ");
             }
+            DEBUG_PRINTF("\n");
             if (imu_bio_feats_selector[0] == 1) {
                 features_imu_model[N_IMU_FEATURES] = gender_feature;
             }
@@ -269,9 +272,12 @@ int launch(void)
                            AUDIO_FS,
                            audio_feature_array);
 
+            DEBUG_PRINTF("AUDIO FEATURES\n");
             for (int16_t j = 0; j < N_AUDIO_FEATURES; j++) {
                 features_audio_model[j] = audio_feature_array[indexes_audio_f[j]];
+                DEBUG_PRINT_FLOAT((float)features_audio_model[j], 8); DEBUG_PRINTF(" ");
             }
+            DEBUG_PRINTF("\n");
             if (audio_bio_feats_selector[0] == 1) {
                 features_audio_model[N_AUDIO_FEATURES] = gender_feature;
             }
