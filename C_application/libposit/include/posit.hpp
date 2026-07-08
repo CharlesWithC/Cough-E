@@ -39,7 +39,7 @@ public:
     explicit operator T() const { return static_cast<T>(posit2float(v)); }
 
     inline posit_t value() {
-        return v;
+        return psw(v);
     }
 
     inline posit_t value_unsafe() {
@@ -73,22 +73,22 @@ public:
         return p;
     }
 
-    inline Posit& operator+=(Posit y) {
+    Posit& operator+=(Posit y) {
         v = padd(v, y.v);
         return *this;
     }
 
-    inline Posit& operator-=(Posit y) {
+    Posit& operator-=(Posit y) {
         v = psub(v, y.v);
         return *this;
     }
 
-    inline Posit& operator*=(Posit y) {
+    Posit& operator*=(Posit y) {
         v = pmul(v, y.v);
         return *this;
     }
 
-    inline Posit& operator/=(Posit y) {
+    Posit& operator/=(Posit y) {
         v = pdiv(v, y.v);
         return *this;
     }

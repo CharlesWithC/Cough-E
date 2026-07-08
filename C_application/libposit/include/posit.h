@@ -5,26 +5,18 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <stdio.h>
 
 #if POSIT_SIZE == 16
 #include "softposit/posit16.h"
+typedef uint16_t posit_t;
 #else
 #if POSIT_SIZE == 32
 #include "softposit/posit32.h"
+typedef uint32_t posit_t;
 #else
 #error "Invalid POSIT_SIZE"
 #endif
 #endif
-
-// use uint32_t for both posit16 and posit32 because GPR is 32bit
-// uint16_t may cause unexpected behaviors
-// this should be improved in the future along with llvm-xposit
-//
-// note: this library targets hardware that supports EITHER posit16 OR posit32
-// i.e. the hardware is synthesized for only one of them, and same instruction
-// is used for both posit sizes. thus this library does not care posit size.
-typedef uint32_t posit_t;
 
 static constexpr inline posit_t float2posit(float x) {
 #if POSIT_SIZE == 16
@@ -46,7 +38,7 @@ static constexpr inline float posit2float(posit_t x) {
 #endif
 }
 
-static __attribute__((noinline)) posit_t padd(posit_t x, posit_t y) {
+static inline posit_t padd(posit_t x, posit_t y) {
     posit_t result;
 
     asm inline volatile (
@@ -60,7 +52,7 @@ static __attribute__((noinline)) posit_t padd(posit_t x, posit_t y) {
     return result;
 }
 
-static __attribute__((noinline)) posit_t psub(posit_t x, posit_t y) {
+static inline posit_t psub(posit_t x, posit_t y) {
     posit_t result;
 
     asm inline volatile (
@@ -74,7 +66,7 @@ static __attribute__((noinline)) posit_t psub(posit_t x, posit_t y) {
     return result;
 }
 
-static __attribute__((noinline)) posit_t pmul(posit_t x, posit_t y) {
+static inline posit_t pmul(posit_t x, posit_t y) {
     posit_t result;
 
     asm inline volatile (
@@ -88,7 +80,7 @@ static __attribute__((noinline)) posit_t pmul(posit_t x, posit_t y) {
     return result;
 }
 
-static __attribute__((noinline)) posit_t pdiv(posit_t x, posit_t y) {
+static inline posit_t pdiv(posit_t x, posit_t y) {
     posit_t result;
 
     asm inline volatile (
@@ -102,7 +94,7 @@ static __attribute__((noinline)) posit_t pdiv(posit_t x, posit_t y) {
     return result;
 }
 
-static __attribute__((noinline)) posit_t psqrt(posit_t x) {
+static inline posit_t psqrt(posit_t x) {
     posit_t result;
 
     asm inline volatile (
@@ -116,7 +108,7 @@ static __attribute__((noinline)) posit_t psqrt(posit_t x) {
     return result;
 }
 
-static __attribute__((noinline)) posit_t pmin(posit_t x, posit_t y) {
+static inline posit_t pmin(posit_t x, posit_t y) {
     posit_t result;
 
     asm inline volatile (
@@ -130,7 +122,7 @@ static __attribute__((noinline)) posit_t pmin(posit_t x, posit_t y) {
     return result;
 }
 
-static __attribute__((noinline)) posit_t pmax(posit_t x, posit_t y) {
+static inline posit_t pmax(posit_t x, posit_t y) {
     posit_t result;
 
     asm inline volatile (
@@ -144,7 +136,7 @@ static __attribute__((noinline)) posit_t pmax(posit_t x, posit_t y) {
     return result;
 }
 
-static __attribute__((noinline)) bool peq(posit_t x, posit_t y) {
+static inline bool peq(posit_t x, posit_t y) {
     bool result;
 
     asm inline volatile (
@@ -158,7 +150,7 @@ static __attribute__((noinline)) bool peq(posit_t x, posit_t y) {
     return result;
 }
 
-static __attribute__((noinline)) bool plt(posit_t x, posit_t y) {
+static inline bool plt(posit_t x, posit_t y) {
     bool result;
 
     asm inline volatile (
@@ -172,7 +164,7 @@ static __attribute__((noinline)) bool plt(posit_t x, posit_t y) {
     return result;
 }
 
-static __attribute__((noinline)) bool ple(posit_t x, posit_t y) {
+static inline bool ple(posit_t x, posit_t y) {
     bool result;
 
     asm inline volatile (
@@ -186,7 +178,7 @@ static __attribute__((noinline)) bool ple(posit_t x, posit_t y) {
     return result;
 }
 
-static __attribute__((noinline)) posit_t psgnjxs(posit_t x, posit_t y) {
+static inline posit_t psgnjxs(posit_t x, posit_t y) {
     posit_t result;
 
     asm inline volatile (
@@ -200,7 +192,7 @@ static __attribute__((noinline)) posit_t psgnjxs(posit_t x, posit_t y) {
     return result;
 }
 
-static __attribute__((noinline)) posit_t plw(posit_t x) {
+static inline posit_t plw(posit_t x) {
     posit_t result;
 
     asm inline volatile (
@@ -214,7 +206,7 @@ static __attribute__((noinline)) posit_t plw(posit_t x) {
     return result;
 }
 
-static __attribute__((noinline)) posit_t psw(posit_t x) {
+static inline posit_t psw(posit_t x) {
     posit_t result;
 
     asm inline volatile (
@@ -228,7 +220,7 @@ static __attribute__((noinline)) posit_t psw(posit_t x) {
     return result;
 }
 
-static __attribute__((noinline)) posit_t pmvwx(posit_t x) {
+static inline posit_t pmvwx(posit_t x) {
     posit_t result;
 
     asm inline volatile (
@@ -242,7 +234,7 @@ static __attribute__((noinline)) posit_t pmvwx(posit_t x) {
     return result;
 }
 
-static __attribute__((noinline)) posit_t pmvxw(posit_t x) {
+static inline posit_t pmvxw(posit_t x) {
     posit_t result;
 
     asm inline volatile (
