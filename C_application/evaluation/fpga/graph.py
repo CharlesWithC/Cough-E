@@ -53,7 +53,7 @@ def parse_log(path):
     return data
 
 
-def build_matrix(data_a, data_b, kind):
+def build_matrix(data_a, data_b, kind, drift_type="absolute"):
     """
     Align windows present in both logs for a given kind ('IMU' or 'AUDIO').
     Returns (windows_sorted, drift_matrix) where drift_matrix is
@@ -77,12 +77,15 @@ def build_matrix(data_a, data_b, kind):
             print(f"WARNING: {kind} window {w} length mismatch "
                   f"({len(a)} vs {len(b)}), skipping")
             continue
-        matrix[:, col] = np.abs(a - b)
+        if drift_type == "absolute":
+            matrix[:, col] = np.abs(a - b)
+        elif drift_type == "relative":
+            matrix[:, col] = np.abs(a - b) / (np.abs(a) + 1e-9)
 
     return common_windows, matrix
 
 
-def plot_heatmap(windows, matrix, kind, out_path):
+def plot_heatmap(windows, matrix, kind, drift_type, out_path):
     if matrix is None:
         print(f"No overlapping {kind} windows found, skipping plot")
         return
@@ -94,7 +97,10 @@ def plot_heatmap(windows, matrix, kind, out_path):
 
     ax.set_xlabel("Window")
     ax.set_ylabel("Feature index")
-    ax.set_title(f"{kind} feature drift |desktop - fpga| (scaled to max = {max_drift:.6g})")
+    if drift_type == "absolute":
+        ax.set_title(f"{kind} feature absolute drift |desktop - fpga| (scaled to max = {max_drift:.6g})")
+    else:
+        ax.set_title(f"{kind} feature relative drift |desktop - fpga| / |desktop| (scaled to max = {max_drift:.6g})")
     ax.set_xticks(range(len(windows)))
     ax.set_xticklabels(windows, rotation=90, fontsize=6)
 
@@ -146,12 +152,12 @@ def plot_heatmap(windows, matrix, kind, out_path):
     ax.set_yticklabels(labels, fontsize=6)
 
     cbar = fig.colorbar(im, ax=ax)
-    cbar.set_label("Abs drift")
+    cbar.set_label("Abs drift" if drift_type == "absolute" else "Rel drift")
 
     fig.tight_layout()
     fig.savefig(out_path, dpi=150)
     print(f"Saved {out_path}")
-    print(f"{kind}: max drift = {max_drift:.6f}")
+    print(f"{kind} ({drift_type}): max drift = {max_drift:.6f}")
 
 
 def main():
@@ -162,8 +168,9 @@ def main():
     data_b = parse_log(fpga_path)
 
     for kind in ("IMU", "AUDIO"):
-        windows, matrix = build_matrix(data_a, data_b, kind)
-        plot_heatmap(windows, matrix, kind, f"{kind.lower()}_drift_heatmap.png")
+        for drift_type in ("absolute", "relative"):
+            windows, matrix = build_matrix(data_a, data_b, kind, drift_type)
+            plot_heatmap(windows, matrix, kind, drift_type, f"{kind.lower()}_drift_{drift_type}_heatmap.png")
 
 
 if __name__ == "__main__":
