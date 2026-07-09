@@ -55,6 +55,7 @@ static char *current_heap_ptr = __virtgcram_heap_start;
 extern "C" {
 #endif
 #include <coprosit_cpu.h>
+#include <timer_sdk.h>
 
 void *__wrap__sbrk(ptrdiff_t incr) {
     char *prev_heap_ptr = current_heap_ptr;
@@ -94,6 +95,10 @@ int putchar(int c) {
 #error "LPOS_MODE requires HEEPATIA_MODE: libposit is only available on HEEPatia"
 #endif
 
+#if defined(LOG_PERF) && !defined(HEEPATIA_MODE)
+#error "LOG_PERF requires HEEPATIA_MODE: Clock cycle can only be recorded on HEEPatia"
+#endif
+
 volatile int posit_done;
 volatile int posit_ok;
 
@@ -104,6 +109,9 @@ int launch(void)
         printf("FLASH INIT ERROR\n");
         return EXIT_FAILURE;
     }
+#endif
+#ifdef LOG_PERF
+    timer_cycles_init();
 #endif
 
     // initialize audio/imu model data from FLASH because CARUS are NOLOAD
@@ -232,10 +240,17 @@ int launch(void)
             read_flash(&imu_in[idx_start_window], imu_buf, WINDOW_SAMP_IMU * Num_IMU_signals * sizeof(imu_data_t));
 #endif
 
+#ifdef LOG_PERF
+            timer_start();
+#endif
             imu_features(imu_features_selector,
                          imu_signal,
                          WINDOW_SAMP_IMU,
                          imu_feature_array);
+#ifdef LOG_PERF
+            uint32_t cycles = timer_stop();
+            printf("IMU CLK CYCLE %d AT WIND %d\n", cycles, idx_start_window);
+#endif
 
             DEBUG_PRINTF("IMU FEATURES\n");
             for (int16_t j = 0; j < N_IMU_FEATURES; j++) {
@@ -266,11 +281,18 @@ int launch(void)
             read_flash(&audio_in.air[idx_start_window], audio_buf, WINDOW_SAMP_AUDIO * sizeof(audio_data_t));
 #endif
 
+#ifdef LOG_PERF
+            timer_start();
+#endif
             audio_features(audio_features_selector,
                            audio_signal,
                            WINDOW_SAMP_AUDIO,
                            AUDIO_FS,
                            audio_feature_array);
+#ifdef LOG_PERF
+            uint32_t cycles = timer_stop();
+            printf("AUDIO CLK CYCLE %d AT WIND %d\n", cycles, idx_start_window);
+#endif
 
             DEBUG_PRINTF("AUDIO FEATURES\n");
             for (int16_t j = 0; j < N_AUDIO_FEATURES; j++) {

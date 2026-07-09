@@ -23,7 +23,7 @@ template <RealType T> struct all_filters_t {
 /* b and a are the coefficients of the transfer function    */
 /* zi are the initial states of the filter                  */
 template <RealType T>
-static const all_filters_t<T> filters_parameters = {{
+static const all_filters_t<T> DINTL1 filters_parameters = {{
     {// [50 - 100]
      {0.00972234054502324, 0.0, -0.00972234054502324},
      {1.0, -1.9797917771329199, 0.9805553189099537},
@@ -104,8 +104,8 @@ static const all_filters_t<T> filters_parameters = {{
 
 // Parameters of the second filter used in the EEPD function. These are the same for every band
 template <RealType T>
-static const T b_second[3] = {3.844633506752846e-06, 7.689267013505692e-06, 3.844633506752846e-06};
-template <RealType T> static const T a_second[3] = {1.0, -1.9944464105419268, 0.9944617890759538};
-template <RealType T> static const T zi_second[2] = {0.9999961553614867, -0.9944579444374683};
+static const T DINTL1 b_second[3] = {3.844633506752846e-06, 7.689267013505692e-06, 3.844633506752846e-06};
+template <RealType T> static const T DINTL1 a_second[3] = {1.0, -1.9944464105419268, 0.9944617890759538};
+template <RealType T> static const T DINTL1 zi_second[2] = {0.9999961553614867, -0.9944579444374683};
 
 #endif

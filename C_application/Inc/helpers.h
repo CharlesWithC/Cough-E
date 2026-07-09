@@ -56,7 +56,7 @@ static inline void read_flash(const void *src, void *dest, uint32_t len) { memcp
  * @param len           :   length of the array
  * @param *sort_idxs    :   pointer to the array where to store the indexes that would sort the `arr` array
  */
-static inline void argsort(uint16_t *arr, uint16_t len, uint16_t *sort_idxs);
+static void argsort(uint16_t *arr, uint16_t len, uint16_t *sort_idxs);
 
 /**
  * Orders an array based on some indexes specified as input parameters.
@@ -77,7 +77,7 @@ template <typename T> void order_by_idxs(T *arr_in, uint16_t len, uint16_t *idxs
  * @param len       : length of the input array
  * @param divisor   : number to be used as a diviros for the elements of the array
  */
-template <RealType T> static inline void vect_div_const(T *x, int16_t len, T divisor, T *res);
+template <RealType T> static void vect_div_const(T *x, int16_t len, T divisor, T *res);
 
 /**
  * Returns the sum of all the values of the input array.
@@ -85,7 +85,7 @@ template <RealType T> static inline void vect_div_const(T *x, int16_t len, T div
  * @param *x    : pointer to the input array
  * @param len   : lenght of the input array
  */
-template <RealType T, RealType S> static inline S vect_sum(const T *x, int16_t len);
+template <RealType T, RealType S> static S vect_sum(const T *x, int16_t len);
 
 /**
  * Returns the mean of a sequence of numbers
@@ -93,7 +93,7 @@ template <RealType T, RealType S> static inline S vect_sum(const T *x, int16_t l
 * @param *x    : pointer to the input array
 * @param len   : lenght of the input array
  */
-template <RealType T, RealType S> static inline T vect_mean(const T *x, int16_t len);
+template <RealType T, RealType S> static T vect_mean(const T *x, int16_t len);
 
 /// @brief Computes the element-wise multiplication between x and y arrays,
 /// the multiplication is stored in r array.
@@ -101,13 +101,13 @@ template <RealType T, RealType S> static inline T vect_mean(const T *x, int16_t 
 /// @param *y   pointer to the second vector
 /// @param len  lenght of the vectors
 /// @param *r   pointer to the resulting vectors
-template <RealType T> static inline void vect_mult(T *x, const T *y, int16_t len, T *r);
+template <RealType T> static void vect_mult(T *x, const T *y, int16_t len, T *r);
 
 /// @brief Returns the standard deviation of the given input array
 /// @param *x       pointer to the signal
 /// @param len      lenght of the signal
 /// @return         the standard deviation
-template <RealType T, RealType S> static inline T vect_std(T *x, int16_t len);
+template <RealType T, RealType S> static T vect_std(T *x, int16_t len);
 
 /// @brief Copies "len" samples from "in" array of T starting at index "start"
 /// Destination is "out"
@@ -117,7 +117,7 @@ template <RealType T, RealType S> static inline T vect_std(T *x, int16_t len);
 /// @param start    start index
 /// @param len      lenght to copy
 /// @param *out     poitner to the output array
-template <RealType T> static inline void vect_copy(const T *in, int16_t start, int16_t len, T *out);
+template <RealType T> static void vect_copy(const T *in, int16_t start, int16_t len, T *out);
 
 /// @brief Copies "len" samples from "in" array of uint16_t starting at index "start"
 /// Destination is "out"
@@ -127,26 +127,26 @@ template <RealType T> static inline void vect_copy(const T *in, int16_t start, i
 /// @param start    start index
 /// @param len      lenght to copy
 /// @param *out     poitner to the output array
-static inline void vect_copy_uint16_t(uint16_t *in, int16_t start, int16_t len, uint16_t *out);
+static void vect_copy_uint16_t(uint16_t *in, int16_t start, int16_t len, uint16_t *out);
 
 /// @brief Subtract a constant to each element of an input array and stores in into res array
 /// @param *x           pointer to the input signal
 /// @param len          lenght of the signal
 /// @param constant     constant value to subtract
 /// @param *res         pointer to the result
-template <RealType T> static inline void sub_constant(const T *x, int16_t len, T constant, T *res);
+template <RealType T> static void sub_constant(const T *x, int16_t len, T constant, T *res);
 
 /// @brief Returns the index at which the maximum value of array x is found
 /// @param *x   pointer to the inpug array
 /// @param len  lenght of the array
 /// @return     index of the maximum value
-template <RealType T> static inline int16_t vect_max_index(T *x, int16_t len);
+template <RealType T> static int16_t vect_max_index(T *x, int16_t len);
 
 /// @brief Returns the maximum value within an array
 /// @param *x   pointer to the inpug array
 /// @param len  lenght of the array
 /// @return     max value
-template <RealType T> static inline T vect_max_value(T *x, int16_t len);
+template <RealType T> static T vect_max_value(T *x, int16_t len);
 
 /**
  * Returns the maximum absoulate value of the given array
@@ -155,13 +155,13 @@ template <RealType T> static inline T vect_max_value(T *x, int16_t len);
  * @param len   :   length of the input array
  * @return      :   maximum absolute value in the input array
  */
-template <RealType T> static inline T vect_max_abs_value(T *x, int16_t len);
+template <RealType T> static T vect_max_abs_value(T *x, int16_t len);
 
 /// @brief Divides every element in the specified "x" array by the maximum value.
 /// @param *x   pointer to the inpug array
 /// @param len  lenght of the array
 /// @param *res pointer to the resulting array
-template <RealType T> static inline void normalize_max(T *x, int16_t len, T *res);
+template <RealType T> static void normalize_max(T *x, int16_t len, T *res);
 
 /// @brief Returns the integral of signal x coputed using the composite
 /// Simpson's rule. The spacing of the samples is defined by the

@@ -18,7 +18,7 @@ typedef struct seg_idxs {
 /**
  * Implements the comparison function to be used by the qsort algorithm
  */
-static inline int _qsort_cmp(const void *e1, const void *e2) {
+static int _qsort_cmp(const void *e1, const void *e2) {
     if (*(int16_t *)e1 > *(int16_t *)e2) {
         return 1;
     }

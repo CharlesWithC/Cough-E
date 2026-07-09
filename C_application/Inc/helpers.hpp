@@ -66,7 +66,7 @@ static void print_float(float f, int precision) {
 /// @param len  lenght of the array
 /// @param *max_value   max value
 /// @param *max_index   index of the max value
-template <RealType T> static inline void _find_max(T *x, int16_t len, T *max_value, int16_t *max_index) {
+template <RealType T> static void _find_max(T *x, int16_t len, T *max_value, int16_t *max_index) {
     T max_v = x[0];
     int16_t max_i = 0;
     for (int16_t i = 0; i < len; i++) {
@@ -80,13 +80,13 @@ template <RealType T> static inline void _find_max(T *x, int16_t len, T *max_val
     *max_value = max_v;
 }
 
-template <RealType T> static inline void vect_div_const(T *x, int16_t len, T divisor, T *res) {
+template <RealType T> static void vect_div_const(T *x, int16_t len, T divisor, T *res) {
     for (uint16_t i = 0; i < len; i++) {
         res[i] = x[i] / divisor;
     }
 }
 
-template <RealType T, RealType S = T> static inline S vect_sum(const T *x, int16_t len) {
+template <RealType T, RealType S = T> static S vect_sum(const T *x, int16_t len) {
     S sum = 0.0;
     for (int16_t i = 0; i < len; i++) {
         sum += (S)x[i];
@@ -94,17 +94,17 @@ template <RealType T, RealType S = T> static inline S vect_sum(const T *x, int16
     return sum;
 }
 
-template <RealType T, RealType S = T> static inline T vect_mean(const T *x, int16_t len) {
+template <RealType T, RealType S = T> static T vect_mean(const T *x, int16_t len) {
     return vect_sum<T, S>(x, len) / len;
 }
 
-template <RealType T> static inline void vect_mult(T *x, const T *y, int16_t len, T *r) {
+template <RealType T> static void vect_mult(T *x, const T *y, int16_t len, T *r) {
     for (int16_t i = 0; i < len; i++) {
         r[i] = x[i] * y[i];
     }
 }
 
-template <RealType T, RealType S = T> static inline T vect_std(T *x, int16_t len) {
+template <RealType T, RealType S = T> static T vect_std(T *x, int16_t len) {
     T mean = vect_mean<T, S>(x, len);
     S sum = 0.0;
 
@@ -124,33 +124,33 @@ template <RealType T, RealType S = T> static inline T vect_std(T *x, int16_t len
     return result;
 }
 
-template <RealType T> static inline void vect_copy(const T *in, int16_t start, int16_t len, T *out) {
+template <RealType T> static void vect_copy(const T *in, int16_t start, int16_t len, T *out) {
     for (int16_t i = 0; i < len; i++) {
         out[i] = in[i + start];
     }
 }
 
-template <RealType T> static inline void sub_constant(const T *x, int16_t len, T constant, T *res) {
+template <RealType T> static void sub_constant(const T *x, int16_t len, T constant, T *res) {
     for (int16_t i = 0; i < len; i++) {
         res[i] = x[i] - constant;
     }
 }
 
-template <RealType T> static inline int16_t vect_max_index(T *x, int16_t len) {
+template <RealType T> static int16_t vect_max_index(T *x, int16_t len) {
     int16_t max_i = 0.0;
     T temp_v;
     _find_max(x, len, &temp_v, &max_i);
     return max_i;
 }
 
-template <RealType T> static inline T vect_max_value(T *x, int16_t len) {
+template <RealType T> static T vect_max_value(T *x, int16_t len) {
     int16_t max_i = 0;
     T max_v;
     _find_max(x, len, &max_v, &max_i);
     return max_v;
 }
 
-template <RealType T> static inline T vect_max_abs_value(T *x, int16_t len) {
+template <RealType T> static T vect_max_abs_value(T *x, int16_t len) {
     T max_abs = x[0];
     T tmp = 0.0;
     for (int16_t i = 1; i < len; i++) {
@@ -163,7 +163,7 @@ template <RealType T> static inline T vect_max_abs_value(T *x, int16_t len) {
     return max_abs;
 }
 
-template <RealType T> static inline void normalize_max(T *x, int16_t len, T *res) {
+template <RealType T> static void normalize_max(T *x, int16_t len, T *res) {
     T max;
     int16_t max_i;
     _find_max(x, len, &max, &max_i);
@@ -177,7 +177,7 @@ template <RealType T> static inline void normalize_max(T *x, int16_t len, T *res
  * Comparator function to be passed to qsort() function.
  * It works with a structure having values and indexes, it has to be used for the argsort implementation
  */
-static inline int _q_argsort__cmp(const void *e1, const void *e2) {
+static int _q_argsort__cmp(const void *e1, const void *e2) {
     argsort_struct *val_1 = (argsort_struct *)e1;
     argsort_struct *val_2 = (argsort_struct *)e2;
 
@@ -190,7 +190,7 @@ static inline int _q_argsort__cmp(const void *e1, const void *e2) {
     return 0;
 }
 
-static inline void argsort(uint16_t *arr, uint16_t len, uint16_t *sort_idxs) {
+static void argsort(uint16_t *arr, uint16_t len, uint16_t *sort_idxs) {
     argsort_struct *elems = (argsort_struct *)malloc(len * sizeof(argsort_struct));
 
     for (uint16_t i = 0; i < len; i++) {
