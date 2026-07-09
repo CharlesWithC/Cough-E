@@ -43,33 +43,45 @@ int is_required(const int8_t *features_selector, uint16_t start_index, uint16_t 
 
 static void imu_run_float_features(const int8_t *features_selector, imu_data_t *sig, int16_t len, imu_data_t *feats) {
     if (features_selector[LINE_LENGTH]) {
+        PERF_KERNEL_TIMER_START();
         feats[LINE_LENGTH] = get_line_length(sig, len);
+        PERF_KERNEL_TIMER_STOP("IMU|LINE_LENGTH");
         // PA_LOG("imu", "line_length", feats[LINE_LENGTH]);
     }
     if (features_selector[ZERO_CROSSING_RATE_IMU]) {
+        PERF_KERNEL_TIMER_START();
         feats[ZERO_CROSSING_RATE_IMU] = compute_zrc(sig, len);
+        PERF_KERNEL_TIMER_STOP("IMU|ZRC");
         // PA_LOG("imu", "zrc", feats[ZERO_CROSSING_RATE_IMU]);
     }
     if (features_selector[KURTOSIS]) {
+        PERF_KERNEL_TIMER_START();
         feats[KURTOSIS] = get_kurtosis(sig, len);
+        PERF_KERNEL_TIMER_STOP("IMU|KURTOSIS");
         // PA_LOG("imu", "kurtosis", feats[KURTOSIS]);
     }
+    PERF_KERNEL_TIMER_START();
     imu_data_t rms = get_rms<imu_data_t, real_t>(sig, len);
+    PERF_KERNEL_TIMER_STOP("IMU|RMS");
     if (features_selector[ROOT_MEANS_SQUARED_IMU]) {
         feats[ROOT_MEANS_SQUARED_IMU] = rms;
         // PA_LOG("imu", "rms", feats[ROOT_MEANS_SQUARED_IMU]);
     }
     if (features_selector[CREST_FACTOR_IMU]) {
+        PERF_KERNEL_TIMER_START();
         feats[CREST_FACTOR_IMU] = rms > 0.0f ? get_crest(sig, len, rms) : 0.0f;
+        PERF_KERNEL_TIMER_STOP("IMU|CREST");
         // PA_LOG("imu", "crest", feats[CREST_FACTOR_IMU]);
     }
     for (uint8_t i = 0; i < N_AZC; i++) {
+        PERF_KERNEL_TIMER_START();
         uint8_t idx = (uint8_t)(APPROXIMATE_ZERO_CROSSING + i);
         if (features_selector[idx]) {
             imu_data_t eps = EPSILON_START + (EPSILON_STEP * i);
             feats[idx] = azc_computation(sig, len, eps);
             // PA_LOG("imu", "azc", feats[idx]);
         }
+        PERF_KERNEL_TIMER_STOP("IMU|AZC");
     }
 }
 
@@ -96,28 +108,39 @@ void fft_based_features(const int8_t *features_selector, const audio_data_t *sig
         return;
     }
 
+    PERF_KERNEL_TIMER_START();
     compute_rfft<audio_data_t, real_t>(sig, len, fs, magnitudes, frequencies, &sum_mags);
+    PERF_KERNEL_TIMER_STOP("AUDIO|RFFT");
 
     if (features_selector[SPECTRAL_DECREASE]) {
+        PERF_KERNEL_TIMER_START();
         audio_data_t spectral_decrease = compute_spec_decrease(magnitudes, frequencies, (len / 2) + 1, sum_mags);
+        PERF_KERNEL_TIMER_STOP("AUDIO|SPECTRAL_DECREASE");
         // PA_LOG("audio_fft", "spectral_decrease", spectral_decrease);
         feats[SPECTRAL_DECREASE] = spectral_decrease;
     }
 
     if (features_selector[SPECTRAL_SLOPE]) {
+        PERF_KERNEL_TIMER_START();
         audio_data_t spectral_slope = compute_spectral_slope(magnitudes, frequencies, (len / 2) + 1, sum_mags);
+        PERF_KERNEL_TIMER_STOP("AUDIO|SPECTRAL_SLOPE");
         // PA_LOG("audio_fft", "spectral_slope", spectral_slope);
         feats[SPECTRAL_SLOPE] = spectral_slope;
     }
 
     if (features_selector[SPECTRAL_ROLLOFF]) {
-        audio_data_t spectral_rolloff = compute_rolloff<audio_data_t, real_t>(magnitudes, frequencies, (len / 2) + 1, sum_mags);
+        PERF_KERNEL_TIMER_START();
+        audio_data_t spectral_rolloff =
+            compute_rolloff<audio_data_t, real_t>(magnitudes, frequencies, (len / 2) + 1, sum_mags);
+        PERF_KERNEL_TIMER_STOP("AUDIO|SPECTRAL_ROLLOFF");
         // PA_LOG("audio_fft", "spectral_rolloff", spectral_rolloff);
         feats[SPECTRAL_ROLLOFF] = spectral_rolloff;
     }
 
     if (is_required(features_selector, SPECTRAL_CENTROID, SPECTRAL_SKEW)) {
+        PERF_KERNEL_TIMER_START();
         audio_data_t spectral_cetroid = compute_centroid(magnitudes, frequencies, (len / 2) + 1, sum_mags);
+        PERF_KERNEL_TIMER_STOP("AUDIO|SPECTRAL_ROLLOFF");
         // PA_LOG("audio_fft", "spectral_cetroid", spectral_cetroid);
 
         if (features_selector[SPECTRAL_CENTROID]) {
@@ -125,8 +148,10 @@ void fft_based_features(const int8_t *features_selector, const audio_data_t *sig
         }
 
         if (is_required(features_selector, SPECTRAL_SPREAD, SPECTRAL_SKEW)) {
-            audio_data_t spectral_spread = compute_spread<audio_data_t, real_t>(
-                magnitudes, frequencies, (len / 2) + 1, sum_mags, spectral_cetroid);
+            PERF_KERNEL_TIMER_START();
+            audio_data_t spectral_spread = compute_spread<audio_data_t, real_t>(magnitudes, frequencies, (len / 2) + 1,
+                                                                                sum_mags, spectral_cetroid);
+            PERF_KERNEL_TIMER_STOP("AUDIO|SPECTRAL_SPREAD");
             // PA_LOG("audio_fft", "spectral_spread", spectral_spread);
 
             if (features_selector[SPECTRAL_SPREAD]) {
@@ -134,15 +159,19 @@ void fft_based_features(const int8_t *features_selector, const audio_data_t *sig
             }
 
             if (features_selector[SPECTRAL_KURTOSIS]) {
-                audio_data_t kurt = compute_kurt<audio_data_t, real_t>(magnitudes, frequencies, (len / 2) + 1,
-                                                                         sum_mags, spectral_cetroid, spectral_spread);
+                PERF_KERNEL_TIMER_START();
+                audio_data_t kurt = compute_kurt<audio_data_t, real_t>(magnitudes, frequencies, (len / 2) + 1, sum_mags,
+                                                                       spectral_cetroid, spectral_spread);
+                PERF_KERNEL_TIMER_STOP("AUDIO|SPECTRAL_KURTOSIS");
                 // PA_LOG("audio_fft", "spectral_kurt", kurt);
                 feats[SPECTRAL_KURTOSIS] = kurt;
             }
 
             if (features_selector[SPECTRAL_SKEW]) {
+                PERF_KERNEL_TIMER_START();
                 audio_data_t skew =
                     compute_skew(magnitudes, frequencies, (len / 2) + 1, sum_mags, spectral_cetroid, spectral_spread);
+                PERF_KERNEL_TIMER_STOP("AUDIO|SPECTRAL_SKEW");
                 // PA_LOG("audio_fft", "spectral_skew", skew);
                 feats[SPECTRAL_SKEW] = skew;
             }
@@ -174,35 +203,47 @@ void periodogram_based_features(const int8_t *features_selector, const audio_dat
         return;
     }
 
+    PERF_KERNEL_TIMER_START();
     compute_periodogram<audio_data_t, real_t>(sig, len, fs, psd, freqs);
+    PERF_KERNEL_TIMER_STOP("AUDIO|PERIODOGRAM");
 
     if (features_selector[SPECTRAL_FLATNESS]) {
+        PERF_KERNEL_TIMER_START();
         audio_data_t spectral_flatness = compute_flatness<audio_data_t, real_t>(psd, psd_size);
+        PERF_KERNEL_TIMER_STOP("AUDIO|SPECTRAL_FLATNESS");
         // PA_LOG("audio_periodogram", "spectral_flatness", spectral_flatness);
         feats[SPECTRAL_FLATNESS] = spectral_flatness;
     }
 
     if (features_selector[SPECTRAL_STD]) {
+        PERF_KERNEL_TIMER_START();
         audio_data_t spectral_std = compute_std(psd, psd_size);
+        PERF_KERNEL_TIMER_STOP("AUDIO|SPECTRAL_STD");
         // PA_LOG("audio_periodogram", "spectral_std", spectral_std);
         feats[SPECTRAL_STD] = spectral_std;
     }
 
     if (features_selector[SPECTRAL_ENTROPY]) {
+        PERF_KERNEL_TIMER_START();
         audio_data_t spectral_entr = compute_spectral_entropy(psd, psd_size);
+        PERF_KERNEL_TIMER_STOP("AUDIO|SPECTRAL_ENTROPY");
         // PA_LOG("audio_periodogram", "spectral_entropy", spectral_entr);
         feats[SPECTRAL_ENTROPY] = spectral_entr;
     }
 
     if (features_selector[DOMINANT_FREQUENCY]) {
+        PERF_KERNEL_TIMER_START();
         audio_data_t dominant_freq = get_domiant_freq(psd, freqs, psd_size);
+        PERF_KERNEL_TIMER_STOP("AUDIO|DOMINANT_FREQ");
         // PA_LOG("audio_periodogram", "dominant_freq", dominant_freq);
         feats[DOMINANT_FREQUENCY] = dominant_freq;
     }
 
     if (is_required(features_selector, POWER_SPECTRAL_DENSITY, POWER_SPECTRAL_DENSITY + N_PSD - 1)) {
         audio_data_t *band_powers = (audio_data_t *)malloc(N_PSD * sizeof(audio_data_t));
+        PERF_KERNEL_TIMER_START();
         normalized_bandpowers(psd, freqs, psd_size, &features_selector[POWER_SPECTRAL_DENSITY], band_powers);
+        PERF_KERNEL_TIMER_STOP("AUDIO|BAND_POWER");
         for (int8_t i = 0; i < N_PSD; i++) {
             // PA_LOG("audio_periodogram", "band_powers", band_powers[i]);
             feats[POWER_SPECTRAL_DENSITY + i] = band_powers[i];
@@ -223,7 +264,9 @@ void mfcc_features(const int8_t *features_selector, const audio_data_t *sig, int
 
         audio_data_t *mean_mfcc = (audio_data_t *)malloc(N_MFCC * sizeof(audio_data_t));
         audio_data_t *std_mfcc = (audio_data_t *)malloc(N_MFCC * sizeof(audio_data_t));
+        PERF_KERNEL_TIMER_START();
         get_mfcc_features(sig, len, mean_mfcc, std_mfcc);
+        PERF_KERNEL_TIMER_STOP("AUDIO|MFCC");
 
         // stores first the mean and then the std, one after the other
         for (int16_t i = 0; i < N_MFCC; i++) {
@@ -270,8 +313,10 @@ void mel_spectrogram_features(const int8_t *features_selector, const audio_data_
         audio_data_t *max_mel_spectr = (audio_data_t *)malloc(n_mels_needed * sizeof(audio_data_t));
         real_t *entropy_mel_spectr = (real_t *)malloc(n_mels_needed * sizeof(real_t));
 
+        PERF_KERNEL_TIMER_START();
         get_mel_spectrogram_features(sig, len, idxs_needed, n_mels_needed, mean_mel_spectr, std_mel_spectr,
-                                             max_mel_spectr, entropy_mel_spectr);
+                                     max_mel_spectr, entropy_mel_spectr);
+        PERF_KERNEL_TIMER_STOP("AUDIO|MEL_SPECTROGRAM");
 
         // stores first the mean, the std, the max and the entropy, one after the other
         int idx = 0;
@@ -305,20 +350,27 @@ void mean_based_features(const int8_t *features_selector, const audio_data_t *si
         RA_LOG_ARRAY("AUDIO_FFT", "mean_based_features", "sig_input", sig, len);
 
         // compute mean
-        audio_data_t *zero_mean = (audio_data_t *)malloc(len * sizeof(audio_data_t)); // to store the signal after subtracting the mean
+        audio_data_t *zero_mean =
+            (audio_data_t *)malloc(len * sizeof(audio_data_t)); // to store the signal after subtracting the mean
+        PERF_KERNEL_TIMER_START();
         sub_mean<audio_data_t, real_t>(sig, zero_mean, len);
+        PERF_KERNEL_TIMER_STOP("AUDIO|SUB_MEAN");
         RA_LOG_ARRAY("AUDIO_FFT", "mean_based_features", "zero_mean", zero_mean, len);
 
         if (features_selector[ZERO_CROSSING_RATE]) {
             // compute ZCR
+            PERF_KERNEL_TIMER_START();
             audio_data_t zcr = compute_zrc(zero_mean, len);
+            PERF_KERNEL_TIMER_STOP("AUDIO|ZRC");
             // PA_LOG("audio_mean", "zcr", zcr);
             feats[ZERO_CROSSING_RATE] = zcr;
         }
 
         if (features_selector[ROOT_MEANS_SQUARED] || features_selector[CREST_FACTOR]) {
             // compute RMS
+            PERF_KERNEL_TIMER_START();
             audio_data_t rms = get_rms<audio_data_t, real_t>(zero_mean, len);
+            PERF_KERNEL_TIMER_STOP("AUDIO|RMS");
             // PA_LOG("audio_mean", "rms", rms);
             RA_LOG_SCALAR("AUDIO_FFT", "audio_rms", "result", rms);
 
@@ -329,7 +381,9 @@ void mean_based_features(const int8_t *features_selector, const audio_data_t *si
 
             if (features_selector[CREST_FACTOR]) {
                 // compute CREST
+                PERF_KERNEL_TIMER_START();
                 audio_data_t crest_factor = get_crest(zero_mean, len, rms);
+                PERF_KERNEL_TIMER_STOP("AUDIO|CREST");
                 // PA_LOG("audio_mean", "crest", crest_factor);
                 RA_LOG_SCALAR("AUDIO_FFT", "audio_crest", "result", crest_factor);
                 feats[CREST_FACTOR] = crest_factor;
@@ -351,7 +405,9 @@ void eepd_features(const int8_t *features_selector, const audio_data_t *sig, int
         int16_t *eepds = (int16_t *)malloc(N_EEPD * sizeof(int16_t));
 
         // compute EEPD
+        PERF_KERNEL_TIMER_START();
         eepd(sig, len, fs, &features_selector[ENERGY_ENVELOPE_PEAK_DETECT], eepds);
+        PERF_KERNEL_TIMER_STOP("AUDIO|EEPD");
 
         for (int16_t i = 0; i < N_EEPD; i++) {
             // PA_LOG("audio_eepd", "eepd", eepds[i]);

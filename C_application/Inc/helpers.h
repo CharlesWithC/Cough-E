@@ -25,6 +25,21 @@
 #endif
 static void print_float(float f, int precision);
 
+#ifdef LOG_PERF_KERNEL
+extern "C" {
+#include <timer_sdk.h>
+}
+#define PERF_KERNEL_TIMER_START() timer_start()
+#define PERF_KERNEL_TIMER_STOP(label) \
+    do { \
+        uint32_t cycles = timer_stop(); \
+        printf("%s CLK CYCLE %d\n", (label), cycles); \
+    } while (0)
+#else
+#define PERF_KERNEL_TIMER_START() ((void)0)
+#define PERF_KERNEL_TIMER_STOP(label) ((void)0)
+#endif
+
 #ifdef HEEPATIA_MODE
 extern "C" {
 #pragma GCC diagnostic push
