@@ -4,32 +4,48 @@
 #include <FxP/core/fxp_core.h>
 #endif
 
-#ifdef UPOS_MODE // universal posit (mixed precision / generic)
-#ifndef __cplusplus
-#error "UPOS requires compiling with g++"
-#endif
-#include <universal/number/posit/posit.hpp>
-using namespace sw::universal;
-typedef float real_t;
-typedef posit<16, 2> sreal_t;
-template <typename T>
-concept Universal = requires(T x) { T::nbits; };
+#ifdef UPOS_MODE // universal posit
+    #define POSIT_SIZE 16
+    #include <universal/number/posit/posit.hpp>
+    #include <quire_wrapper.h>
+    using namespace sw::universal;
+
+    typedef float real_t;
+    typedef Posit sreal_t;
+    typedef Quire quire_t;
+
+    #define POS(hexval) ([]{ \
+        sw::universal::posit<16,1> p; \
+        p.setbits(hexval); \
+        return p; \
+    }())
+
+    template <typename T>
+    concept Universal = requires(T x) { T::nbits; };
 #else
-#ifdef LPOS_MODE // libposit (mixed precision / with float)
-#ifndef __cplusplus
-#error "LPOS requires compiling with g++"
-#endif
-#define POSIT_SIZE 16
-#include <posit.hpp>
-using namespace libposit;
-typedef float real_t;
-typedef Posit sreal_t;
-#define POS Posit::from_bits
+#ifdef LPOS_MODE // libposit
+    #define POSIT_SIZE 16
+    #include <posit.hpp>
+    using namespace libposit;
+
+    typedef float real_t;
+    typedef Posit sreal_t;
+    typedef Quire quire_t;
+
+    #define POS Posit::from_bits
 #else
-typedef float real_t;
-typedef float sreal_t;
+    #include <quire_wrapper.h>
+    typedef float real_t;
+    typedef float sreal_t;
+    typedef Quire quire_t;
 #endif
 #endif
+
+const sreal_t CONST_ZERO = sreal_t(0.0f);
+const sreal_t CONST_ONE = sreal_t(1.0f);
+const sreal_t CONST_TEN = sreal_t(10.0f);
+const sreal_t CONST_NEG_ONE = sreal_t(-1.0f);
+const sreal_t CONST_095 = sreal_t(0.95f);
 
 #ifndef FXP_MODE
 typedef sreal_t audio_data_t;

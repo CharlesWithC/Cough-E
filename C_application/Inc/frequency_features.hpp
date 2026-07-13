@@ -21,7 +21,7 @@
 */
 template <RealType T> void _rfft(const T *sig, int16_t len, T *real, T *imag);
 
-template <RealType T, RealType S = T> void compute_rfft(const T *sig, int16_t len, int16_t fs, T *mags, T *freqs, T *sum_mags) {
+template <RealType T> void compute_rfft(const T *sig, int16_t len, int16_t fs, T *mags, T *freqs, T *sum_mags) {
     RA_LOG_ARRAY("AUDIO_FFT", "compute_rfft", "sig_input", sig, len);
 
     T *re = (T *)malloc(len * sizeof(T));
@@ -33,12 +33,14 @@ template <RealType T, RealType S = T> void compute_rfft(const T *sig, int16_t le
     RA_LOG_ARRAY("AUDIO_FFT", "compute_rfft", "im", im, fft_size);
 
     // Compute the magnitude of each FFT output
-    S sum_mags_local = (S)*sum_mags; // use high precision accumulator to reduce rounding error
+    // NOTE: We assume `*sum_mags` is 0 when function is called
+    quire_t q;
+    q.clear();
     for (int16_t i = 0; i < fft_size; i++) {
         mags[i] = sqrtreal((re[i] * re[i]) + (im[i] * im[i]));
-        sum_mags_local += (S)mags[i];
+        q.add_mul(CONST_ONE, mags[i]);
     }
-    *sum_mags = sum_mags_local;
+    *sum_mags = q.round();
 
     RA_LOG_ARRAY("AUDIO_FFT", "compute_rfft", "magnitudes", mags, fft_size);
 
@@ -77,21 +79,26 @@ void compute_periodogram(const T *sig, int16_t len, int16_t fs, T *psd, T *freqs
     for (int i = 0; i < NPERSEG; i++)
         cumul_sums[i] = 0;
 
+    // NOTE: regarding the use of S type and no quire
+    // we can't use quire for cumul_sums because we have only one quire (on hardware)
+    // but cumul_sums would need `psd_size` quires because at each step it accumulates on `psd_size` indices
+    // thus we use manual S-type accumulator for cumul_sums, and we also use S for mags_squared to reduce conversions
+
     T *re = (T *)malloc(NPERSEG * sizeof(T));
     T *im = (T *)malloc(NPERSEG * sizeof(T));
 
     // To store the magnitudes squared after the FFT
-    T *mags_squared = (T *)malloc(((NPERSEG / 2) + 1) * sizeof(T));
+    S *mags_squared = (S *)malloc(((NPERSEG / 2) + 1) * sizeof(S));
 
-    T mean = 0.0;
-    S scale = 0.0;
-    S sum = 0.0;
+    T mean = CONST_ZERO;
 
+    Quire q;
+    q.clear();
     for (int16_t i = 0; i < NPERSEG; i++) {
-        sum += (S)(hann_window<T>[i] * hann_window<T>[i]);
+        q.add_mul(hann_window<T>[i], hann_window<T>[i]);
     }
-
-    scale = 1 / (fs * sum);
+    T sum = q.round();
+    S scale = 1 / (fs * (S)sum);
     RA_LOG_SCALAR("AUDIO_PSD", "periodogram", "scale", scale);
 
     // start and end indexes of the current processed window
@@ -105,7 +112,7 @@ void compute_periodogram(const T *sig, int16_t len, int16_t fs, T *psd, T *freqs
         vect_copy(sig, start, NPERSEG, win); // copies the current window from the signal
 
         // subtract the mean
-        mean = vect_mean<T, S>(win, NPERSEG);
+        mean = vect_mean(win, NPERSEG);
         sub_constant(win, NPERSEG, mean, win);
 
         // Apply the window function
@@ -126,8 +133,8 @@ void compute_periodogram(const T *sig, int16_t len, int16_t fs, T *psd, T *freqs
             if (i != 0 && i != (NPERSEG / 2)) {
                 mags_squared[i] *= 2; // Multiply by 2, apart from DC frequency (first element) and last element
             }
-            cumul_sums[i] +=
-                (S)mags_squared[i]; // Update the cumulative sum (element-wise across FFT result of different windows)
+            cumul_sums[i] += mags_squared[i];
+            // Update the cumulative sum (element-wise across FFT result of different windows)
         }
 
         RA_LOG_ARRAY("AUDIO_PSD", "periodogram", "mags_squared", mags_squared, psd_size);
@@ -155,7 +162,7 @@ void compute_periodogram(const T *sig, int16_t len, int16_t fs, T *psd, T *freqs
 }
 
 template <RealType T> T compute_spec_decrease(T *mags, T *freqs, int16_t len, T sum_mags) {
-    T sum = 0.0;
+    T sum = CONST_ZERO;
     T dc_mag = mags[0];
 
     RA_LOG_SCALAR("AUDIO_FFT", "spec_decrease", "dc_mag", dc_mag);
@@ -172,7 +179,7 @@ template <RealType T> T compute_spec_decrease(T *mags, T *freqs, int16_t len, T 
 
 template <RealType T> T compute_spectral_slope(T *mags, T *freqs, int16_t len, T sum_mags) {
     T mean_mag = sum_mags / len;
-    T mean_freq = 0.0;
+    T mean_freq = CONST_ZERO;
 
     mean_freq = vect_mean(freqs, len);
 
@@ -180,8 +187,8 @@ template <RealType T> T compute_spectral_slope(T *mags, T *freqs, int16_t len, T
     RA_LOG_SCALAR("AUDIO_FFT", "spec_slope", "mean_freq", mean_freq);
 
     // Numerator and denominator for the final slope computation
-    T num = 0.0;
-    T den = 0.0;
+    T num = CONST_ZERO;
+    T den = CONST_ZERO;
 
     for (int16_t i = 0; i < len; i++) {
         num += (freqs[i] - mean_freq) * (mags[i] - mean_mag);
@@ -195,29 +202,31 @@ template <RealType T> T compute_spectral_slope(T *mags, T *freqs, int16_t len, T
     return result;
 }
 
-template <RealType T, RealType S = T> T compute_rolloff(T *mags, T *freqs, int16_t len, T sum_mags) {
-    S rolloff_energy = 0.95 * (S)sum_mags;
-    S sum = 0.0;
-    T rolloff = -1.0; // Error value
+template <RealType T> T compute_rolloff(T *mags, T *freqs, int16_t len, T sum_mags) {
+    T rolloff_energy = CONST_095 * sum_mags;
+    Quire q;
+    q.clear();
 
     RA_LOG_SCALAR("AUDIO_FFT", "rolloff", "rolloff_energy", rolloff_energy);
 
     for (int16_t i = 0; i < len; i++) {
-        sum += (S)mags[i];
+        q.add_mul(CONST_ONE, mags[i]);
         RA_LOG_SCALAR("AUDIO_FFT", "rolloff", "sum", sum);
 
+        T sum = q.round();
         if (sum >= rolloff_energy) {
             RA_LOG_SCALAR("AUDIO_FFT", "rolloff", "result", freqs[i]);
             return freqs[i];
         }
     }
 
+    T rolloff = CONST_NEG_ONE; // Error value
     RA_LOG_SCALAR("AUDIO_FFT", "rolloff", "result", rolloff);
     return rolloff;
 }
 
 template <RealType T> T compute_centroid(T *mags, T *freqs, int16_t len, T sum_mags) {
-    T sum = 0.0;
+    T sum = CONST_ZERO;
 
     for (int16_t i = 0; i < len; i++) {
         sum += freqs[i] * mags[i];
@@ -229,34 +238,34 @@ template <RealType T> T compute_centroid(T *mags, T *freqs, int16_t len, T sum_m
     return result;
 }
 
-// allow higher precision selection (based on precision analysis result)
-template <RealType T, RealType S = T> T compute_spread(T *mags, T *freqs, int16_t len, T sum_mags, T centroid) {
-    S sum = 0.0;
-
+template <RealType T> T compute_spread(T *mags, T *freqs, int16_t len, T sum_mags, T centroid) {
+    Quire q;
+    q.clear();
     for (int16_t i = 0; i < len; i++) {
-        sum += (S)((freqs[i] - centroid) * (freqs[i] - centroid) * mags[i]);
+        q.add_mul((freqs[i] - centroid) * (freqs[i] - centroid), mags[i]);
     }
+    T sum = q.round();
 
     RA_LOG_SCALAR("AUDIO_FFT", "spread", "sum", sum);
-    T result = sqrtreal(sum / (S)sum_mags);
+    T result = sqrtreal(sum / sum_mags);
     RA_LOG_SCALAR("AUDIO_FFT", "spread", "result", result);
     return result;
 }
 
-// allow higher precision selection (based on precision analysis result)
-template <RealType T, RealType S = T> T compute_kurt(T *mags, T *freqs, int16_t len, T sum_mags, T centroid, T spread) {
-    S spread_4 = (S)(spread * spread * spread * spread); // spread^4
+template <RealType T> T compute_kurt(T *mags, T *freqs, int16_t len, T sum_mags, T centroid, T spread) {
+    T spread_4 = spread * spread * spread * spread; // spread^4
     RA_LOG_SCALAR("AUDIO_FFT", "spec_kurt", "spread_4", spread_4);
 
-    S sum = 0.0;
-
+    Quire q;
+    q.clear();
     for (int16_t i = 0; i < len; i++) {
         T tmp = (freqs[i] - centroid) * (freqs[i] - centroid);
-        sum += (S)(tmp * tmp * mags[i]);
+        q.add_mul(tmp * tmp, mags[i]);
     }
+    T sum = q.round();
 
     RA_LOG_SCALAR("AUDIO_FFT", "spec_kurt", "sum", sum);
-    T result = sum / (spread_4 * (S)sum_mags);
+    T result = sum / (spread_4 * sum_mags);
     RA_LOG_SCALAR("AUDIO_FFT", "spec_kurt", "result", result);
     return result;
 }
@@ -265,7 +274,7 @@ template <RealType T> T compute_skew(T *mags, T *freqs, int16_t len, T sum_mags,
     T spread_3 = spread * spread * spread;
     RA_LOG_SCALAR("AUDIO_FFT", "spec_skew", "spread_3", spread_3);
 
-    T sum = 0.0;
+    T sum = CONST_ZERO;
 
     for (int16_t i = 0; i < len; i++) {
         T tmp = (freqs[i] - centroid) * (freqs[i] - centroid);
@@ -278,24 +287,24 @@ template <RealType T> T compute_skew(T *mags, T *freqs, int16_t len, T sum_mags,
     return result;
 }
 
-// allow higher precision selection (based on precision analysis result)
 template <RealType T, RealType S = T> T compute_flatness(T *x, int16_t len) {
     RA_LOG_ARRAY("AUDIO_PSD", "flatness", "input", x, len);
 
-    T gmean = 0.0; // geometric
-    T amean = 0.0; // arithmetic
+    T gmean = CONST_ZERO; // geometric
+    T amean = CONST_ZERO; // arithmetic
 
-    S sum_logs = 0.0;
+    S sum_logs = 0.0f;
     for (int16_t i = 0; i < len; i++) {
-        T log_val = logreal(x[i]);
+        // log uses float math for libposit, thus do not convert to posit or use quire
+        S log_val = (S)logreal(x[i]);
         RA_LOG_SCALAR("AUDIO_PSD", "flatness", "log_val", log_val);
-        sum_logs += (S)log_val;
+        sum_logs += log_val;
     }
     RA_LOG_SCALAR("AUDIO_PSD", "flatness", "sum_logs_raw", sum_logs);
     sum_logs = sum_logs / len;
 
     gmean = expreal(sum_logs);
-    amean = vect_mean<T, S>(x, len);
+    amean = vect_mean(x, len);
 
     RA_LOG_SCALAR("AUDIO_PSD", "flatness", "sum_logs", sum_logs);
     RA_LOG_SCALAR("AUDIO_PSD", "flatness", "gmean", gmean);
@@ -348,7 +357,7 @@ void normalized_bandpowers(T *psd, T *freqs, int16_t len, const int8_t *psd_sele
     int16_t n_bins = 0;         // number of frequency bins inside the band
     int8_t start_found = 0;     // 1 if the start frequency was found, useful to minimize the if-statements
 
-    T band_power = 0.0;
+    T band_power = CONST_ZERO;
 
     // check which PSD bands are needed
     for (int16_t i = 0; i < N_PSD; i++) {
@@ -412,10 +421,9 @@ template <RealType T> void get_mfcc_features(const T *x, int16_t len, T *mean_mf
     free(coeffs);
 }
 
-// allow higher precision selection (based on precision analysis result)
-template <RealType T, RealType S = T>
+template <RealType T>
 void get_mel_spectrogram_features(const T *x, int16_t len, uint8_t *idx_needed, uint8_t n_mels_needed,
-                                  T *mean_mel_spectr, T *std_mel_spectr, T *max_mel_spectr, S *entropy_mel_spectr) {
+                                  T *mean_mel_spectr, T *std_mel_spectr, T *max_mel_spectr, T *entropy_mel_spectr) {
     int16_t padded_len = (2 * PAD_LEN) + len;                // lenght of the padded signal
     int16_t n_frames = ((padded_len - N_FFT) / HOP_LEN) + 1; // number of frames for the stft
 
@@ -437,8 +445,8 @@ void get_mel_spectrogram_features(const T *x, int16_t len, uint8_t *idx_needed, 
 
     // Computes the mean, std and maximum value of each MEL bin
     for (int8_t i = 0; i < n_mels_needed; i++) {
-        mean_mel_spectr[i] = vect_mean<T, S>(&mel_dB[i * n_frames], n_frames);
-        std_mel_spectr[i] = vect_std<T, S>(&mel_dB[i * n_frames], n_frames);
+        mean_mel_spectr[i] = vect_mean(&mel_dB[i * n_frames], n_frames);
+        std_mel_spectr[i] = vect_std(&mel_dB[i * n_frames], n_frames);
         max_mel_spectr[i] = vect_max_value(&mel_dB[i * n_frames], n_frames);
     }
 

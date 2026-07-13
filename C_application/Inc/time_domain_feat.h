@@ -14,13 +14,13 @@ template <RealType T> T get_max(T *sig, int16_t len);
 /// @param *sig     pointer to the input array
 /// @param *res     pointer to the resulting array
 /// @param len      lenght of the input array
-template <RealType T, RealType S> void sub_mean(const T *sig, T *res, int16_t len);
+template <RealType T> void sub_mean(const T *sig, T *res, int16_t len);
 
 /// @brief Returns the RMS of the input signal
 /// @param *sig     pointer to the input signal
 /// @param len      lenght of the input signal
 /// @return The root mean squared
-template <RealType T, RealType S> T get_rms(T *sig, int16_t len);
+template <RealType T> T get_rms(T *sig, int16_t len);
 
 /// @brief Computes the Zero Crossing Rate
 /// @param *sig     pointer to the input signal

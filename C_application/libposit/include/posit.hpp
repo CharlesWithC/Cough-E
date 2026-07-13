@@ -5,51 +5,56 @@
 
 #include "posit.h"
 
-#ifdef USE_CONSTEVAL // force compile-time evaluation
-#define CONSTEXPR consteval
+#if POSIT_SIZE == 16
+#include "softposit/posit16.h"
 #else
-#define CONSTEXPR constexpr
+#if POSIT_SIZE == 32
+#include "softposit/posit32.h"
+#else
+#error "Invalid POSIT_SIZE"
+#endif
 #endif
 
-// NOTE: It seems there is hardware latency issue on pmvxw.
-//
-// Whether we let LLVM auto decide when to use pmvxw, or we manually call pmvxw
-// on .value(), we observe similar latency-related issues, where raw posit data
-// is not always immediately available, and may be overwritten when accessed
-// later. The current workaround is to use psw to route data through memory
-// when accessing raw posit values, which prevents LLVM from using pmvxw
-// shortcut to move data to GPR. The hardware should be investigated to
-// determine the exact cause of this issue.
-//
-// Side note:
-// Using psw also avoids sign bit extensions in posit16 when dealing with GPR.
+static constexpr inline posit_t float2posit(float x) {
+#if POSIT_SIZE == 16
+    return convertFloatToP16(x);
+#else
+#if POSIT_SIZE == 32
+    return convertFloatToP32(x);
+#endif
+#endif
+}
+
+static constexpr inline float posit2float(posit_t x) {
+#if POSIT_SIZE == 16
+    return convertP16ToFloat(x);
+#else
+#if POSIT_SIZE == 32
+    return convertP32ToFloat(x);
+#endif
+#endif
+}
 
 class Posit {
-    posit_t v; // private field, use `value` method
+    posit_t v;
 
 public:
-    CONSTEXPR Posit() : v(0) { }
+    constexpr Posit() : v(0) { }
 
-    CONSTEXPR Posit(float x) : v(float2posit(x)) { }
+    constexpr Posit(float x) : v(float2posit(x)) { }
     template<typename T>
-    CONSTEXPR Posit(T x) : v(float2posit(static_cast<float>(x))) { }
+    constexpr Posit(T x) : v(float2posit(static_cast<float>(x))) { }
 
     explicit operator float() const { return posit2float(v); }
     template<typename T>
     explicit operator T() const { return static_cast<T>(posit2float(v)); }
 
-    inline posit_t value() {
-        return psw(v);
-    }
-
-    inline posit_t value_unsafe() {
-        // this should only be used by library functions
-        // this should not be used by application programmers
+    inline posit_t bits() {
         return v;
     }
 
     // call `from_bits` to directly set posit numbers
-    static CONSTEXPR inline Posit from_bits(posit_t x){
+    static constexpr Posit from_bits(posit_t x){
         Posit p;
         p.v = x;
         return p;
@@ -151,9 +156,36 @@ public:
     friend inline bool operator>=(T x, Posit y) { return !plt(Posit(x).v, y.v); }
 };
 
+class Quire {
+    [[maybe_unused]] char q; // dummy
+
+public:
+    constexpr Quire() : q(' ') { }
+
+    inline void clear() {
+        qclr();
+    }
+
+    inline Posit round() {
+        return Posit::from_bits(qround());
+    }
+
+    inline void neg() {
+        qneg();
+    }
+
+    inline void add_mul(Posit x, Posit y) {
+        qmadd(x.bits(), y.bits());
+    }
+
+    inline void sub_mul(Posit x, Posit y) {
+        qmsub(x.bits(), y.bits());
+    }
+};
+
 namespace libposit {
     static inline Posit abs(Posit x) {
-        return Posit::from_bits(psgnjxs(x.value_unsafe(), x.value_unsafe()));
+        return Posit::from_bits(psgnjxs(x.bits(), x.bits()));
     }
     static inline Posit fabs(Posit x) { return abs(x); }
 

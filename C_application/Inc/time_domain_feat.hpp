@@ -31,13 +31,21 @@ template <RealType T> T get_crest(T *sig, int16_t len, T rms) {
     return crest_factor;
 }
 
-template <RealType T, RealType S = T> void sub_mean(const T *sig, T *res, int16_t len) {
-    T mean = vect_mean<T, S>(sig, len);
+template <RealType T> void sub_mean(const T *sig, T *res, int16_t len) {
+    T mean = vect_mean(sig, len);
 
     sub_constant(sig, len, mean, res);
 }
 
 template <RealType T, RealType S = T> T get_rms(T *sig, int16_t len) {
+    // NOTE: regarding the use of S type and no quire
+    // at baseline SE 0.6029 PR 0.8116 F1 0.6919 FP/hr 90.7 TP 659 FP 153 FN 434
+    // if we replace `sum` with a quire-based accumulator, we would get result
+    // SE 0.6002 PR 0.8059 F1 0.6880 FP/hr 93.6 TP 656 FP 158 FN 437
+    // where both SE and PR dropped, and both FP and FN increased, i.e. a net loss
+    // it is likely caused by the threshold values being tuned with rounding error baked in
+    // and if we increase precision to reduce rounding error, we actually drift away from the threshold
+    // thus we keep S-type and do not replace it with quire, unless threshold is recalibrated with quire
     S sum = 0;
     for (int16_t i = 0; i < len; i++) {
         T sq = sig[i] * sig[i];

@@ -71,7 +71,7 @@ template <RealType T> void dct_matrix(T *x, int16_t rows, int16_t cols, T *y);
  * @param *res          :   array where to store the resulting entropy. It should
  *                          be an array of `n_rows` elements
  */
-template <RealType T, RealType S> void entropy(T *spectrogram, int16_t n_rows, int16_t n_columns, S *res);
+template <RealType T> void entropy(T *spectrogram, int16_t n_rows, int16_t n_columns, T *res);
 
 #include <mfcc_module.hpp>
 

@@ -109,7 +109,7 @@ void fft_based_features(const int8_t *features_selector, const audio_data_t *sig
     }
 
     PERF_KERNEL_TIMER_START();
-    compute_rfft<audio_data_t, real_t>(sig, len, fs, magnitudes, frequencies, &sum_mags);
+    compute_rfft(sig, len, fs, magnitudes, frequencies, &sum_mags);
     PERF_KERNEL_TIMER_STOP("AUDIO|RFFT");
 
     if (features_selector[SPECTRAL_DECREASE]) {
@@ -130,8 +130,7 @@ void fft_based_features(const int8_t *features_selector, const audio_data_t *sig
 
     if (features_selector[SPECTRAL_ROLLOFF]) {
         PERF_KERNEL_TIMER_START();
-        audio_data_t spectral_rolloff =
-            compute_rolloff<audio_data_t, real_t>(magnitudes, frequencies, (len / 2) + 1, sum_mags);
+        audio_data_t spectral_rolloff = compute_rolloff(magnitudes, frequencies, (len / 2) + 1, sum_mags);
         PERF_KERNEL_TIMER_STOP("AUDIO|SPECTRAL_ROLLOFF");
         // PA_LOG("audio_fft", "spectral_rolloff", spectral_rolloff);
         feats[SPECTRAL_ROLLOFF] = spectral_rolloff;
@@ -149,8 +148,8 @@ void fft_based_features(const int8_t *features_selector, const audio_data_t *sig
 
         if (is_required(features_selector, SPECTRAL_SPREAD, SPECTRAL_SKEW)) {
             PERF_KERNEL_TIMER_START();
-            audio_data_t spectral_spread = compute_spread<audio_data_t, real_t>(magnitudes, frequencies, (len / 2) + 1,
-                                                                                sum_mags, spectral_cetroid);
+            audio_data_t spectral_spread =
+                compute_spread(magnitudes, frequencies, (len / 2) + 1, sum_mags, spectral_cetroid);
             PERF_KERNEL_TIMER_STOP("AUDIO|SPECTRAL_SPREAD");
             // PA_LOG("audio_fft", "spectral_spread", spectral_spread);
 
@@ -160,8 +159,8 @@ void fft_based_features(const int8_t *features_selector, const audio_data_t *sig
 
             if (features_selector[SPECTRAL_KURTOSIS]) {
                 PERF_KERNEL_TIMER_START();
-                audio_data_t kurt = compute_kurt<audio_data_t, real_t>(magnitudes, frequencies, (len / 2) + 1, sum_mags,
-                                                                       spectral_cetroid, spectral_spread);
+                audio_data_t kurt =
+                    compute_kurt(magnitudes, frequencies, (len / 2) + 1, sum_mags, spectral_cetroid, spectral_spread);
                 PERF_KERNEL_TIMER_STOP("AUDIO|SPECTRAL_KURTOSIS");
                 // PA_LOG("audio_fft", "spectral_kurt", kurt);
                 feats[SPECTRAL_KURTOSIS] = kurt;
@@ -311,7 +310,7 @@ void mel_spectrogram_features(const int8_t *features_selector, const audio_data_
         audio_data_t *mean_mel_spectr = (audio_data_t *)malloc(n_mels_needed * sizeof(audio_data_t));
         audio_data_t *std_mel_spectr = (audio_data_t *)malloc(n_mels_needed * sizeof(audio_data_t));
         audio_data_t *max_mel_spectr = (audio_data_t *)malloc(n_mels_needed * sizeof(audio_data_t));
-        real_t *entropy_mel_spectr = (real_t *)malloc(n_mels_needed * sizeof(real_t));
+        audio_data_t *entropy_mel_spectr = (audio_data_t *)malloc(n_mels_needed * sizeof(audio_data_t));
 
         PERF_KERNEL_TIMER_START();
         get_mel_spectrogram_features(sig, len, idxs_needed, n_mels_needed, mean_mel_spectr, std_mel_spectr,
@@ -353,7 +352,7 @@ void mean_based_features(const int8_t *features_selector, const audio_data_t *si
         audio_data_t *zero_mean =
             (audio_data_t *)malloc(len * sizeof(audio_data_t)); // to store the signal after subtracting the mean
         PERF_KERNEL_TIMER_START();
-        sub_mean<audio_data_t, real_t>(sig, zero_mean, len);
+        sub_mean(sig, zero_mean, len);
         PERF_KERNEL_TIMER_STOP("AUDIO|SUB_MEAN");
         RA_LOG_ARRAY("AUDIO_FFT", "mean_based_features", "zero_mean", zero_mean, len);
 

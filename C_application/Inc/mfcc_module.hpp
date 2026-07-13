@@ -16,8 +16,12 @@
 #define PAD_LEN 1024
 
 // defines used in the dB conversion
-#define F_MIN 1.17549e-038
-#define TOP_DB 80.0
+#if defined(UPOS_MODE) || defined(LPOS_MODE) // posit16
+const sreal_t F_MIN = POS(0x0001);
+#else // float
+const sreal_t F_MIN = sreal_t(1.17549e-038);
+#endif
+const sreal_t TOP_DB = sreal_t(80.0);
 
 // define used for the DCT computation
 #define PI 3.14159265358979323846
@@ -166,14 +170,14 @@ template <RealType T> void mel_spectrogram(const T *x, int16_t len, int16_t n_fr
 template <RealType T> void power_to_dB(T *x, int16_t len, T *res) {
     RA_LOG_ARRAY("AUDIO_MEL", "power_to_dB", "input", x, len);
 
-    T sample = 0.0f;
+    T sample = CONST_ZERO;
     for (int16_t i = 0; i < len; i++) {
         if (x[i] == 0) {
             sample = F_MIN;
         } else {
             sample = x[i];
         }
-        res[i] = 10.0f * log10real(sample);
+        res[i] = CONST_TEN * log10real(sample);
     }
     T max = vect_max_value(res, len);
     RA_LOG_SCALAR("AUDIO_MEL", "power_to_dB", "max_dB", max);
@@ -193,17 +197,17 @@ template <RealType T> void power_to_dB(T *x, int16_t len, T *res) {
 template <RealType T> void _dct_linear(T *x, int16_t len, T *y) {
     RA_LOG_ARRAY("AUDIO_MEL", "dct_linear", "input", x, len);
 
-    T sum = 0.0f;
-    T scaling = sqrtreal(1.0f / (2 * len));
+    T sum = CONST_ZERO;
+    T scaling = sqrtreal(CONST_ONE / (2 * len));
 
-    T cos_v = 0.0f;
+    T cos_v = CONST_ZERO;
 
     T *dct_cos_buf = (T *)malloc(len * sizeof(T));
 
     for (int16_t k = 0; k < len; k++) {
         read_flash(&dct_cos<T>[(len * k)], dct_cos_buf, len * sizeof(T));
 
-        sum = 0.0f;
+        sum = CONST_ZERO;
         for (int16_t n = 0; n < len; n++) {
             cos_v = dct_cos_buf[n];
             sum += x[n] * cos_v;
@@ -214,7 +218,7 @@ template <RealType T> void _dct_linear(T *x, int16_t len, T *y) {
             y[k] = y[k] * scaling;
         }
     }
-    y[0] = y[0] * sqrtreal(1.0f / (4 * len));
+    y[0] = y[0] * sqrtreal(CONST_ONE / (4 * len));
 
     RA_LOG_ARRAY("AUDIO_MEL", "dct_linear", "output", y, len);
 }
@@ -241,20 +245,17 @@ template <RealType T> void dct_matrix(T *x, int16_t rows, int16_t cols, T *y) {
     free(c_res);
 }
 
-template <RealType T, RealType S = T> void entropy(T *spectrogram, int16_t n_rows, int16_t n_columns, S *res) {
+template <RealType T> void entropy(T *spectrogram, int16_t n_rows, int16_t n_columns, T *res) {
     RA_LOG_ARRAY("AUDIO_MEL", "entropy", "input", spectrogram, n_rows * n_columns);
-
-    // Store the sum of each row of the spectrogram
-    S row_sum = 0.0f;
 
     for (int8_t i = 0; i < n_rows; i++) {
         // Sum each column of the spectrogram
-        row_sum = vect_sum<T, S>(&spectrogram[i * n_columns], n_columns);
+        T row_sum = vect_sum(&spectrogram[i * n_columns], n_columns);
         RA_LOG_SCALAR("AUDIO_MEL", "entropy", "row_sum", row_sum);
 
         // Divide all the row's elements by the sum of the row.
         // Passing the same pointer for input and output --> the input is modified
-        vect_div_const(&spectrogram[i * n_columns], n_columns, (T)row_sum, &spectrogram[i * n_columns]);
+        vect_div_const(&spectrogram[i * n_columns], n_columns, row_sum, &spectrogram[i * n_columns]);
         RA_LOG_ARRAY("AUDIO_MEL", "entropy", "normalized_row", &spectrogram[i * n_columns], n_columns);
     }
 
@@ -264,7 +265,7 @@ template <RealType T, RealType S = T> void entropy(T *spectrogram, int16_t n_row
 
     // Sum each column of the spectrogram
     for (int8_t i = 0; i < n_rows; i++) {
-        res[i] = vect_sum<T, S>(&spectrogram[i * n_columns], n_columns);
+        res[i] = vect_sum(&spectrogram[i * n_columns], n_columns);
         RA_LOG_SCALAR("AUDIO_MEL", "entropy", "result", res[i]);
     }
 }

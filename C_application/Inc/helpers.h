@@ -100,7 +100,7 @@ template <RealType T> static void vect_div_const(T *x, int16_t len, T divisor, T
  * @param *x    : pointer to the input array
  * @param len   : lenght of the input array
  */
-template <RealType T, RealType S> static S vect_sum(const T *x, int16_t len);
+template <RealType T> static T vect_sum(const T *x, int16_t len);
 
 /**
  * Returns the mean of a sequence of numbers
@@ -108,7 +108,7 @@ template <RealType T, RealType S> static S vect_sum(const T *x, int16_t len);
 * @param *x    : pointer to the input array
 * @param len   : lenght of the input array
  */
-template <RealType T, RealType S> static T vect_mean(const T *x, int16_t len);
+template <RealType T> static T vect_mean(const T *x, int16_t len);
 
 /// @brief Computes the element-wise multiplication between x and y arrays,
 /// the multiplication is stored in r array.
@@ -122,7 +122,7 @@ template <RealType T> static void vect_mult(T *x, const T *y, int16_t len, T *r)
 /// @param *x       pointer to the signal
 /// @param len      lenght of the signal
 /// @return         the standard deviation
-template <RealType T, RealType S> static T vect_std(T *x, int16_t len);
+template <RealType T> static T vect_std(T *x, int16_t len);
 
 /// @brief Copies "len" samples from "in" array of T starting at index "start"
 /// Destination is "out"

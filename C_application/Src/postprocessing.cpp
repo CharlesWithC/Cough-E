@@ -382,14 +382,14 @@ static audio_data_t *_downsample(const audio_data_t *sig, int16_t len, int16_t f
     *new_len = len / scale_factor;
 
     audio_data_t *res = (audio_data_t *)malloc(*new_len * sizeof(audio_data_t));
-    real_t mean = 0.0f;
 
+    Quire q;
+    q.clear();
     for (int16_t i = 0; i < *new_len; i++) {
         res[i] = sig[i * scale_factor];
-        mean += (real_t)res[i];
+        q.add_mul(CONST_ONE, res[i]);
     }
-
-    mean = mean / *new_len;
+    audio_data_t mean = q.round() / *new_len;
     RA_LOG_SCALAR("POSTPROC", "_downsample", "mean", mean);
 
     sub_constant(res, *new_len, (audio_data_t)mean, res);
@@ -414,7 +414,7 @@ void _get_cough_peaks(const postproc_peak_t *seg,
 {
     RA_LOG_ARRAY("POSTPROC", "_get_cough_peaks", "seg_input", seg, len);
 
-    int16_t downsample_len = 0.0f;
+    int16_t downsample_len = 0;
     audio_data_t *downsample_seg = _downsample(seg, len, fs, &downsample_len);
 
     audio_data_t *seg_squared = (audio_data_t *)malloc(downsample_len * sizeof(audio_data_t));

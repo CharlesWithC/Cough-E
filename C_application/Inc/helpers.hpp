@@ -86,16 +86,17 @@ template <RealType T> static void vect_div_const(T *x, int16_t len, T divisor, T
     }
 }
 
-template <RealType T, RealType S = T> static S vect_sum(const T *x, int16_t len) {
-    S sum = 0.0;
+template <RealType T> static T vect_sum(const T *x, int16_t len) {
+    Quire q;
+    q.clear();
     for (int16_t i = 0; i < len; i++) {
-        sum += (S)x[i];
+        q.add_mul(CONST_ONE, x[i]);
     }
-    return sum;
+    return q.round();
 }
 
-template <RealType T, RealType S = T> static T vect_mean(const T *x, int16_t len) {
-    return vect_sum<T, S>(x, len) / len;
+template <RealType T> static T vect_mean(const T *x, int16_t len) {
+    return vect_sum(x, len) / len;
 }
 
 template <RealType T> static void vect_mult(T *x, const T *y, int16_t len, T *r) {
@@ -104,17 +105,19 @@ template <RealType T> static void vect_mult(T *x, const T *y, int16_t len, T *r)
     }
 }
 
-template <RealType T, RealType S = T> static T vect_std(T *x, int16_t len) {
-    T mean = vect_mean<T, S>(x, len);
-    S sum = 0.0;
+template <RealType T> static T vect_std(T *x, int16_t len) {
+    T mean = vect_mean(x, len);
+    Quire q;
+    q.clear();
 
     for (int16_t i = 0; i < len; i++) {
         T centered = x[i] - mean;
         RA_IMU_LOG_SCALAR("vect_std", "x_minus_mean", centered);
-        T sq_dev = centered * centered;
-        RA_IMU_LOG_SCALAR("vect_std", "sq_dev", sq_dev);
-        sum += (S)sq_dev;
+        // T sq_dev = centered * centered;
+        // RA_IMU_LOG_SCALAR("vect_std", "sq_dev", sq_dev);
+        q.add_mul(centered, centered);
     }
+    T sum = q.round();
 
     RA_IMU_LOG_SCALAR("vect_std", "sum_sq_dev", sum);
     T variance = sum / len;

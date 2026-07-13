@@ -8,11 +8,11 @@ template <typename T> struct twiddles_t {
     T sine;
 };
 
-template <RealType T> extern const twiddles_t<T> twiddles_3200[3200];
-template <RealType T> extern const twiddles_t<T> twiddles_450[450];
-template <RealType T> extern const twiddles_t<T> twiddles_1024[1024];
-template <RealType T> extern const twiddles_t<T> twiddles_1600[1600];
-template <RealType T> extern const twiddles_t<T> twiddles_225[225];
-template <RealType T> extern const twiddles_t<T> twiddles_512[512];
+template <RealType T> extern const twiddles_t<T> FLASH1 twiddles_3200[3200];
+template <RealType T> extern const twiddles_t<T> FLASH1 twiddles_450[450];
+template <RealType T> extern const twiddles_t<T> FLASH1 twiddles_1024[1024];
+template <RealType T> extern const twiddles_t<T> FLASH1 twiddles_1600[1600];
+template <RealType T> extern const twiddles_t<T> FLASH1 twiddles_225[225];
+template <RealType T> extern const twiddles_t<T> FLASH1 twiddles_512[512];
 
 #endif

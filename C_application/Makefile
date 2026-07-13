@@ -19,7 +19,7 @@ TWIDDLE_Q31 = kiss_fftr/twiddles_win08_fs8000_q31.h
 
 MATH        =    -lm
 
-CXXFLAGS	=	-Wall -O3 -g -std=c++20 -stdlib=libc++ -MMD -MP $(INC) $(CFLAGS)
+CXXFLAGS	=	-w -O3 -g -std=c++20 -stdlib=libc++ -MMD -MP $(INC) $(CFLAGS)
 
 COMP_STRING = 	" |++++++++++++++++++++++++++++++++|\n"
 COMP_STRING +=  "|            Cough-E             |\n"
