@@ -383,7 +383,7 @@ static audio_data_t *_downsample(const audio_data_t *sig, int16_t len, int16_t f
 
     audio_data_t *res = (audio_data_t *)malloc(*new_len * sizeof(audio_data_t));
 
-    Quire q;
+    quire_t q;
     q.clear();
     for (int16_t i = 0; i < *new_len; i++) {
         res[i] = sig[i * scale_factor];

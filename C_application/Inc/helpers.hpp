@@ -87,7 +87,7 @@ template <RealType T> static void vect_div_const(T *x, int16_t len, T divisor, T
 }
 
 template <RealType T> static T vect_sum(const T *x, int16_t len) {
-    Quire q;
+    quire_t q;
     q.clear();
     for (int16_t i = 0; i < len; i++) {
         q.add_mul(CONST_ONE, x[i]);
@@ -107,7 +107,7 @@ template <RealType T> static void vect_mult(T *x, const T *y, int16_t len, T *r)
 
 template <RealType T> static T vect_std(T *x, int16_t len) {
     T mean = vect_mean(x, len);
-    Quire q;
+    quire_t q;
     q.clear();
 
     for (int16_t i = 0; i < len; i++) {

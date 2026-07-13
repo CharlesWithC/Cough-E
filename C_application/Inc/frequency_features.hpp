@@ -92,7 +92,7 @@ void compute_periodogram(const T *sig, int16_t len, int16_t fs, T *psd, T *freqs
 
     T mean = CONST_ZERO;
 
-    Quire q;
+    quire_t q;
     q.clear();
     for (int16_t i = 0; i < NPERSEG; i++) {
         q.add_mul(hann_window<T>[i], hann_window<T>[i]);
@@ -204,7 +204,7 @@ template <RealType T> T compute_spectral_slope(T *mags, T *freqs, int16_t len, T
 
 template <RealType T> T compute_rolloff(T *mags, T *freqs, int16_t len, T sum_mags) {
     T rolloff_energy = CONST_095 * sum_mags;
-    Quire q;
+    quire_t q;
     q.clear();
 
     RA_LOG_SCALAR("AUDIO_FFT", "rolloff", "rolloff_energy", rolloff_energy);
@@ -239,7 +239,7 @@ template <RealType T> T compute_centroid(T *mags, T *freqs, int16_t len, T sum_m
 }
 
 template <RealType T> T compute_spread(T *mags, T *freqs, int16_t len, T sum_mags, T centroid) {
-    Quire q;
+    quire_t q;
     q.clear();
     for (int16_t i = 0; i < len; i++) {
         q.add_mul((freqs[i] - centroid) * (freqs[i] - centroid), mags[i]);
@@ -256,7 +256,7 @@ template <RealType T> T compute_kurt(T *mags, T *freqs, int16_t len, T sum_mags,
     T spread_4 = spread * spread * spread * spread; // spread^4
     RA_LOG_SCALAR("AUDIO_FFT", "spec_kurt", "spread_4", spread_4);
 
-    Quire q;
+    quire_t q;
     q.clear();
     for (int16_t i = 0; i < len; i++) {
         T tmp = (freqs[i] - centroid) * (freqs[i] - centroid);
