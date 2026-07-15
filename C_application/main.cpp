@@ -106,6 +106,9 @@ int putchar(int c) {
 volatile int posit_done;
 volatile int posit_ok;
 
+volatile int count_pos2float_conv;
+volatile int count_float2pos_conv;
+
 int launch(void)
 {
 #ifdef HEEPATIA_MODE
@@ -246,6 +249,8 @@ int launch(void)
 
 #ifdef LOG_PERF_OVERALL
             timer_start();
+            count_pos2float_conv = 0;
+            count_float2pos_conv = 0;
 #endif
             imu_features(imu_features_selector,
                          imu_signal,
@@ -254,6 +259,7 @@ int launch(void)
 #ifdef LOG_PERF_OVERALL
             uint32_t cycles = timer_stop();
             printf("IMU CLK CYCLE %d AT WIND %d\n", cycles, idx_start_window);
+            printf("IMU POS2FLOAT %d FLOAT2POS %d AT WIND %d\n", count_pos2float_conv, count_float2pos_conv, idx_start_window);
 #endif
 
             DEBUG_PRINTF("IMU FEATURES\n");
@@ -287,6 +293,8 @@ int launch(void)
 
 #ifdef LOG_PERF_OVERALL
             timer_start();
+            count_pos2float_conv = 0;
+            count_float2pos_conv = 0;
 #endif
             audio_features(audio_features_selector,
                            audio_signal,
@@ -296,6 +304,7 @@ int launch(void)
 #ifdef LOG_PERF_OVERALL
             uint32_t cycles = timer_stop();
             printf("AUDIO CLK CYCLE %d AT WIND %d\n", cycles, idx_start_window);
+            printf("AUDIO POS2FLOAT %d FLOAT2POS %d AT WIND %d\n", count_pos2float_conv, count_float2pos_conv, idx_start_window);
 #endif
 
             DEBUG_PRINTF("AUDIO FEATURES\n");

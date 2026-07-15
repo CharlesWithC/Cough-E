@@ -60,12 +60,12 @@ template <RealType T, RealType S = T> T get_rms(T *sig, int16_t len) {
 
 template <RealType T> T compute_zrc(T *sig, int16_t len) {
     int sum = 0;
-    T interm_product = 0;
+    T interm_product = CONST_ZERO;
 
     for (int16_t i = 0; i < len - 1; i++) {
         interm_product = sig[i] * sig[i + 1];
         RA_IMU_LOG_SCALAR("compute_zrc", "multiplier", interm_product);
-        if (interm_product < 0) {
+        if (interm_product < CONST_ZERO) {
             sum++;
         }
     }

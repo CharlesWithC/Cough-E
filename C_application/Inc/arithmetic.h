@@ -7,12 +7,18 @@
 template <typename T> static inline T floorreal(T x) {
     return floorf((float)x);
 }
-template <typename T> static inline T expreal(T x) { return expf((float)x); }
+template <typename T> static inline T expreal(T x) {
+    return expf((float)x);
+}
 template <typename T, typename S> static inline T powreal(T base, S exp) {
     return powf((float)base, (float)exp);
 }
-template <typename T> static inline T sqrtreal(T x) { return sqrtf((float)x); }
-template <typename T> static inline T logreal(T x) { return logf((float)x); }
+template <typename T> static inline T sqrtreal(T x) {
+    return sqrtf((float)x);
+}
+template <typename T> static inline T logreal(T x) {
+    return logf((float)x);
+}
 template <typename T> static inline T log10real(T x) {
     return log10f((float)x);
 }

@@ -429,7 +429,7 @@ void get_mel_spectrogram_features(const T *x, int16_t len, uint8_t *idx_needed, 
 
     T *spectrogram = (T *)malloc((n_mels_needed * n_frames) * sizeof(T));
     for (int i = 0; i < n_mels_needed * n_frames; i++)
-        spectrogram[i] = 0;
+        spectrogram[i] = CONST_ZERO;
 
     // Get the spectrogram
     mel_spectrogram(x, len, n_frames, idx_needed, spectrogram);

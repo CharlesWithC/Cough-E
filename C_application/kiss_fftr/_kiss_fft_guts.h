@@ -134,9 +134,10 @@ struct kiss_fft_state {
 #  define KISS_FFT_SIN(phase) _mm_set1_ps( sin(phase) )
 #  define HALF_OF(x) ((x)*_mm_set1_ps(.5))
 #else
+const sreal_t HALF = sreal_t(0.5f);
 #  define KISS_FFT_COS(phase) (kiss_fft_scalar) cos(phase)
 #  define KISS_FFT_SIN(phase) (kiss_fft_scalar) sin(phase)
-#  define HALF_OF(x) ((x)*.5)
+#  define HALF_OF(x) ((x)*HALF)
 #endif
 
 #define  kf_cexp(x,phase) \

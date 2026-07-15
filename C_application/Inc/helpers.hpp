@@ -5,12 +5,9 @@
 #include <range_analysis.h>
 #include <types.h>
 
-// Minimum T available (supposing 32-bit T)
-#define MIN_FLOAT 1.17549e-038
-
 // Costant used in the kurtosis computation using the
 // Fisher definition
-#define KURT_FISHER_CONST 3
+const sreal_t KURT_FISHER_CONST = sreal_t(3.0f);
 
 // This serves as support for the argsort function
 // It stores both values and indexes
@@ -140,7 +137,7 @@ template <RealType T> static void sub_constant(const T *x, int16_t len, T consta
 }
 
 template <RealType T> static int16_t vect_max_index(T *x, int16_t len) {
-    int16_t max_i = 0.0;
+    int16_t max_i = 0;
     T temp_v;
     _find_max(x, len, &temp_v, &max_i);
     return max_i;
@@ -155,7 +152,7 @@ template <RealType T> static T vect_max_value(T *x, int16_t len) {
 
 template <RealType T> static T vect_max_abs_value(T *x, int16_t len) {
     T max_abs = x[0];
-    T tmp = 0.0;
+    T tmp = CONST_ZERO;
     for (int16_t i = 1; i < len; i++) {
         tmp = fabs(x[i]);
         if (tmp >= max_abs) {
@@ -234,30 +231,30 @@ template <typename T> void order_by_idxs(T *arr_in, uint16_t len, uint16_t *idxs
 template <RealType T> T _simpson_step(T *x, T spacing, int16_t start, int16_t end) {
     int n_intervals = (end - start) / 2; // realber of intervals (h in the formula)
 
-    T sum = 0.0;
+    T sum = CONST_ZERO;
     int interval_start = start;
 
     // computes the indexes
     for (int i = 0; i < n_intervals; i++) {
-        sum += x[interval_start] + 4 * x[interval_start + 1] + x[interval_start + 2];
+        sum += x[interval_start] + CONST_FOUR * x[interval_start + 1] + x[interval_start + 2];
         interval_start = interval_start + 2;
     }
-    return (sum * (spacing / 3));
+    return (sum * (spacing / CONST_THREE));
 }
 
 template <RealType T> T simpson(T *x, int16_t len, T spacing) {
-    T result = 0.0;
+    T result = CONST_ZERO;
 
     if (len % 2 == 0) {
-        T val = 0.0;
-        val += spacing * (x[len - 1] + x[len - 2]) / 2;
+        T val = CONST_ZERO;
+        val += spacing * (x[len - 1] + x[len - 2]) / CONST_TWO;
         result += _simpson_step(x, spacing, 0, len - 1);
 
-        val += spacing * (x[0] + x[1]) / 2;
+        val += spacing * (x[0] + x[1]) / CONST_TWO;
         result += _simpson_step(x, spacing, 1, len);
 
-        val /= 2;
-        result /= 2;
+        val /= CONST_TWO;
+        result /= CONST_TWO;
         result = result + val;
     } else {
         result = _simpson_step(x, spacing, 0, len);
@@ -277,7 +274,7 @@ template <RealType T> void padding(const T *sig, int len, int padlen, T *res) {
         left_ext[i] = sig[padlen - i];
         right_ext[i] = sig[len - 2 - i];
 
-        res[i] = (2 * left_end) - left_ext[i];
+        res[i] = (CONST_TWO * left_end) - left_ext[i];
     }
 
     // copy the original signal in the central part of the result
@@ -285,7 +282,7 @@ template <RealType T> void padding(const T *sig, int len, int padlen, T *res) {
 
     // computes and append padding for the right side
     for (int i = padlen + len; i < (padlen * 2) + len; i++) {
-        res[i] = (2 * right_end) - right_ext[i - (padlen + len)];
+        res[i] = (CONST_TWO * right_end) - right_ext[i - (padlen + len)];
     }
 
     free(left_ext);
@@ -295,8 +292,8 @@ template <RealType T> void padding(const T *sig, int len, int padlen, T *res) {
 template <RealType T> void zero_padding(const T *x, int16_t len, int16_t side_pad_len, T *r) {
     // pad with zeros in front and in the end
     for (int16_t i = 0; i < side_pad_len; i++) {
-        r[i] = 0.0;
-        r[i + side_pad_len + len] = 0.0;
+        r[i] = CONST_ZERO;
+        r[i + side_pad_len + len] = CONST_ZERO;
     }
 
     // copy input vector
@@ -315,7 +312,7 @@ template <RealType T> void reflect_padding(const T *x, uint16_t len, uint16_t si
 }
 
 template <RealType T> T get_line_length(T *x, int16_t len) {
-    T sum = 0.0;
+    T sum = CONST_ZERO;
 
     for (int16_t i = 0; i < len - 1; i++) {
         sum += fabs(x[i + 1] - x[i]);
@@ -335,9 +332,9 @@ template <RealType T> T get_kurtosis(T *x, int16_t len) {
     RA_IMU_LOG_SCALAR("get_kurtosis", "mean", mean);
     RA_IMU_LOG_SCALAR("get_kurtosis", "std", std);
 
-    T sum = 0.0;
+    T sum = CONST_ZERO;
 #ifdef RANGE_ANALYSIS
-    T moment_max = 0.0;
+    T moment_max = CONST_ZERO;
 #endif
 
     for (int16_t i = 0; i < len; i++) {
@@ -355,7 +352,7 @@ template <RealType T> T get_kurtosis(T *x, int16_t len) {
 #endif
     RA_IMU_LOG_SCALAR("get_kurtosis", "sum_x4", sum);
 
-    T std4 = powreal(std, 4);
+    T std4 = std * std * std * std;
     RA_IMU_LOG_SCALAR("get_kurtosis", "std4", std4);
 
     T result = (sum / (len * std4)) - KURT_FISHER_CONST;
@@ -364,7 +361,7 @@ template <RealType T> T get_kurtosis(T *x, int16_t len) {
 }
 
 template <RealType T> T L2_norm(const T *x, int16_t len) {
-    T sum = 0.0;
+    T sum = CONST_ZERO;
 
     for (int16_t i = 0; i < len; i++) {
         sum += x[i] * x[i];
@@ -385,17 +382,17 @@ static inline uint16_t min(uint16_t a, uint16_t b) {
 
 template <RealType T> void entropy_calc(T *x, int16_t len, uint8_t base) {
     for (int16_t i = 0; i < len; i++) {
-        if (x[i] > 0.0) {
-            x[i] = -1.0 * x[i] * logreal(x[i]);
-        } else if (x[i] < 0.0) {
-            x[i] = MIN_FLOAT;
+        if (x[i] > CONST_ZERO) {
+            x[i] = CONST_NEG_ONE * x[i] * logreal(x[i]);
+        } else if (x[i] < CONST_ZERO) {
+            x[i] = F_MIN;
         }
     }
 
     // If base needed, change the base of the logarithm result
     if (base != 1) {
         for (int16_t i = 0; i < len; i++) {
-            if (x[i] > MIN_FLOAT) {
+            if (x[i] > F_MIN) {
                 x[i] /= logreal(base);
             }
         }

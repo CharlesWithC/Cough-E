@@ -94,7 +94,7 @@ template <RealType T> T _max_vdist(T *sig, int16_t first, int16_t last, int16_t 
     // Check if the first and last indexes are the same
     if (first == last) {
         *idx = first;
-        return 0.0;
+        return CONST_ZERO;
     }
 
     // Length - number of point for which to check the distance
@@ -164,7 +164,7 @@ template <RealType T> int16_t *polygonal_approx(T *sig, int16_t len, T eps, int1
     // Always keeps track of the tail of the array, next element to process
     int16_t next_to_process = 0;
 
-    T max_dist = 0.0;
+    T max_dist = CONST_ZERO;
     int16_t max_idx = 0;
 
     // Indexes of first and last element to consider at each iteration

@@ -16,11 +16,6 @@
 #define PAD_LEN 1024
 
 // defines used in the dB conversion
-#if defined(UPOS_MODE) || defined(LPOS_MODE) // posit16
-const sreal_t F_MIN = POS(0x0001);
-#else // float
-const sreal_t F_MIN = sreal_t(1.17549e-038);
-#endif
 const sreal_t TOP_DB = sreal_t(80.0);
 
 // define used for the DCT computation
@@ -198,7 +193,7 @@ template <RealType T> void _dct_linear(T *x, int16_t len, T *y) {
     RA_LOG_ARRAY("AUDIO_MEL", "dct_linear", "input", x, len);
 
     T sum = CONST_ZERO;
-    T scaling = sqrtreal(CONST_ONE / (2 * len));
+    T scaling = sqrtreal(1.0f / (2 * len));
 
     T cos_v = CONST_ZERO;
 
@@ -212,13 +207,13 @@ template <RealType T> void _dct_linear(T *x, int16_t len, T *y) {
             cos_v = dct_cos_buf[n];
             sum += x[n] * cos_v;
         }
-        y[k] = sum * 2;
+        y[k] = sum * CONST_TWO;
 
         if (k > 0) {
             y[k] = y[k] * scaling;
         }
     }
-    y[0] = y[0] * sqrtreal(CONST_ONE / (4 * len));
+    y[0] = y[0] * sqrtreal(1.0f / (4 * len));
 
     RA_LOG_ARRAY("AUDIO_MEL", "dct_linear", "output", y, len);
 }

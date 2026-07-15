@@ -43,9 +43,18 @@
 
 const sreal_t CONST_ZERO = sreal_t(0.0f);
 const sreal_t CONST_ONE = sreal_t(1.0f);
+const sreal_t CONST_TWO = sreal_t(2.0f);
+const sreal_t CONST_THREE = sreal_t(3.0f);
+const sreal_t CONST_FOUR = sreal_t(4.0f);
 const sreal_t CONST_TEN = sreal_t(10.0f);
 const sreal_t CONST_NEG_ONE = sreal_t(-1.0f);
 const sreal_t CONST_095 = sreal_t(0.95f);
+
+#if defined(UPOS_MODE) || defined(LPOS_MODE) // posit16
+const sreal_t F_MIN = POS(0x0001);
+#else // float
+const sreal_t F_MIN = sreal_t(1.17549e-038);
+#endif
 
 #ifndef FXP_MODE
 typedef sreal_t audio_data_t;

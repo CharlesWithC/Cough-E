@@ -9,13 +9,6 @@
 #include <range_analysis.h>
 #include <types.h>
 
-// Minimum float available (supposing 32-bit float)
-#define MIN_FLOAT 1.17549e-038
-
-// Costant used in the kurtosis computation using the
-// Fisher definition
-#define KURT_FISHER_CONST 3
-
 #ifdef DEBUG
 #define DEBUG_PRINTF(...) printf(__VA_ARGS__)
 #define DEBUG_PRINT_FLOAT(...) print_float(__VA_ARGS__)
@@ -29,11 +22,17 @@ static void print_float(float f, int precision);
 extern "C" {
 #include <timer_sdk.h>
 }
-#define PERF_KERNEL_TIMER_START() timer_start()
+extern volatile int count_pos2float_conv;
+extern volatile int count_float2pos_conv;
+#define PERF_KERNEL_TIMER_START() do { \
+        count_pos2float_conv = 0; \
+        count_float2pos_conv = 0; \
+        timer_start(); \
+    } while (0)
 #define PERF_KERNEL_TIMER_STOP(label) \
     do { \
         uint32_t cycles = timer_stop(); \
-        printf("%s CLK CYCLE %d\n", (label), cycles); \
+        printf("%s CLK CYCLE %d POS2FLOAT %d FLOAT2POS %d\n", (label), cycles, count_pos2float_conv, count_float2pos_conv); \
     } while (0)
 #else
 #define PERF_KERNEL_TIMER_START() ((void)0)

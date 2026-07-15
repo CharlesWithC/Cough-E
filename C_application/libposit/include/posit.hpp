@@ -15,6 +15,16 @@
 #endif
 #endif
 
+#ifdef LOG_PERF_FLOAT
+extern volatile int count_pos2float_conv;
+extern volatile int count_float2pos_conv;
+#define INC_POS2FLOAT() if (!__builtin_is_constant_evaluated()) count_pos2float_conv += 1
+#define INC_FLOAT2POS() if (!__builtin_is_constant_evaluated()) count_float2pos_conv += 1
+#else
+#define INC_POS2FLOAT() ((void)0)
+#define INC_FLOAT2POS() ((void)0)
+#endif
+
 static constexpr inline posit_t float2posit(float x) {
 #if POSIT_SIZE == 16
     return convertFloatToP16(x);
@@ -41,13 +51,13 @@ class Posit {
 public:
     constexpr Posit() : v(0) { }
 
-    constexpr Posit(float x) : v(float2posit(x)) { }
+    constexpr Posit(float x) : v(float2posit(x)) { INC_FLOAT2POS(); }
     template<typename T>
-    constexpr Posit(T x) : v(float2posit(static_cast<float>(x))) { }
+    constexpr Posit(T x) : v(float2posit(static_cast<float>(x))) { INC_FLOAT2POS(); }
 
-    explicit operator float() const { return posit2float(v); }
+    explicit operator float() const { INC_POS2FLOAT(); return posit2float(v); }
     template<typename T>
-    explicit operator T() const { return static_cast<T>(posit2float(v)); }
+    explicit operator T() const { INC_POS2FLOAT(); return static_cast<T>(posit2float(v)); }
 
     inline posit_t bits() {
         return v;
