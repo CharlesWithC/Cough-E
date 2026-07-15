@@ -23,7 +23,7 @@ template <typename T> static inline T log10real(T x) {
     return log10f((float)x);
 }
 
-#ifdef UPOS_MODE
+#if defined(UPOS_MODE) && defined(DOUBLE_MATH)
 template <Universal T> static inline T floorreal(T x) {
     return sw::universal::floor(x);
 }

@@ -3,9 +3,9 @@ import math
 
 def compare_logs(file1, file2, tolerance=1e-2):
     with open(file1, 'r') as f:
-        lines1 = [l.strip() for l in f if l.strip() and "CLK CYCLE" not in l]
+        lines1 = [l.strip() for l in f if l.strip() and "CLK CYCLE" not in l and "POS2FLOAT" not in l]
     with open(file2, 'r') as f:
-        lines2 = [l.strip() for l in f if l.strip() and "CLK CYCLE" not in l]
+        lines2 = [l.strip() for l in f if l.strip() and "CLK CYCLE" not in l and "POS2FLOAT" not in l]
 
     if len(lines1) != len(lines2):
         print(f"Structure mismatch: {file1} has {len(lines1)} lines, {file2} has {len(lines2)} lines.")

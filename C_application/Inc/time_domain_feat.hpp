@@ -46,12 +46,23 @@ template <RealType T, RealType S = T> T get_rms(T *sig, int16_t len) {
     // it is likely caused by the threshold values being tuned with rounding error baked in
     // and if we increase precision to reduce rounding error, we actually drift away from the threshold
     // thus we keep S-type and do not replace it with quire, unless threshold is recalibrated with quire
-    S sum = 0;
+
+    // option 1: use S type and no quire (better eval / worse performance)
+    // S sum = 0;
+    // for (int16_t i = 0; i < len; i++) {
+    //     T sq = sig[i] * sig[i];
+    //     RA_IMU_LOG_SCALAR("get_rms", "sig_sq", sq);
+    //     sum += (S)sq;
+    // }
+
+    // option 2: use quire (worse eval / better performance)
+    quire_t q;
+    q.clear();
     for (int16_t i = 0; i < len; i++) {
-        T sq = sig[i] * sig[i];
-        RA_IMU_LOG_SCALAR("get_rms", "sig_sq", sq);
-        sum += (S)sq;
+        q.add_mul(sig[i], sig[i]);
     }
+    T sum = q.round();
+
     RA_IMU_LOG_SCALAR("get_rms", "sum_sq", sum);
     T result = sqrtreal(sum / len);
     RA_IMU_LOG_SCALAR("get_rms", "result", result);
