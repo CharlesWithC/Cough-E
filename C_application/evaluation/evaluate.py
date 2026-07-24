@@ -265,6 +265,22 @@ def score_recording(gt_events, pred_events, duration):
 #  Per-recording evaluation
 # ──────────────────────────────────────────────
 
+def _resolve_mode_from_compile_flags(extra_flags):
+    if "-DUPOS_MODE -DPOSIT_SIZE=16 -DNO_UPOS_QUIRE" in extra_flags:
+        return "upos16nq"
+    elif "-DUPOS_MODE -DPOSIT_SIZE=32 -DNO_UPOS_QUIRE" in extra_flags:
+        return "upos32nq"
+    elif "-DUPOS_MODE -DPOSIT_SIZE=16" in extra_flags:
+        return "upos16q"
+    elif "-DUPOS_MODE -DPOSIT_SIZE=32" in extra_flags:
+        return "upos32q"
+    elif "-DUPOS_MODE" in extra_flags:
+        return "upos"
+    elif "-DFXP_MODE" in extra_flags:
+        return "fxp"
+    else:
+        return "float"
+
 def evaluate_recording_isolated(subj_id, trial, mov, noise, sound,
                                 dataset_path, ws_path, extra_flags=""):
     input_data_dir = os.path.join(ws_path, "input_data")
@@ -305,15 +321,37 @@ def evaluate_recording_isolated(subj_id, trial, mov, noise, sound,
         open(os.path.join(output_dir, f"{subj_id}_t{trial}_{mov}_{noise}_{sound}.log"), "a")\
             .write("\n".join([x for x in output.split("\n") if x.startswith("PRECISION")]))
 
+    if "-DDEBUG" in extra_flags:
+        mode = _resolve_mode_from_compile_flags(extra_flags)
+        output_dir = os.path.join(os.path.join(os.path.dirname(__file__), "numerical_analysis"), mode)
+
+        current_window = -1
+        parsed_output = ""
+        output_lines = output.split("\n")
+        for i in range(len(output_lines) - 1):
+            line = output_lines[i]
+            m = re.search(r"PROCESS WINDOW (\d+) WITH MODEL (\d+)", line)
+            current_window = int(m.group(1)) if m else current_window
+
+            if line == "IMU FEATURES":
+                parsed_output += f"IMU {current_window} {output_lines[i+1]}\n"
+            elif line == "AUDIO FEATURES":
+                parsed_output += f"AUDIO {current_window} {output_lines[i+1]}\n"
+
+        open(os.path.join(output_dir, f"{subj_id}_t{trial}_{mov}_{noise}_{sound}.log"), "w")\
+            .write(parsed_output)
+
     return scores
 
 
-def _worker_task(task_args, dataset_path, workspaces, log_pa, extra_flags):
+def _worker_task(task_args, dataset_path, workspaces, log_pa, log_na, extra_flags):
     subj_id, trial, mov, noise, sound = task_args
     ws_path = workspaces.get()
     try:
         if log_pa:
             extra_flags += f" -DPRECISION_ANALYSIS"
+        if log_na:
+            extra_flags += f" -DDEBUG"
         return evaluate_recording_isolated(
             subj_id, trial, mov, noise, sound,
             dataset_path, ws_path, extra_flags
@@ -360,7 +398,8 @@ def _validate_workspace(ws_path):
     return required.issubset(entries)
 
 
-def evaluate_subjects(dataset_path, log_pa=False, jobs=1, extra_flags="", reuse_workspace=False):
+def evaluate_subjects(dataset_path, log_pa=False, log_na=False, \
+                      jobs=1, extra_flags="", reuse_workspace=False):
     all_results = []
     recordings = iter_existing_recordings(dataset_path)
     print(f"Expected recordings: {len(recordings)}")
@@ -424,7 +463,7 @@ def evaluate_subjects(dataset_path, log_pa=False, jobs=1, extra_flags="", reuse_
         print(f"Beginning parallel evaluation of {len(recordings)} recordings...")
         with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as executor:
             future_to_rec = {
-                executor.submit(_worker_task, rec, dataset_path, workspaces, log_pa, extra_flags): rec
+                executor.submit(_worker_task, rec, dataset_path, workspaces, log_pa, log_na, extra_flags): rec
                 for rec in recordings
             }
 
@@ -852,12 +891,21 @@ def _run_progressive_eval(fxp_block, twiddle):
 def _compile_flags_for_mode(mode, twiddle):
     if mode == "float":
         return ""
-    if mode == "upos":
+    elif mode == "upos":
         return "-DUPOS_MODE"
-    return f"-DFXP_MODE -DFIXED_POINT={twiddle}"
+    elif mode == "upos16q":
+        return "-DUPOS_MODE -DPOSIT_SIZE=16"
+    elif mode == "upos16nq":
+        return "-DUPOS_MODE -DPOSIT_SIZE=16 -DNO_UPOS_QUIRE"
+    elif mode == "upos32q":
+        return "-DUPOS_MODE -DPOSIT_SIZE=32"
+    elif mode == "upos32nq":
+        return "-DUPOS_MODE -DPOSIT_SIZE=32 -DNO_UPOS_QUIRE"
+    else:
+        return f"-DFXP_MODE -DFIXED_POINT={twiddle}"
 
 
-def _run_mode_eval(mode, twiddle, log_pa, cflags, jobs, reuse_workspace):
+def _run_mode_eval(mode, twiddle, log_pa, log_na, cflags, jobs, reuse_workspace):
     compile_flags = _compile_flags_for_mode(mode, twiddle) + f" {cflags}"
 
     if mode == "float":
@@ -865,7 +913,7 @@ def _run_mode_eval(mode, twiddle, log_pa, cflags, jobs, reuse_workspace):
     else:
         print(f"Using {mode} mode compile flags: {compile_flags}")
 
-    results = evaluate_subjects(DEFAULT_DATASET_PATH, log_pa=log_pa, jobs=jobs,
+    results = evaluate_subjects(DEFAULT_DATASET_PATH, log_pa=log_pa, log_na=log_na, jobs=jobs,
                                 extra_flags=compile_flags, reuse_workspace=reuse_workspace)
     if not results:
         print("No recordings processed. Check the default dataset path.")
@@ -890,13 +938,21 @@ def main(argv=None):
     parser = argparse.ArgumentParser(
         description="Evaluate Cough-E ML metrics in float or FxP mode."
     )
-    parser.add_argument("--mode", choices=["float", "fxp", "fxp-error", "upos"], default="float",
+
+    # upos = universal posit (default config)
+    # upos16q = universal posit16 with quire
+    # upos16nq = universal posit16 without quire
+    # upos32q = universal posit32 with quire
+    # upos32nq = universal posit32 without quire
+    parser.add_argument("--mode", choices=["float", "fxp", "fxp-error", "upos", "upos16q", "upos16nq", \
+                        "upos32q", "upos32nq"], default="float",
                         help="float / fxp / upos ML metrics, or fxp-error for kernel-level FxP-vs-float error metrics")
     parser.add_argument("--twiddle", type=int, choices=[32], default=32,
                         help="KissFFT twiddle precision (FxP audio uses 32-bit KissFFT)")
     parser.add_argument("--fxp-block", choices=FXP_BLOCKS,
                         help="run mixed float/FxP ML metrics with only this feature block replaced by FxP outputs")
     parser.add_argument("--log-pa", action="store_true", help="Produce precision analysis log")
+    parser.add_argument("--log-na", action="store_true", help="Produce numerical analysis log")
     parser.add_argument("--cflags", type=str, default="", help="Extra CFLAGS at compilation")
     parser.add_argument("-j", "--jobs", type=int, default=1,
                         help="Number of threads for parallel evaluation (default: 1)")
@@ -910,6 +966,10 @@ def main(argv=None):
         output_dir = os.path.join(os.path.dirname(__file__), "precision_analysis")
         os.makedirs(output_dir, exist_ok=True)
 
+    if args.log_na:
+        output_dir = os.path.join(os.path.join(os.path.dirname(__file__), "numerical_analysis"), args.mode)
+        os.makedirs(output_dir, exist_ok=True)
+
     try:
         if args.fxp_block:
             if args.mode != "float":
@@ -918,7 +978,7 @@ def main(argv=None):
         elif args.mode == "fxp-error":
             _evaluate_fxp_errors(DEFAULT_DATASET_PATH, args.twiddle)
         else:
-            _run_mode_eval(args.mode, args.twiddle, args.log_pa, args.cflags, args.jobs, args.reuse_workspace)
+            _run_mode_eval(args.mode, args.twiddle, args.log_pa, args.log_na, args.cflags, args.jobs, args.reuse_workspace)
     except EvaluationError as exc:
         print(f"\nEvaluation aborted: {exc}", file=sys.stderr)
         sys.exit(1)

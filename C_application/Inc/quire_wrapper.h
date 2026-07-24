@@ -6,6 +6,35 @@
 // we use true quire in both libposit and universal posit, however, it is
 // possible to use mixed precision (posit + float) by modifying this wrapper
 
+// a generic quire that does regular accumulation
+template <typename T>
+class GenericQuire {
+    T f;
+
+public:
+    constexpr GenericQuire() : f(0.0f) { }
+
+    inline void clear() {
+        f = 0.0f;
+    }
+
+    inline T round() {
+        return f;
+    }
+
+    inline void neg() {
+        f = -f;
+    }
+
+    inline void add_mul(T x, T y) {
+        f += x * y;
+    }
+
+    inline void sub_mul(T x, T y) {
+        f -= x * y;
+    }
+};
+
 #if defined(UPOS_MODE) // universal posit
 #ifndef POSIT_SIZE
 #define POSIT_SIZE 16
@@ -14,6 +43,10 @@
 #include <universal/number/posit/posit.hpp>
 using namespace sw::universal;
 typedef posit<POSIT_SIZE, 2> Posit;
+
+#ifdef NO_UPOS_QUIRE
+typedef GenericQuire<Posit> Quire;
+#else
 class Quire {
     quire<Posit> q;
 
@@ -40,6 +73,7 @@ public:
         q -= quire_mul(x, y);
     }
 };
+#endif
 #else
 #if defined(LPOS_MODE) // libposit
 // do nothing - we use libposit standard
@@ -47,32 +81,7 @@ public:
 #if !defined(FXP_MODE) // float
 // NOTE: Quire for float is a simple accumulator for code consistency.
 //       It does NOT convert float to double to reduce rounding error.
-class Quire {
-    float f;
-
-public:
-    constexpr Quire() : f(0.0f) { }
-
-    inline void clear() {
-        f = 0.0f;
-    }
-
-    inline float round() {
-        return f;
-    }
-
-    inline void neg() {
-        f = -f;
-    }
-
-    inline void add_mul(float x, float y) {
-        f += x * y;
-    }
-
-    inline void sub_mul(float x, float y) {
-        f -= x * y;
-    }
-};
+typedef GenericQuire<float> Quire;
 #endif
 #endif
 #endif

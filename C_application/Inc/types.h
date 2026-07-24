@@ -5,7 +5,10 @@
 #endif
 
 #ifdef UPOS_MODE // universal posit
+    #ifndef POSIT_SIZE
     #define POSIT_SIZE 16
+    #endif
+
     #include <universal/number/posit/posit.hpp>
     #include <quire_wrapper.h>
     using namespace sw::universal;
@@ -15,7 +18,7 @@
     typedef Quire quire_t;
 
     #define POS(hexval) ([]{ \
-        sw::universal::posit<16,1> p; \
+        sw::universal::posit<POSIT_SIZE,2> p; \
         p.setbits(hexval); \
         return p; \
     }())
@@ -24,7 +27,10 @@
     concept Universal = requires(T x) { T::nbits; };
 #else
 #ifdef LPOS_MODE // libposit
+    #ifndef POSIT_SIZE
     #define POSIT_SIZE 16
+    #endif
+
     #include <posit.hpp>
     using namespace libposit;
 
