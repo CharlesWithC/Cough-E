@@ -30,6 +30,8 @@ C_application/evaluation/fxp/fxp_stage_harness_*
 C_application/evaluation/fxp/fxp_progressive_harness
 C_application/evaluation/fxp/fxp_progressive_harness_*
 C_application/evaluation/fxp/.fxp_stage_harness.build.lock
+C_application/evaluation/fpga/*.log
+C_application/evaluation/fpga/*.png
 C_application/evaluation/precision_analysis/*
 C_application/evaluation/numerical_analysis/*
 C_application/precision_analysis/*.csv

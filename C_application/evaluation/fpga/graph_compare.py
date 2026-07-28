@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 """
-Parse desktop.log and fpga.log (same window/model output format) and plot
-per-feature drift between the two precision runs as heatmaps.
+Parse desktop and fpga float/posit logs and plot per-feature drift
+between desktop and fpga for each format side-by-side.
 
 Usage:
     python plot_drift.py
-    (expects desktop.log and fpga.log in the same directory, or pass paths)
-    python plot_drift.py path/to/desktop.log path/to/fpga.log
+    python plot_drift.py desktop_float.log fpga_float.log desktop_posit.log fpga_posit.log
 """
 
 import sys
+import os
 import re
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.colors import PowerNorm
 
 plt.rcParams['font.family'] = 'serif'
 plt.rcParams['mathtext.fontset'] = 'cm'
@@ -22,11 +23,10 @@ SECTION_RE = re.compile(r"^(IMU|AUDIO) FEATURES$")
 
 
 def parse_log(path):
-    """
-    Returns dict[(window, kind)] = np.array of feature values
-    kind is 'IMU' or 'AUDIO'
-    """
     data = {}
+    if not os.path.exists(path):
+        return data
+
     with open(path, "r") as f:
         lines = [l.rstrip("\n") for l in f]
 
@@ -57,11 +57,6 @@ def parse_log(path):
 
 
 def build_matrix(data_a, data_b, kind, drift_type="absolute"):
-    """
-    Align windows present in both logs for a given kind ('IMU' or 'AUDIO').
-    Returns (windows_sorted, drift_matrix) where drift_matrix is
-    features x windows.
-    """
     common_windows = sorted(
         w for (w, k) in data_a.keys()
         if k == kind and (w, k) in data_b
@@ -88,25 +83,7 @@ def build_matrix(data_a, data_b, kind, drift_type="absolute"):
     return common_windows, matrix
 
 
-def plot_heatmap(windows, matrix, kind, drift_type, out_path):
-    if matrix is None:
-        print(f"No overlapping {kind} windows found, skipping plot")
-        return
-
-    max_drift = matrix.max()
-
-    fig, ax = plt.subplots(figsize=(max(8, len(windows) * 0.4), max(6, matrix.shape[0] * 0.15)))
-    im = ax.imshow(matrix, aspect="auto", cmap="inferno", vmin=0, vmax=max_drift)
-
-    ax.set_xlabel("Window")
-    ax.set_ylabel("Feature")
-    if drift_type == "absolute":
-        ax.set_title(f"{kind} feature absolute drift |desktop - fpga|")
-    else:
-        ax.set_title(f"{kind} feature relative drift |desktop - fpga| / |desktop|")
-    ax.set_xticks(range(len(windows)))
-    ax.set_xticklabels(windows, rotation=90, fontsize=6)
-
+def get_feature_labels(kind, n_features):
     labels = []
     if kind == "AUDIO":
         audio_base = {
@@ -115,11 +92,11 @@ def plot_heatmap(windows, matrix, kind, drift_type, out_path):
             6: "SPECTRAL_SKEW", 7: "SPECTRAL_FLATNESS", 8: "SPECTRAL_STD",
             9: "SPECTRAL_ENTROPY", 10: "DOMINANT_FREQUENCY",
         }
-        for i in range(matrix.shape[0]):
+        for i in range(n_features):
             if i in audio_base:
                 name = audio_base[i]
             elif 11 <= i <= 13:
-                name = f"POWER_SPECTRAL_DENSITY_BAND_{i-10}"
+                name = f"PSD_{i-10}"
             elif 14 <= i < 270:
                 mfcc_idx = i - 14
                 family = mfcc_idx // 64
@@ -127,20 +104,20 @@ def plot_heatmap(windows, matrix, kind, drift_type, out_path):
                 fam_name = ["MEAN", "STD", "MAX", "ENTROPY"][family]
                 name = f"MFCC_{fam_name}_{coeff}"
             elif i == 270:
-                name = "ZERO_CROSSING_RATE"
+                name = "ZRC"
             elif i == 271:
-                name = "ROOT_MEANS_SQUARED"
+                name = "RMS"
             elif i == 272:
                 name = "CREST_FACTOR"
             elif 273 <= i < 292:
-                name = f"ENERGY_ENVELOPE_PEAK_DETECT_{i-273}"
+                name = f"EEPD_{i-273}"
             else:
                 name = "UNKNOWN"
             labels.append(f"[{i}] {name}")
     elif kind == "IMU":
         imu_bases = ["ACCEL_X", "ACCEL_Y", "ACCEL_Z", "GYRO_Y", "GYRO_P", "GYRO_R", "ACCEL_COMBO", "GYRO_COMBO"]
-        imu_families = ["LINE_LENGTH", "ZERO_CROSSING_RATE", "KURTOSIS", "ROOT_MEANS_SQUARED", "CREST_FACTOR"] + [f"APPROXIMATE_ZERO_CROSSING_{j}" for j in range(8)]
-        for i in range(matrix.shape[0]):
+        imu_families = ["LINE_LENGTH", "ZRC", "KURTOSIS", "RMS", "CREST_FACTOR"] + [f"AZC_{j}" for j in range(8)]
+        for i in range(n_features):
             base_idx = i // 13
             fam_idx = i % 13
             if base_idx < len(imu_bases) and fam_idx < len(imu_families):
@@ -149,31 +126,81 @@ def plot_heatmap(windows, matrix, kind, drift_type, out_path):
                 name = "UNKNOWN"
             labels.append(f"[{i}] {name}")
     else:
-        labels = [f"[{i}]" for i in range(matrix.shape[0])]
+        labels = [f"[{i}]" for i in range(n_features)]
+    return labels
 
-    ax.set_yticks(range(matrix.shape[0]))
-    ax.set_yticklabels(labels, fontsize=6)
 
-    cbar = fig.colorbar(im, ax=ax)
-    cbar.set_label("Absolute drift" if drift_type == "absolute" else "Relative drift")
+def plot_side_by_side_heatmap(pair1_res, pair2_res, kind, drift_type, out_path):
+    win1, mat1, label1 = pair1_res
+    win2, mat2, label2 = pair2_res
 
+    if mat1 is None and mat2 is None:
+        print(f"No overlapping {kind} windows found, skipping plot")
+        return
+
+    n_feats = mat1.shape[0] if mat1 is not None else mat2.shape[0]
+    max_wins = max(len(win1) if win1 else 0, len(win2) if win2 else 0)
+
+    fig, (ax1, ax2) = plt.subplots(
+        1, 2, figsize=(max(12, max_wins * 0.6), max(6, n_feats * 0.15)), sharey=True
+    )
+
+    labels = get_feature_labels(kind, n_feats)
+
+    for ax, win, mat, title in [(ax1, win1, mat1, label1), (ax2, win2, mat2, label2)]:
+        if mat is None or len(win) == 0:
+            ax.set_title(f"{title} (No Data)")
+            continue
+
+        max_drift = mat.max()
+
+        im = ax.imshow(
+            mat, aspect="auto", cmap="inferno",
+            norm=PowerNorm(gamma=0.3, vmin=0, vmax=max_drift)
+        )
+        ax.set_xlabel("Window")
+        ax.set_title(f"{title}\nMax Drift: {max_drift:.4e}")
+        ax.set_xticks(range(len(win)))
+        ax.set_xticklabels(win, rotation=90, fontsize=6)
+
+        cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+        cbar.set_label(f"{drift_type.capitalize()} drift")
+
+    ax1.set_ylabel("Feature")
+    ax1.set_yticks(range(n_feats))
+    ax1.set_yticklabels(labels, fontsize=6)
+
+    # fig.suptitle(f"{kind} Feature {drift_type.capitalize()} Drift Comparison (Desktop vs FPGA)", fontsize=12)
     fig.tight_layout()
     fig.savefig(out_path, dpi=150)
     print(f"Saved {out_path}")
-    print(f"{kind} ({drift_type}): max drift = {max_drift:.6f}")
 
 
 def main():
-    desktop_path = sys.argv[1] if len(sys.argv) > 1 else "desktop.log"
-    fpga_path = sys.argv[2] if len(sys.argv) > 2 else "fpga.log"
+    if len(sys.argv) == 5:
+        p1_a, p1_b, p2_a, p2_b = sys.argv[1:5]
+        pair1 = (p1_a, p1_b, f"Float ({os.path.basename(p1_a)} vs {os.path.basename(p1_b)})")
+        pair2 = (p2_a, p2_b, f"Posit ({os.path.basename(p2_a)} vs {os.path.basename(p2_b)})")
+    else:
+        pair1 = ("desktop_float.log", "fpga_float.log", "Float (Desktop vs FPGA)")
+        pair2 = ("desktop_posit.log", "fpga_posit.log", "Posit (Desktop vs FPGA)")
 
-    data_a = parse_log(desktop_path)
-    data_b = parse_log(fpga_path)
+    data1_a = parse_log(pair1[0])
+    data1_b = parse_log(pair1[1])
+    data2_a = parse_log(pair2[0])
+    data2_b = parse_log(pair2[1])
 
     for kind in ("IMU", "AUDIO"):
         for drift_type in ("absolute", "relative"):
-            windows, matrix = build_matrix(data_a, data_b, kind, drift_type)
-            plot_heatmap(windows, matrix, kind, drift_type, f"{kind.lower()}_drift_{drift_type}_heatmap.png")
+            win1, mat1 = build_matrix(data1_a, data1_b, kind, drift_type)
+            win2, mat2 = build_matrix(data2_a, data2_b, kind, drift_type)
+
+            res1 = (win1, mat1, pair1[2])
+            res2 = (win2, mat2, pair2[2])
+
+            plot_side_by_side_heatmap(
+                res1, res2, kind, drift_type, f"{kind.lower()}_drift_{drift_type}_comparison.png"
+            )
 
 
 if __name__ == "__main__":

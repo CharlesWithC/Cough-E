@@ -17,9 +17,11 @@ TWIDDLE_GENERATOR = kiss_fftr/gen_twiddles_fixed.py
 TWIDDLE_Q15 = kiss_fftr/twiddles_win08_fs8000_q15.h
 TWIDDLE_Q31 = kiss_fftr/twiddles_win08_fs8000_q31.h
 
-MATH        =    -lm
+# MATH        =    -lm
+MATH        =    -Wl,--whole-archive /opt/newlib/x86_64-elf/lib/libm.a -Wl,--no-whole-archive \
+				-ffp-contract=off -fno-builtin
 
-CXXFLAGS	=	-w -O3 -g -std=c++20 -stdlib=libc++ -MMD -MP $(INC) $(CFLAGS)
+CXXFLAGS	=	-w -O3 -MMD -MP -g -std=c++20 -stdlib=libc++ $(INC) $(MATH) -lc $(CFLAGS)
 
 COMP_STRING = 	" |++++++++++++++++++++++++++++++++|\n"
 COMP_STRING +=  "|            Cough-E             |\n"
@@ -43,7 +45,7 @@ all: $(TWIDDLE_Q15) $(TWIDDLE_Q31) $(BUILD_DIR)/$(APP)
 
 $(BUILD_DIR)/$(APP): $(MAIN_OBJ) $(OBJ)
 	@mkdir -p $(BUILD_DIR)
-	$(CC) -Wall -o $@ $^ $(MATH) -O3 -g -std=c++20 -stdlib=libc++ $(CFLAGS)
+	$(CC) -o $@ $^ $(CXXFLAGS)
 
 $(MAIN_OBJ): main.cpp
 	@mkdir -p $(dir $@)
@@ -62,7 +64,7 @@ FORCE:
 -include $(DEPS)
 
 run: all
-	@echo $(EXEC_STRING)
+	@echo -e $(EXEC_STRING)
 	@./$(BUILD_DIR)/$(APP)
 
 $(TWIDDLE_Q15) $(TWIDDLE_Q31): $(TWIDDLE_GENERATOR)

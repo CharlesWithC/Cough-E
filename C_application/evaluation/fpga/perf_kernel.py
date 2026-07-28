@@ -37,10 +37,11 @@ df_agg = df.groupby(["model", "kernel", "window"])["cycles"].sum().reset_index()
 
 summary = (
     df_agg.groupby(["model", "kernel"])["cycles"]
-    .agg(["mean", "std"])
+    .agg(["mean"])
     .reset_index()
 )
 print(summary)
+print(summary.to_latex(index=False, float_format="{:,.0f}".format, escape=True))
 
 models = df_agg["model"].unique()
 for model in models:
