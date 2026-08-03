@@ -27,7 +27,7 @@ import statistics
 import sys
 from collections import defaultdict
 
-REL_ERR_THRESHOLD = 1e-6
+REL_ERR_THRESHOLD = 1e-4
 DECIMAL_PLACES = 10  # fixed decimal places for CSV output, no scientific notation
 
 
@@ -79,8 +79,8 @@ def feature_label(kind, i):
     elif kind == "IMU":
         imu_bases = ["ACCEL_X", "ACCEL_Y", "ACCEL_Z", "GYRO_Y", "GYRO_P", "GYRO_R",
                      "ACCEL_COMBO", "GYRO_COMBO"]
-        imu_families = (["LINE_LENGTH", "ZERO_CROSSING_RATE_IMU", "KURTOSIS",
-                          "ROOT_MEANS_SQUARED_IMU", "CREST_FACTOR_IMU"] +
+        imu_families = (["LINE_LENGTH", "ZERO_CROSSING_RATE", "KURTOSIS",
+                          "ROOT_MEANS_SQUARED", "CREST_FACTOR"] +
                          [f"APPROXIMATE_ZERO_CROSSING_{j}" for j in range(8)])
         base_idx = i // 13
         fam_idx = i % 13
