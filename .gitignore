@@ -12,8 +12,8 @@ compile_flags.txt
 .vscode/*.json
 
 # Generated KissFFT twiddles
-C_application/kiss_fftr/twiddles_win08_fs8000_q15.h
-C_application/kiss_fftr/twiddles_win08_fs8000_q31.h
+C_application/kiss_fftr/twiddles_win08_fs8000_q15.cpp
+C_application/kiss_fftr/twiddles_win08_fs8000_q31.cpp
 
 # Generated evaluation headers (per-subject folders)
 C_application/input_data/*/

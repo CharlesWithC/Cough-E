@@ -14,14 +14,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 #include <helpers.h>
 
-// #include "twiddles.h"
-#if defined(FIXED_POINT) && (FIXED_POINT == 32)
-#  include "twiddles_win08_fs8000_q31.h"   /* int32_t Q1.31 twiddles */
-#elif defined(FIXED_POINT)
-#  include "twiddles_win08_fs8000_q15.h"   /* int16_t Q1.15 twiddles */
-#else
-#  include "twiddles_win08_fs8000.h"       /* float twiddles */
-#endif
+#include "twiddles_win08_fs8000.h"
 #include "kiss_fftr.h"
 #include "_kiss_fft_guts.h"
 
@@ -270,7 +263,14 @@ void kiss_fftri(kiss_fftr_cfg<T> st,const kiss_fft_cpx<T> *freqdata,T *timedata)
     kiss_fft (st->substate, st->tmpbuf, (kiss_fft_cpx<T> *) timedata);
 }
 
+#ifdef FXP_MODE
+template struct kiss_fftr_state<kiss_fft_scalar>;
+template kiss_fftr_cfg<kiss_fft_scalar> kiss_fftr_alloc<kiss_fft_scalar>(int nfft, int inverse_fft, void * mem, size_t * lenmem);
+template void kiss_fftr<kiss_fft_scalar>(kiss_fftr_cfg<kiss_fft_scalar> cfg, const kiss_fft_scalar *timedata, kiss_fft_cpx<kiss_fft_scalar> *freqdata);
+template void kiss_fftri<kiss_fft_scalar>(kiss_fftr_cfg<kiss_fft_scalar> cfg, const kiss_fft_cpx<kiss_fft_scalar> *freqdata, kiss_fft_scalar *timedata);
+#else
 template struct kiss_fftr_state<sreal_t>;
 template kiss_fftr_cfg<sreal_t> kiss_fftr_alloc<sreal_t>(int nfft, int inverse_fft, void * mem, size_t * lenmem);
 template void kiss_fftr<sreal_t>(kiss_fftr_cfg<sreal_t> cfg, const sreal_t *timedata, kiss_fft_cpx<sreal_t> *freqdata);
 template void kiss_fftri<sreal_t>(kiss_fftr_cfg<sreal_t> cfg, const kiss_fft_cpx<sreal_t> *freqdata, sreal_t *timedata);
+#endif

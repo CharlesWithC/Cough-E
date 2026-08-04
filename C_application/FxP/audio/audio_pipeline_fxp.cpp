@@ -10,6 +10,7 @@
 #include <FxP/audio/audio_pipeline_fxp.h>
 #include <FxP/audio/audio_tables_q15.h>
 #include <FxP/core/fxp_log_exp.h>
+#include <FxP/core/fxp_core.h>
 #endif
 
 #if defined(FXP_MODE) && defined(FIXED_POINT)
@@ -176,11 +177,11 @@ int audio_fft_stage_probe(const int16_t *sig, int16_t len, int16_t fs, uq4_28_t 
                           uq12_20_t *freqs, uq7_25_t *sum_mags) {
 
     int16_t fft_len = (int16_t)((len / 2) + 1);
-    kiss_fftr_cfg cfg = kiss_fftr_alloc(len, 0, 0, 0);
+    kiss_fftr_cfg<kiss_fft_scalar> cfg = kiss_fftr_alloc<kiss_fft_scalar>(len, 0, 0, 0);
     if (!cfg) return 0;
 
     kiss_fft_scalar *fft_in = (kiss_fft_scalar *)malloc((size_t)len * sizeof(kiss_fft_scalar));
-    kiss_fft_cpx *cx_out = (kiss_fft_cpx *)malloc((size_t)fft_len * sizeof(kiss_fft_cpx));
+    kiss_fft_cpx<kiss_fft_scalar> *cx_out = (kiss_fft_cpx<kiss_fft_scalar> *)malloc((size_t)fft_len * sizeof(kiss_fft_cpx<kiss_fft_scalar>));
 
     if (!fft_in || !cx_out) {
         free(fft_in);
@@ -233,11 +234,11 @@ void audio_fft_features(const int8_t *features_selector, const int16_t *sig, int
     if (!need_rolloff && !need_centroid && !need_spread && !need_kurt) return;
 
     int16_t fft_len = (int16_t)((len / 2) + 1);
-    kiss_fftr_cfg cfg = kiss_fftr_alloc(len, 0, 0, 0);
+    kiss_fftr_cfg<kiss_fft_scalar> cfg = kiss_fftr_alloc<kiss_fft_scalar>(len, 0, 0, 0);
     if (!cfg) return;
 
     kiss_fft_scalar *fft_in = (kiss_fft_scalar *)malloc((size_t)len * sizeof(kiss_fft_scalar));
-    kiss_fft_cpx *cx_out = (kiss_fft_cpx *)malloc((size_t)fft_len * sizeof(kiss_fft_cpx));
+    kiss_fft_cpx<kiss_fft_scalar> *cx_out = (kiss_fft_cpx<kiss_fft_scalar> *)malloc((size_t)fft_len * sizeof(kiss_fft_cpx<kiss_fft_scalar>));
     uq4_28_t *mags = (uq4_28_t *)malloc((size_t)fft_len * sizeof(uq4_28_t));
     uq12_20_t *freqs = (uq12_20_t *)malloc((size_t)fft_len * sizeof(uq12_20_t));
 
@@ -255,7 +256,7 @@ void audio_fft_features(const int8_t *features_selector, const int16_t *sig, int
         fft_in[i] = (kiss_fft_scalar)((int32_t)sig[i] << 16);
     }
 
-    kiss_fftr(cfg, fft_in, cx_out);
+    kiss_fftr<kiss_fft_scalar>(cfg, fft_in, cx_out);
 
     // Convert the shared RFFT output into magnitudes and frequency bins used by
     // rolloff, centroid, spread, and kurtosis.
@@ -567,13 +568,13 @@ void audio_psd_features(const int8_t *features_selector, const int16_t *sig, int
     // timedata is Q2.30 for KissFFT's 32-bit twiddle path.
     kiss_fft_scalar *timedata =
         (kiss_fft_scalar *)malloc((size_t)NPERSEG * sizeof(kiss_fft_scalar));
-    kiss_fft_cpx *cx_out = (kiss_fft_cpx *)malloc((size_t)psd_len * sizeof(kiss_fft_cpx));
+    kiss_fft_cpx<kiss_fft_scalar> *cx_out = (kiss_fft_cpx<kiss_fft_scalar> *)malloc((size_t)psd_len * sizeof(kiss_fft_cpx<kiss_fft_scalar>));
     uq9_23_t *acc_power = (uq9_23_t *)malloc((size_t)psd_len * sizeof(uq9_23_t));
     uq9_55_t *acc_power_wide = (need_flatness || need_bandpowers)
                                    ? (uq9_55_t *)malloc((size_t)psd_len * sizeof(uq9_55_t))
                                    : NULL;
     uq12_20_t *freqs = (uq12_20_t *)malloc((size_t)psd_len * sizeof(uq12_20_t));
-    kiss_fftr_cfg cfg = kiss_fftr_alloc(NPERSEG, 0, 0, 0);
+    kiss_fftr_cfg<kiss_fft_scalar> cfg = kiss_fftr_alloc<kiss_fft_scalar>(NPERSEG, 0, 0, 0);
 
     if (!timedata || !cx_out || !acc_power ||
         ((need_flatness || need_bandpowers) && !acc_power_wide) || !freqs || !cfg) {
@@ -606,7 +607,7 @@ void audio_psd_features(const int8_t *features_selector, const int16_t *sig, int
                                                               fxp_hann_window_q15[i]);
         }
 
-        kiss_fftr(cfg, timedata, cx_out);
+        kiss_fftr<kiss_fft_scalar>(cfg, timedata, cx_out);
 
         // Square fixed KissFFT bins in Q2.30 once. The widened UQ9.55 proxy
         // feeds flatness/bandpowers; the compact UQ9.23 proxy is derived from
@@ -685,8 +686,8 @@ int audio_psd_stage_probe(const int16_t *sig, int16_t sig_len, int16_t fs, uq9_2
 
     kiss_fft_scalar *timedata =
         (kiss_fft_scalar *)malloc((size_t)NPERSEG * sizeof(kiss_fft_scalar));
-    kiss_fft_cpx *cx_out = (kiss_fft_cpx *)malloc((size_t)psd_len * sizeof(kiss_fft_cpx));
-    kiss_fftr_cfg cfg = kiss_fftr_alloc(NPERSEG, 0, 0, 0);
+    kiss_fft_cpx<kiss_fft_scalar> *cx_out = (kiss_fft_cpx<kiss_fft_scalar> *)malloc((size_t)psd_len * sizeof(kiss_fft_cpx<kiss_fft_scalar>));
+    kiss_fftr_cfg<kiss_fft_scalar> cfg = kiss_fftr_alloc<kiss_fft_scalar>(NPERSEG, 0, 0, 0);
 
     if (!timedata || !cx_out || !cfg) {
         free(timedata);
@@ -876,12 +877,12 @@ void audio_mel_features(const int8_t *features_selector, const int16_t *sig, int
     if (n_frames <= 0) return;
 
     kiss_fft_scalar *timedata = (kiss_fft_scalar *)malloc((size_t)N_FFT * sizeof(kiss_fft_scalar));
-    kiss_fft_cpx *cx_out = (kiss_fft_cpx *)malloc((size_t)FFT_RES_LEN * sizeof(kiss_fft_cpx));
+    kiss_fft_cpx<kiss_fft_scalar> *cx_out = (kiss_fft_cpx<kiss_fft_scalar> *)malloc((size_t)FFT_RES_LEN * sizeof(kiss_fft_cpx<kiss_fft_scalar>));
     uq8_56_t *frame_power = (uq8_56_t *)malloc((size_t)FFT_RES_LEN * sizeof(uq8_56_t));
     uq8_56_t *mel_entropy_power =
         (uq8_56_t *)malloc((size_t)n_mels_needed * (size_t)n_frames * sizeof(uq8_56_t));
     q23_9_t *mel_db = (q23_9_t *)malloc((size_t)n_mels_needed * (size_t)n_frames * sizeof(q23_9_t));
-    kiss_fftr_cfg cfg = kiss_fftr_alloc(N_FFT, 0, 0, 0);
+    kiss_fftr_cfg<kiss_fft_scalar> cfg = kiss_fftr_alloc<kiss_fft_scalar>(N_FFT, 0, 0, 0);
 
     if (!timedata || !cx_out || !frame_power || !mel_entropy_power || !mel_db || !cfg) {
         free(timedata);
@@ -1051,8 +1052,8 @@ int audio_mel_stage_probe(const int8_t *features_selector, const int16_t *sig, i
         (uq8_56_t *)malloc((size_t)n_mels_needed * (size_t)n_frames * sizeof(uq8_56_t));
 
     kiss_fft_scalar *timedata = (kiss_fft_scalar *)malloc((size_t)N_FFT * sizeof(kiss_fft_scalar));
-    kiss_fft_cpx *cx_out = (kiss_fft_cpx *)malloc((size_t)FFT_RES_LEN * sizeof(kiss_fft_cpx));
-    kiss_fftr_cfg cfg = kiss_fftr_alloc(N_FFT, 0, 0, 0);
+    kiss_fft_cpx<kiss_fft_scalar> *cx_out = (kiss_fft_cpx<kiss_fft_scalar> *)malloc((size_t)FFT_RES_LEN * sizeof(kiss_fft_cpx<kiss_fft_scalar>));
+    kiss_fftr_cfg<kiss_fft_scalar> cfg = kiss_fftr_alloc<kiss_fft_scalar>(N_FFT, 0, 0, 0);
 
     if (!probe->frame_power || !probe->mel_power || !probe->mel_db || !mel_entropy_power ||
         !timedata || !cx_out || !cfg) {

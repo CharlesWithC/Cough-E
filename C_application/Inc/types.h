@@ -66,6 +66,10 @@ const sreal_t F_MIN = sreal_t(1.17549e-038);
 typedef sreal_t audio_data_t;
 typedef sreal_t imu_data_t;
 
+typedef sreal_t feat_t;
+typedef sreal_t audio_feat_t;
+typedef sreal_t imu_feat_t;
+
 typedef sreal_t audio_score_t;
 typedef sreal_t imu_score_t;
 #endif // for FXP_MODE, these are defined in fxp_core.h

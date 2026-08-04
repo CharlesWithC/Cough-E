@@ -43,7 +43,7 @@ extern "C++" {
 # endif
 #else
 # ifndef kiss_fft_scalar
-/*  deprecated; use c++ template instead */
+/*  for non-fxp; use c++ template instead */
 #   define kiss_fft_scalar fah
 # endif
 #endif

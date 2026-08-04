@@ -1,3 +1,6 @@
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wnarrowing"
+
 #include <constants.h>
 #include <types.h>
 
@@ -1841,7 +1844,7 @@ const audio_node_children_t DINTL0 audio_children[AUD_N_TREES][AUD_MAX_NODES] = 
 };
 
 #ifdef FXP_MODE // fxp
-const int32_t FLASH1 audio_scores_src[100][55] = {
+const audio_score_t FLASH1 audio_scores_src[100][55] = {
     {37009,  -9830,  -25023, 39294,  9830,   -17873, -38406, -9830,  -9830,  -38870, -32854, -17873, -37516, -31706,
      -30196, -11479, 8366,   -20369, -32554, 11235,  -37783, 3575,   -17901, -35504, 33704,  -4369,  -36591, -10220,
      22724,  -22562, 5548,   -25762, -498,   31493,  -9830,  -36258, -19661, 15124,  -16852, 17873,  0,      33704,
@@ -2241,7 +2244,7 @@ const int32_t FLASH1 audio_scores_src[100][55] = {
      0,    0,     0,    0,     0,     0,     0,     0,    0,     0,      0,    0,     0,    0,
      0,    0,     0,    0,     0,     0,     0,     0,    0,     0,      0,    0,     0},
 };
-const uint32_t FLASH1 audio_values_comp_src[100][54] = {
+const audio_score_t FLASH1 audio_values_comp_src[100][54] = {
     {4294957335U, 461866U,     2973U,       339003U,    4294964665U, 1128U,       42017U,      4294960384U,
      4294952282U, 4294954830U, 32768U,      459415U,    1168U,       448793U,     2269584346U, 299U,
      4294963611U, 489335502U,  4294962034U, 535938812U, 4294954181U, 4294965446U, 5334U,       2919U,
@@ -2859,7 +2862,7 @@ const uint32_t FLASH1 audio_values_comp_src[100][54] = {
 };
 #else                                      // !FXP_MODE
 #if defined(LPOS_MODE) && POSIT_SIZE == 16 // 16-bit precomputed posit
-const Posit FLASH1 audio_scores_src[AUD_N_TREES][MAX_LEAVES] = {
+const audio_score_t FLASH1 audio_scores_src[AUD_N_TREES][MAX_LEAVES] = {
     {
         POS(0x3909U), POS(0xd666U), POS(0xcbc8U), POS(0x3998U), POS(0x299aU), POS(0xcf46U), POS(0xc6a0U), POS(0xd666U),
         POS(0xd666U), POS(0xc683U), POS(0xc7fbU), POS(0xcf46U), POS(0xc6d7U), POS(0xc885U), POS(0xc942U), POS(0xd4caU),
@@ -3761,7 +3764,7 @@ const Posit FLASH1 audio_scores_src[AUD_N_TREES][MAX_LEAVES] = {
         POS(0x0U),    POS(0x0U),    POS(0x0U),    POS(0x0U),    POS(0x0U),    POS(0x0U),    POS(0x0U),
     },
 };
-const Posit FLASH1 audio_values_comp_src[AUD_N_TREES][AUD_MAX_NODES] = {
+const audio_score_t FLASH1 audio_values_comp_src[AUD_N_TREES][AUD_MAX_NODES] = {
     {
         POS(0x9f23U), POS(0x5618U), POS(0x539dU), POS(0x5258U), POS(0xadb9U), POS(0x48d1U), POS(0x4a42U), POS(0xa280U),
         POS(0x9cabU), POS(0x9deaU), POS(0x3800U), POS(0x5605U), POS(0x4921U), POS(0x55b2U), POS(0x761dU), POS(0x10abU),
@@ -8741,7 +8744,7 @@ const imu_node_children_t DINTL0 imu_children[IMU_N_TREES][IMU_MAX_NODES] = {
 };
 
 #ifdef FXP_MODE // fxp
-const int32_t imu_scores_src[100][61] = {
+const imu_score_t imu_scores_src[100][61] = {
     {-39003, -7864,  -3575, -37235, -22469, -33272, -11235, 19661,  0,      -35948, -18933, -34079, -15909,
      -16531, -35170, -4183, -31404, -38231, -35366, -32654, -15464, -35366, -11010, -8879,  10724,  -30896,
      9830,   -12417, 17873, -25385, -35931, -26385, 29491,  -26013, -481,   7261,   -29239, -14663, 27034,
@@ -9213,7 +9216,7 @@ const int32_t imu_scores_src[100][61] = {
      -11798, -833,   21660,  -6253, -2104, 206,   0,     0,     0,     0,     0,     0,      0,    0,      0,     0,
      0,      0,      0,      0,     0,     0,     0,     0,     0,     0,     0,     0,      0},
 };
-const uint32_t imu_values_comp_src[100][60] = {
+const imu_score_t imu_values_comp_src[100][60] = {
     {161U,   2U,     6U,   61U,  43U,  0U,          0U,       1049U,    2U,   0U,   756U, 86U,  350U, 62U, 6U,
      18053U, 69U,    0U,   6U,   111U, 4U,          622U,     6980950U, 69U,  0U,   898U, 92U,  112U, 6U,  2U,
      13U,    18010U, 0U,   825U, 78U,  130U,        7024876U, 6U,       4U,   754U, 8U,   815U, 0U,   48U, 4U,
@@ -9617,7 +9620,7 @@ const uint32_t imu_values_comp_src[100][60] = {
 };
 #else                                      // !FXP_MODE
 #if defined(LPOS_MODE) && POSIT_SIZE == 16 // 16-bit precomputed posit
-const Posit FLASH1 imu_scores_src[IMU_N_TREES][IMU_MAX_LEAVES] = {
+const imu_score_t FLASH1 imu_scores_src[IMU_N_TREES][IMU_MAX_LEAVES] = {
     {
         POS(0xc67aU), POS(0xd8a4U), POS(0xe105U), POS(0xc6e9U), POS(0xcd07U), POS(0xc7e0U), POS(0xd507U), POS(0x319aU),
         POS(0x0U),    POS(0xc739U), POS(0xcec1U), POS(0xc7aeU), POS(0xd077U), POS(0xcfeeU), POS(0xc76aU), POS(0xdfd4U),
@@ -10619,7 +10622,7 @@ const Posit FLASH1 imu_scores_src[IMU_N_TREES][IMU_MAX_LEAVES] = {
         POS(0x0U),    POS(0x0U),    POS(0x0U),    POS(0x0U),    POS(0x0U),
     },
 };
-const Posit FLASH1 imu_values_comp_src[IMU_N_TREES][IMU_MAX_NODES] = {
+const imu_score_t FLASH1 imu_values_comp_src[IMU_N_TREES][IMU_MAX_NODES] = {
     {
         POS(0x3209U), POS(0x4400U), POS(0x5300U), POS(0x2731U), POS(0x52b6U), POS(0x60a3U), POS(0x6157U), POS(0x6c19U),
         POS(0x4400U), POS(0x6450U), POS(0x69e9U), POS(0x2ac2U), POS(0x3aedU), POS(0x2795U), POS(0x5500U), POS(0x40d1U),
@@ -22392,3 +22395,5 @@ template <> const sreal_t DINTL1 hann_window<sreal_t>[NPERSEG] = {
 #endif
 // constants.h (welch_psd.h)
 //////////////////////////////////////////////////////////////////////////////////////
+
+#pragma GCC diagnostic pop

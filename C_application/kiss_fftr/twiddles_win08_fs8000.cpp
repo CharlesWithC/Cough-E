@@ -7028,6 +7028,7 @@ template <> const twiddles_t<Posit> FLASH1 twiddles_512<Posit>[512] = {
 
 #else
 
+#ifndef FXP_MODE
 template <> const twiddles_t<sreal_t> FLASH1 twiddles_3200<sreal_t>[3200] = {
 	{ 1.000000, -0.000000 },
 	{ 0.999998, -0.001963 },
@@ -14051,5 +14052,6 @@ template <> const twiddles_t<sreal_t> FLASH1 twiddles_512<sreal_t>[512] = {
 	{ -0.999995, -0.003068 },
 	{ -1.000000, -0.000000 }
 };
+#endif
 
 #endif

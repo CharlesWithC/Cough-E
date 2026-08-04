@@ -18,7 +18,7 @@
     @param *feats               :   array to be filled with the extracted features
 */
 void audio_features(const int8_t *features_selector, const audio_data_t *sig, int16_t len, int16_t fs,
-                    audio_data_t *feats);
+                    audio_feat_t *feats);
 
 /**
     Computes features from the IMU signal, passed as parameter.
@@ -29,7 +29,7 @@ void audio_features(const int8_t *features_selector, const audio_data_t *sig, in
     @param *feats               :   array to be filled with the extracted features
 */
 void imu_features(const int8_t *features_selector, const imu_data_t sig[][Num_IMU_signals], int16_t len,
-                  imu_data_t *feats);
+                  imu_feat_t *feats);
 
 //////////////////////////////////////////////////////////////////////////////////
 /*                      Local functions declaration                             */

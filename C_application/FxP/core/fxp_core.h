@@ -232,6 +232,9 @@ typedef cough_imu_sample_t imu_sample_t;
 typedef fxp_q16_t score_t;
 typedef score_t audio_score_t;
 typedef score_t imu_score_t;
+
+typedef cough_audio_sample_t audio_data_t;
+typedef cough_imu_sample_t imu_data_t;
 #endif
 
 static inline cough_audio_sample_t cough_source_audio_sample(float x) {

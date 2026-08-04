@@ -12,14 +12,7 @@ Redistribution and use in source and binary forms, with or without modification,
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-// #include "twiddles.h"
-#if defined(FIXED_POINT) && (FIXED_POINT == 32)
-#  include "twiddles_win08_fs8000_q31.h"   /* int32_t Q1.31 twiddles */
-#elif defined(FIXED_POINT)
-#  include "twiddles_win08_fs8000_q15.h"   /* int16_t Q1.15 twiddles */
-#else
-#  include "twiddles_win08_fs8000.h"       /* float twiddles */
-#endif
+#include "twiddles_win08_fs8000.h"
 
 #include <types.h>
 #include <math.h>
@@ -506,6 +499,12 @@ int kiss_fft_next_fast_size(int n)
     return n;
 }
 
+#ifdef FXP_MODE
+template struct kiss_fft_state<kiss_fft_scalar>;
+template kiss_fft_cfg<kiss_fft_scalar> kiss_fft_alloc<kiss_fft_scalar>(int, int, void*, size_t*);
+template void kiss_fft<kiss_fft_scalar>(kiss_fft_cfg<kiss_fft_scalar>, const kiss_fft_cpx<kiss_fft_scalar>*, kiss_fft_cpx<kiss_fft_scalar>*);
+#else
 template struct kiss_fft_state<sreal_t>;
 template kiss_fft_cfg<sreal_t> kiss_fft_alloc<sreal_t>(int, int, void*, size_t*);
 template void kiss_fft<sreal_t>(kiss_fft_cfg<sreal_t>, const kiss_fft_cpx<sreal_t>*, kiss_fft_cpx<sreal_t>*);
+#endif

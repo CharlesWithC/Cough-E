@@ -78,11 +78,9 @@ public:
 #if defined(LPOS_MODE) // libposit
 // do nothing - we use libposit standard
 #else
-#if !defined(FXP_MODE) // float
 // NOTE: Quire for float is a simple accumulator for code consistency.
 //       It does NOT convert float to double to reduce rounding error.
 typedef GenericQuire<float> Quire;
-#endif
 #endif
 #endif
 

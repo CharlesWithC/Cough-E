@@ -14,12 +14,12 @@ INC_DIRS 	= 	Inc FxP universal/include/sw libposit/include ./ kiss_fftr precisio
 INC 		= 	$(foreach d, $(INC_DIRS), -I$d)
 
 TWIDDLE_GENERATOR = kiss_fftr/gen_twiddles_fixed.py
-TWIDDLE_Q15 = kiss_fftr/twiddles_win08_fs8000_q15.h
-TWIDDLE_Q31 = kiss_fftr/twiddles_win08_fs8000_q31.h
+TWIDDLE_Q15 = kiss_fftr/twiddles_win08_fs8000_q15.cpp
+TWIDDLE_Q31 = kiss_fftr/twiddles_win08_fs8000_q31.cpp
 
-# MATH        =    -lm
-MATH        =    -Wl,--whole-archive /opt/newlib/x86_64-elf/lib/libm.a -Wl,--no-whole-archive \
-				-ffp-contract=off -fno-builtin
+MATH        =    -lm
+# MATH        =    -Wl,--whole-archive /opt/newlib/x86_64-elf/lib/libm.a -Wl,--no-whole-archive \
+# 				-ffp-contract=off -fno-builtin
 
 CXXFLAGS	=	-w -O3 -MMD -MP -g -std=c++20 -stdlib=libc++ $(INC) $(MATH) -lc $(CFLAGS)
 

@@ -22,12 +22,12 @@
 //////////////////////////////////////
 /* Input data                       */
 // ///////////////////////////////////
-// #include <input_data/audio_input_55502_w0_9wnds.h>
-// #include <input_data/imu_input_55502_w0_9wnds.h>
-// #include <input_data/bio_input_55502.h>
-#include <input_data/private/audio_input_20724_t2_walk_nothing_cough.h>
-#include <input_data/private/imu_input_20724_t2_walk_nothing_cough.h>
-#include <input_data/private/bio_input_20724.h>
+#include <input_data/audio_input_55502_w0_9wnds.h>
+#include <input_data/imu_input_55502_w0_9wnds.h>
+#include <input_data/bio_input_55502.h>
+// #include <input_data/private/audio_input_20724_t2_walk_nothing_cough.h>
+// #include <input_data/private/imu_input_20724_t2_walk_nothing_cough.h>
+// #include <input_data/private/bio_input_20724.h>
 //////////////////////////////////////
 
 

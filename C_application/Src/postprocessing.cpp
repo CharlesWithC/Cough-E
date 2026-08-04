@@ -60,7 +60,9 @@ static int16_t *_downsample(const int16_t *sig, int16_t len, int16_t fs, int16_t
     }
 
     if (max_abs <= 0) {
-        memset(res, 0, (size_t)(*new_len) * sizeof(int16_t));
+        for (int32_t i = 0; i < *new_len; i++) {
+            res[i] = 0;
+        }
         return res;
     }
 
