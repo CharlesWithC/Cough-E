@@ -4,8 +4,6 @@ This folder contains the C implementation of the Cough-E embedded application, t
 
 The default build produces a `build/cough-e` executable. It can be compiled either as the original floating-point application or as the fixed-point application by passing the corresponding compiler flags.
 
-**NOTE**: Fixed point is BROKEN while adding precision analysis. This is due to changes in `kiss-fftr` where all functions were migrated to C++ templates. To fix the problem, relevant fixed point functions must be updated to select correct type when calling `kiss-fftr` functions.
-
 **NOTE**: `g++` is BROKEN while using templated constant values with external linkage, such as `hann_mfcc_wind`. We get "explicit instantiation but no definition available" when compiling `constants.cpp`. This issue does not exist on `clang++`.
 
 #### Folder structure
@@ -117,9 +115,11 @@ The full evaluation pipeline updates the `main.h` includes automatically for eac
 
 To compile cough-e with libposit on HEEPatia, use:
 
+```bash
+make app PROJECT=cough-e TARGET=zcu104 LINKER=flash_load BOOT_MODE=flash COMPILER_FLAGS="-DTARGET_BYPASS_FLL -DHEEPATIA_MODE -DEVALUATION_MODE -DDEBUG -DLPOS_MODE -DPOSIT_SIZE=16" TOOLCHAIN=POS RISCV_POS=/shares/eslfiler1/common/esl/HEEPatia/compilers/rv32imfcxposit_patched
 ```
-make app PROJECT=cough-e TARGET=zcu104 LINKER=flash_load BOOT_MODE=flash COMPILER_FLAGS="-DTARGET_BYPASS_FLL -DHEEPATIA_MODE -DEVALUATION_MODE -DLPOS_MODE -mavoid-pmv" TOOLCHAIN=POS RISCV_POS=/path/to/modified/rv32imfcxposit
-```
+
+Note: If compiling for 32-bit posit, add `-mavoid-pmv` compiler flag as a hardware hazard workaround.
 
 FLASH, CARUS and GCRAM are utilized due to limited main memory in HEEPatia. Note that we use virtual GCRAM as native support on FPGA is not assumed. Also, we explicitly configure linker to use `ALIGN(4)` for `carus`. The modified [memory layout](/config/mcu-gen-system.hjson) and [linker](/sw/linker/link_flash_load.ld.tpl) must be used.
 
@@ -132,5 +132,3 @@ Twiddles for `kiss-fftr`, cosine LUT for `dct-linear`, and input data are stored
 - CARUS0: 54400 bytes / 65536 bytes (audio model)
 - CARUS1: 60400 bytes / 65536 bytes (imu model)
 - INTERLEAVED: 121680 bytes / 131072 bytes (other constant)
-
-Note: FxP is not tested on HEEPatia.
