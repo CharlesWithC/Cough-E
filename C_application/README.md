@@ -2,7 +2,7 @@
 
 This folder contains the C implementation of the Cough-E embedded application, together with the fixed-point runtime and the scripts used to compile and execute it locally.
 
-The default build produces a `build/cough-e` executable. It can be compiled either as the original floating-point application or as the fixed-point application by passing the corresponding compiler flags.
+The default build produces a `build/cough-e` executable. It can be compiled as the original floating-point application, or as the fixed-point or posit application by passing the corresponding compiler flags.
 
 **NOTE**: `g++` is BROKEN while using templated constant values with external linkage, such as `hann_mfcc_wind`. We get "explicit instantiation but no definition available" when compiling `constants.cpp`. This issue does not exist on `clang++`.
 
@@ -73,13 +73,13 @@ make run CFLAGS="-DFXP_MODE -DFIXED_POINT=32"
 Build the universal posit application:
 
 ```sh
-make CC="g++" CFLAGS="-DUPOS_MODE"
+make CC="clang++" CFLAGS="-DUPOS_MODE"
 ```
 
 Build and run the universal posit application:
 
 ```sh
-make run CC="g++" CFLAGS="-DUPOS_MODE"
+make run CC="clang++" CFLAGS="-DUPOS_MODE"
 ```
 
 Clean the local build output:
@@ -90,8 +90,8 @@ make clean
 
 The Makefile automatically generates the fixed-point KissFFT twiddle tables when needed:
 
-- `kiss_fftr/twiddles_win08_fs8000_q15.h`
-- `kiss_fftr/twiddles_win08_fs8000_q31.h`
+- `kiss_fftr/twiddles_win08_fs8000_q15.cpp`
+- `kiss_fftr/twiddles_win08_fs8000_q31.cpp`
 
 
 #### Input data

@@ -73,6 +73,12 @@ Run the fixed-point C application:
 python3 evaluate.py --mode fxp --twiddle 32
 ```
 
+Run the posit C application:
+
+```sh
+python3 evaluate.py --mode upos
+```
+
 The fixed-point runtime currently uses 32-bit KissFFT twiddles, so `--twiddle 32` is the supported setting.
 
 
